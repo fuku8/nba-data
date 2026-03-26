@@ -9,7 +9,7 @@ export function getPlayerPerGame(): PlayerPerGame[] {
     .map((d) => ({
       player: d["Player"] || "",
       age: num(d["Age"]),
-      team: d["Tm"] || "",
+      team: d["Tm"] || d["Team"] || "",
       pos: d["Pos"] || "",
       gp: num(d["G"]),
       gs: num(d["GS"]),
@@ -47,7 +47,7 @@ export function getPlayerAdvanced(): PlayerAdvanced[] {
     .map((d) => ({
       player: d["Player"] || "",
       age: num(d["Age"]),
-      team: d["Tm"] || "",
+      team: d["Tm"] || d["Team"] || "",
       pos: d["Pos"] || "",
       gp: num(d["G"]),
       mp: num(d["MP"]),
@@ -81,7 +81,7 @@ export function getPlayerTotals(): PlayerTotals[] {
     .map((d) => ({
       player: d["Player"] || "",
       age: num(d["Age"]),
-      team: d["Tm"] || "",
+      team: d["Tm"] || d["Team"] || "",
       pos: d["Pos"] || "",
       gp: num(d["G"]),
       gs: num(d["GS"]),

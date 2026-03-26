@@ -25,14 +25,21 @@ function LeaderCard({
           <div key={`${p.name}-${i}`} className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground w-4">{i + 1}</span>
-              <span className="font-medium">{p.name}</span>
-              <Badge
-                variant="outline"
-                className="text-xs"
-                style={{ borderColor: getTeamColor(p.team) }}
+              <Link
+                href={`/players/${encodeURIComponent(p.name)}`}
+                className="font-medium hover:underline"
               >
-                {p.team}
-              </Badge>
+                {p.name}
+              </Link>
+              <Link href={`/teams/${p.team}`}>
+                <Badge
+                  variant="outline"
+                  className="text-xs hover:bg-accent transition-colors"
+                  style={{ borderColor: getTeamColor(p.team) }}
+                >
+                  {p.team}
+                </Badge>
+              </Link>
             </div>
             <span className="font-mono font-semibold">{p.value.toFixed(1)}</span>
           </div>
@@ -92,7 +99,12 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{bestOff.offRating.toFixed(1)}</div>
-              <p className="text-sm text-muted-foreground">{bestOff.team}</p>
+              <Link
+                href={`/teams/${getTeamAbbr(bestOff.team)}`}
+                className="text-sm text-muted-foreground hover:underline"
+              >
+                {bestOff.team}
+              </Link>
             </CardContent>
           </Card>
         )}
@@ -103,7 +115,12 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{bestDef.defRating.toFixed(1)}</div>
-              <p className="text-sm text-muted-foreground">{bestDef.team}</p>
+              <Link
+                href={`/teams/${getTeamAbbr(bestDef.team)}`}
+                className="text-sm text-muted-foreground hover:underline"
+              >
+                {bestDef.team}
+              </Link>
             </CardContent>
           </Card>
         )}
@@ -116,7 +133,12 @@ export default function HomePage() {
               <div className="text-2xl font-bold">
                 {bestNet.netRating > 0 ? "+" : ""}{bestNet.netRating.toFixed(1)}
               </div>
-              <p className="text-sm text-muted-foreground">{bestNet.team}</p>
+              <Link
+                href={`/teams/${getTeamAbbr(bestNet.team)}`}
+                className="text-sm text-muted-foreground hover:underline"
+              >
+                {bestNet.team}
+              </Link>
             </CardContent>
           </Card>
         )}

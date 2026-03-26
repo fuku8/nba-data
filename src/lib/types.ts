@@ -157,29 +157,6 @@ export interface PlayerTotals {
   pts: number;
 }
 
-// ===== 試合（BallDontLie API） =====
-
-export interface Game {
-  id: number;
-  date: string;
-  season: number;
-  status: string;
-  home_team: {
-    id: number;
-    name: string;
-    full_name: string;
-    abbreviation: string;
-  };
-  visitor_team: {
-    id: number;
-    name: string;
-    full_name: string;
-    abbreviation: string;
-  };
-  home_team_score: number;
-  visitor_team_score: number;
-}
-
 // ===== ソート =====
 
 export type SortDirection = "asc" | "desc";
