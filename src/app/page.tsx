@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getStandings, getTeamAdvanced } from "@/lib/data/teams";
 import { getPlayerPerGame } from "@/lib/data/players";
-import { getLastUpdated } from "@/lib/data/csv-utils";
+import { getLatestGameDate } from "@/lib/data/csv-utils";
 import { getTeamAbbr, getTeamColor } from "@/lib/constants/teams";
 
 export const revalidate = 3600;
@@ -53,7 +53,7 @@ export default function HomePage() {
   const standings = getStandings();
   const advanced = getTeamAdvanced();
   const players = getPlayerPerGame().filter((p) => p.gp >= 30 && p.team !== "TOT");
-  const lastUpdated = getLastUpdated();
+  const latestGameDate = getLatestGameDate();
 
   const ptsLeaders = [...players]
     .sort((a, b) => b.pts - a.pts)
@@ -88,7 +88,7 @@ export default function HomePage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">NBA 2025-26 Dashboard</h1>
-        <p className="text-muted-foreground mt-1">最終更新: {lastUpdated}</p>
+        <p className="text-muted-foreground mt-1">データ反映: {latestGameDate} (米国東部時間)</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">

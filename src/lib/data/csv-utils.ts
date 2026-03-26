@@ -57,3 +57,22 @@ export function getLastUpdated(): string {
     return "不明";
   }
 }
+
+export function getLatestGameDate(): string {
+  try {
+    const filepath = path.join(DATA_DIR, "games.csv");
+    if (!fs.existsSync(filepath)) return "不明";
+    const content = fs.readFileSync(filepath, "utf-8");
+    const lines = content.trim().split("\n");
+    if (lines.length < 2) return "不明";
+    // Last line has the most recent game
+    const lastLine = lines[lines.length - 1];
+    const parts = lastLine.split(",");
+    if (parts.length < 7) return "不明";
+    // Remove last 4 fields (Visitor, VisitorPTS, Home, HomePTS) to get date
+    parts.pop(); parts.pop(); parts.pop(); parts.pop();
+    return parts.join(",").trim();
+  } catch {
+    return "不明";
+  }
+}
