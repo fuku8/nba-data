@@ -414,6 +414,7 @@ interface Game {
 - `pandas.read_html()` でテーブル解析
 - 「League Average」行を除外
 - チーム名の略称変換マップを定義
+- **試合データは差分取得:** 既存 `games.csv` の最終試合日を読み取り、その月以降のみ Basketball Reference から取得。新規データを既存CSVに追記する形式で、毎回全9ヶ月分を取得する必要がなく、リクエスト数とActions実行時間を大幅に削減
 
 ### 運用方法
 

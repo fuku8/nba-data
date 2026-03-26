@@ -271,13 +271,107 @@ def fetch_player_stats(page_suffix: str, filename: str) -> bool:
         return False
 
 
-def fetch_games() -> bool:
-    """今シーズンの試合結果を月別に取得して1つのCSVにまとめる"""
-    try:
-        all_games = []
-        months = ["october", "november", "december", "january", "february", "march", "april", "may", "june"]
+MONTH_ORDER = ["october", "november", "december", "january", "february",
+               "march", "april", "may", "june"]
 
-        for month in months:
+MONTH_NAME_TO_NUM = {
+    "Oct": 10, "Nov": 11, "Dec": 12, "Jan": 1, "Feb": 2,
+    "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
+}
+
+MONTH_NUM_TO_NAME = {v: k for k, v in {
+    "october": 10, "november": 11, "december": 12, "january": 1,
+    "february": 2, "march": 3, "april": 4, "may": 5, "june": 6,
+}.items()}
+
+
+def _parse_bref_date(date_str: str) -> datetime:
+    """Basketball Reference の日付文字列をパース (例: 'Tue, Oct 21, 2025')"""
+    return datetime.strptime(date_str.strip(), "%a, %b %d, %Y")
+
+
+def _get_last_game_date() -> datetime | None:
+    """既存 games.csv から最終試合日を取得"""
+    games_path = os.path.join(DATA_DIR, "games.csv")
+    if not os.path.exists(games_path):
+        return None
+    try:
+        df = pd.read_csv(games_path)
+        if df.empty or "Date" not in df.columns:
+            return None
+        last_date_str = df["Date"].iloc[-1]
+        return _parse_bref_date(last_date_str)
+    except Exception:
+        return None
+
+
+def _parse_games_page(resp) -> pd.DataFrame:
+    """試合ページのHTMLをパースしてDataFrameを返す"""
+    tables = pd.read_html(resp.text)
+    if not tables:
+        return pd.DataFrame()
+    df = tables[0]
+
+    if "Date" in df.columns:
+        df = df[df["Date"] != "Date"]
+
+    col_map = {}
+    for c in df.columns:
+        if "Visitor" in str(c) or c == "Visitor/Neutral":
+            col_map[c] = "Visitor"
+        elif "Home" in str(c) or c == "Home/Neutral":
+            col_map[c] = "Home"
+    df = df.rename(columns=col_map)
+
+    col_indices = [i for i, c in enumerate(df.columns) if str(c).startswith("PTS")]
+    if len(col_indices) >= 2:
+        new_cols = list(df.columns)
+        new_cols[col_indices[0]] = "VisitorPTS"
+        new_cols[col_indices[1]] = "HomePTS"
+        df.columns = new_cols
+
+    keep_cols = ["Date", "Visitor", "VisitorPTS", "Home", "HomePTS"]
+    available = [c for c in keep_cols if c in df.columns]
+    df = df[available]
+    df = df.dropna(subset=["Date", "Visitor", "Home"])
+
+    if "VisitorPTS" in df.columns:
+        df["VisitorPTS"] = pd.to_numeric(df["VisitorPTS"], errors="coerce")
+    if "HomePTS" in df.columns:
+        df["HomePTS"] = pd.to_numeric(df["HomePTS"], errors="coerce")
+    df = df.dropna(subset=["VisitorPTS", "HomePTS"])
+    return df
+
+
+def fetch_games() -> bool:
+    """試合結果を差分取得して既存CSVにマージする"""
+    try:
+        last_date = _get_last_game_date()
+        games_path = os.path.join(DATA_DIR, "games.csv")
+
+        if last_date is None:
+            # 初回: 全月取得
+            months_to_fetch = MONTH_ORDER
+            existing_df = pd.DataFrame()
+            print("  初回取得: 全月を取得します")
+        else:
+            # 差分: 最終試合日の月以降のみ取得
+            last_month_num = last_date.month
+            months_to_fetch = []
+            for m in MONTH_ORDER:
+                m_num = {"october": 10, "november": 11, "december": 12,
+                         "january": 1, "february": 2, "march": 3,
+                         "april": 4, "may": 5, "june": 6}[m]
+                # シーズンは10月開始なので、1-6月は翌年扱い
+                m_order = m_num if m_num >= 10 else m_num + 12
+                last_order = last_month_num if last_month_num >= 10 else last_month_num + 12
+                if m_order >= last_order:
+                    months_to_fetch.append(m)
+            existing_df = pd.read_csv(games_path)
+            print(f"  差分取得: {last_date.strftime('%Y-%m-%d')} 以降 ({', '.join(months_to_fetch)})")
+
+        new_games = []
+        for month in months_to_fetch:
             url = f"https://www.basketball-reference.com/leagues/NBA_{SEASON_YEAR}_games-{month}.html"
             print(f"  Fetching games: {month}...")
             try:
@@ -292,57 +386,40 @@ def fetch_games() -> bool:
                         print(f"    ✗ {month}: リトライ失敗 ({resp.status_code})")
                         continue
                 resp.raise_for_status()
-                tables = pd.read_html(resp.text)
-                if not tables:
-                    continue
-                df = tables[0]
-
-                # ヘッダー行除去（ページ内に繰り返しヘッダーがある場合）
-                if "Date" in df.columns:
-                    df = df[df["Date"] != "Date"]
-
-                # 必要カラムのリネーム
-                col_map = {}
-                for c in df.columns:
-                    if "Visitor" in str(c) or c == "Visitor/Neutral":
-                        col_map[c] = "Visitor"
-                    elif "Home" in str(c) or c == "Home/Neutral":
-                        col_map[c] = "Home"
-                df = df.rename(columns=col_map)
-
-                # PTS カラムが2つある場合（Visitor PTS, Home PTS）
-                col_indices = [i for i, c in enumerate(df.columns) if str(c).startswith("PTS")]
-                if len(col_indices) >= 2:
-                    new_cols = list(df.columns)
-                    new_cols[col_indices[0]] = "VisitorPTS"
-                    new_cols[col_indices[1]] = "HomePTS"
-                    df.columns = new_cols
-
-                keep_cols = ["Date", "Visitor", "VisitorPTS", "Home", "HomePTS"]
-                available = [c for c in keep_cols if c in df.columns]
-                df = df[available]
-                df = df.dropna(subset=["Date", "Visitor", "Home"])
-
-                if "VisitorPTS" in df.columns:
-                    df["VisitorPTS"] = pd.to_numeric(df["VisitorPTS"], errors="coerce")
-                if "HomePTS" in df.columns:
-                    df["HomePTS"] = pd.to_numeric(df["HomePTS"], errors="coerce")
-                df = df.dropna(subset=["VisitorPTS", "HomePTS"])
-
-                all_games.append(df)
+                df = _parse_games_page(resp)
+                if not df.empty:
+                    new_games.append(df)
             except Exception as e:
                 print(f"    ✗ {month}: {e}")
                 continue
 
             time.sleep(SLEEP_SEC + 3)
 
-        if not all_games:
+        if not new_games and existing_df.empty:
             print("  ✗ 試合データが取得できませんでした")
             return False
 
-        games_df = pd.concat(all_games, ignore_index=True)
-        games_df.to_csv(os.path.join(DATA_DIR, "games.csv"), index=False)
-        print(f"  ✓ games.csv: {len(games_df)} 試合")
+        if new_games:
+            new_df = pd.concat(new_games, ignore_index=True)
+
+            if last_date is not None and not existing_df.empty:
+                # 新規データから最終日以前を除外して重複防止
+                new_df = new_df[new_df["Date"].apply(
+                    lambda d: _parse_bref_date(d) > last_date
+                )]
+                if new_df.empty:
+                    print(f"  ✓ games.csv: 新しい試合なし（{len(existing_df)} 試合のまま）")
+                    return True
+                games_df = pd.concat([existing_df, new_df], ignore_index=True)
+                print(f"  ✓ games.csv: {len(new_df)} 試合追加 → 合計 {len(games_df)} 試合")
+            else:
+                games_df = new_df
+                print(f"  ✓ games.csv: {len(games_df)} 試合")
+
+            games_df.to_csv(games_path, index=False)
+        else:
+            print(f"  ✓ games.csv: 新しい試合なし（{len(existing_df)} 試合のまま）")
+
         return True
     except Exception as e:
         print(f"  ✗ games エラー: {e}")
