@@ -7,7 +7,7 @@ import requests
 from bs4 import BeautifulSoup
 import os
 import time
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 
 SEASON_YEAR = "2026"
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
@@ -471,11 +471,6 @@ def main():
     print(f"\n{SLEEP_SEC}秒待機中...")
     time.sleep(SLEEP_SEC)
     results["games"] = fetch_games()
-
-    # 4. 更新日時を記録
-    jst = timezone(timedelta(hours=9))
-    with open(os.path.join(DATA_DIR, "last_updated.txt"), "w") as f:
-        f.write(datetime.now(jst).strftime("%Y-%m-%d %H:%M:%S"))
 
     # 結果サマリ
     print("\n=== 結果サマリ ===")

@@ -49,15 +49,6 @@ export function num(val: string | undefined): number {
   return isNaN(n) ? 0 : n;
 }
 
-export function getLastUpdated(): string {
-  try {
-    const filepath = path.join(DATA_DIR, "last_updated.txt");
-    return fs.readFileSync(filepath, "utf-8").trim();
-  } catch {
-    return "不明";
-  }
-}
-
 export function getLatestGameDate(): string {
   try {
     const filepath = path.join(DATA_DIR, "games.csv");
