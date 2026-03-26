@@ -1,4 +1,6 @@
-import { readCsvFile, csvToObjects, num } from "./csv-utils";
+import fs from "fs";
+import path from "path";
+import { num } from "./csv-utils";
 
 export interface GameResult {
   date: string;
@@ -9,17 +11,33 @@ export interface GameResult {
 }
 
 export function getGames(): GameResult[] {
-  const rows = readCsvFile("games.csv");
-  const data = csvToObjects(rows);
-  return data
-    .filter((d) => d["Date"] && d["Visitor"] && d["Home"])
-    .map((d) => ({
-      date: d["Date"] || "",
-      visitor: d["Visitor"] || "",
-      visitorPts: num(d["VisitorPTS"]),
-      home: d["Home"] || "",
-      homePts: num(d["HomePTS"]),
-    }));
+  const filepath = path.join(process.cwd(), "data", "games.csv");
+  if (!fs.existsSync(filepath)) return [];
+  const content = fs.readFileSync(filepath, "utf-8");
+  const lines = content.trim().split("\n");
+  // Skip header
+  return lines.slice(1)
+    .map((line) => {
+      // Date field contains commas (e.g. "Tue, Oct 21, 2025") so split from the right
+      // Format: "Day, Mon DD, YYYY,Visitor,VisitorPTS,Home,HomePTS"
+      const parts = line.split(",");
+      if (parts.length < 7) return null;
+      // Last 4 fields are: Visitor, VisitorPTS, Home, HomePTS
+      const homePts = parts.pop()!.trim();
+      const home = parts.pop()!.trim();
+      const visitorPts = parts.pop()!.trim();
+      const visitor = parts.pop()!.trim();
+      const date = parts.join(",").trim();
+      if (!date || !visitor || !home) return null;
+      return {
+        date,
+        visitor,
+        visitorPts: num(visitorPts),
+        home,
+        homePts: num(homePts),
+      };
+    })
+    .filter((g): g is GameResult => g !== null);
 }
 
 export function getGamesByDate(date: string): GameResult[] {
@@ -34,6 +52,14 @@ export function getRecentGames(count: number = 30): GameResult[] {
 
 export function getGameDates(): string[] {
   const all = getGames();
-  const dates = new Set(all.map((g) => g.date));
-  return [...dates].sort().reverse();
+  // Preserve CSV order (chronological) and deduplicate
+  const seen = new Set<string>();
+  const dates: string[] = [];
+  for (const g of all) {
+    if (!seen.has(g.date)) {
+      seen.add(g.date);
+      dates.push(g.date);
+    }
+  }
+  return dates.reverse();
 }

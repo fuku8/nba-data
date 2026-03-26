@@ -105,9 +105,12 @@ export function PlayersClient({
     });
   }, [filteredAdvanced, advSortConfig]);
 
+  const [activeTab, setActiveTab] = useState("basic");
   const pagedPerGame = sortedPerGame.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const pagedAdvanced = sortedAdvanced.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  const totalPages = Math.ceil(sortedPerGame.length / PAGE_SIZE);
+  const totalPages = Math.ceil(
+    (activeTab === "advanced" ? sortedAdvanced.length : sortedPerGame.length) / PAGE_SIZE
+  );
 
   return (
     <div className="space-y-6">
@@ -115,7 +118,7 @@ export function PlayersClient({
         <div>
           <h1 className="text-3xl font-bold tracking-tight">選手一覧</h1>
           <p className="text-muted-foreground">
-            <Badge variant="outline">{filteredPerGame.length}</Badge> players
+            <Badge variant="outline">{activeTab === "advanced" ? filteredAdvanced.length : filteredPerGame.length}</Badge> players
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
@@ -148,7 +151,7 @@ export function PlayersClient({
         </div>
       </div>
 
-      <Tabs defaultValue="basic" onValueChange={() => setPage(0)}>
+      <Tabs defaultValue="basic" onValueChange={(v) => { setActiveTab(v); setPage(0); }}>
         <TabsList>
           <TabsTrigger value="basic">Basic Stats</TabsTrigger>
           <TabsTrigger value="advanced">Advanced Stats</TabsTrigger>

@@ -158,6 +158,11 @@ def extract_team_stats(tables, stat_type: str, filename: str) -> bool:
         # 重複カラム名除去
         target_df = target_df.loc[:, ~target_df.columns.duplicated()]
 
+        # Unnamed / Rk カラム除去
+        drop_cols = [c for c in target_df.columns if "Unnamed" in str(c) or c == "Rk"]
+        if drop_cols:
+            target_df = target_df.drop(columns=drop_cols)
+
         # Team カラムのクリーニング
         if "Team" in target_df.columns:
             target_df["Team"] = target_df["Team"].apply(clean_team_name)
@@ -228,7 +233,7 @@ def fetch_player_stats(page_suffix: str, filename: str) -> bool:
 
         # Tm列が空の場合、BeautifulSoupでHTMLから直接チーム略称を抽出
         tm_col = "Tm" if "Tm" in df.columns else None
-        if tm_col and df[tm_col].isna().all() or (tm_col and (df[tm_col] == "").all()):
+        if tm_col and (df[tm_col].isna().all() or (df[tm_col] == "").all()):
             print(f"  ! Tm列が空 - HTMLから直接抽出します")
             soup = BeautifulSoup(resp.text, "html.parser")
             table = soup.find("table")
@@ -352,12 +357,18 @@ def main():
 
     # 1. メインシーズンページからチームデータ取得
     print("\n=== チームデータ取得 ===")
-    tables = fetch_season_page_tables()
-
-    results["standings"] = extract_standings(tables)
-    results["team_advanced"] = extract_team_stats(tables, "advanced", "team_advanced.csv")
-    results["team_per_game"] = extract_team_stats(tables, "per_game", "team_per_game.csv")
-    results["team_opponent"] = extract_team_stats(tables, "opponent", "team_opponent.csv")
+    try:
+        tables = fetch_season_page_tables()
+        results["standings"] = extract_standings(tables)
+        results["team_advanced"] = extract_team_stats(tables, "advanced", "team_advanced.csv")
+        results["team_per_game"] = extract_team_stats(tables, "per_game", "team_per_game.csv")
+        results["team_opponent"] = extract_team_stats(tables, "opponent", "team_opponent.csv")
+    except Exception as e:
+        print(f"  ✗ チームデータ取得失敗（Cloudflare?）: {e}")
+        results["standings"] = False
+        results["team_advanced"] = False
+        results["team_per_game"] = False
+        results["team_opponent"] = False
 
     # 2. 選手データ取得（各ページ間に5秒待機）
     print("\n=== 選手データ取得 ===")
