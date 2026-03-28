@@ -2,7 +2,7 @@ name: Update NBA Data
 
 on:
   schedule:
-    - cron: '22 12 * * *'  # UTC 12:22 (JST 21:22)
+    - cron: '52 7 * * *'  # UTC 7:52 (JST 16:52)
   workflow_dispatch:
 
 permissions:
