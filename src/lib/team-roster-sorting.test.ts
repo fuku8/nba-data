@@ -71,11 +71,20 @@ test("sortTeamRosterRows sorts numeric fields ascending", () => {
   );
 });
 
-test("sortTeamRosterRows treats missing advanced values as zero for sorting", () => {
+test("sortTeamRosterRows places players with null advanced stats last when sorting descending", () => {
   const sorted = sortTeamRosterRows(rows, { key: "per", direction: "desc" });
   assert.deepEqual(
     sorted.map((row) => row.player),
     ["Alpha Guard", "Charlie Big", "Bravo Wing"],
+  );
+});
+
+test("sortTeamRosterRows treats fgPct of 0.0 as a real value, not as missing data", () => {
+  // Charlie Big has threePtPct: 0.0 — should sort before players with null stats (per: null)
+  const sorted = sortTeamRosterRows(rows, { key: "threePtPct", direction: "asc" });
+  assert.deepEqual(
+    sorted.map((row) => row.player),
+    ["Charlie Big", "Alpha Guard", "Bravo Wing"],
   );
 });
 

@@ -139,7 +139,7 @@ export function TeamRosterTable({ rows }: { rows: TeamRosterRow[] }) {
         </TableHeader>
         <TableBody>
           {sortedRows.map((row) => (
-            <TableRow key={row.player} className="hover:bg-accent/50">
+            <TableRow key={`${row.player}-${row.pos}`} className="hover:bg-accent/50">
               <TableCell>
                 <Link
                   href={`/players/${encodeURIComponent(row.player)}`}
@@ -157,10 +157,10 @@ export function TeamRosterTable({ rows }: { rows: TeamRosterRow[] }) {
               <TableCell className="text-right font-mono">{row.stl.toFixed(1)}</TableCell>
               <TableCell className="text-right font-mono">{row.blk.toFixed(1)}</TableCell>
               <TableCell className="text-right font-mono">
-                {row.fgPct ? `${(row.fgPct * 100).toFixed(1)}%` : "-"}
+                {row.fgPct != null ? `${(row.fgPct * 100).toFixed(1)}%` : "-"}
               </TableCell>
               <TableCell className="text-right font-mono">
-                {row.threePtPct ? `${(row.threePtPct * 100).toFixed(1)}%` : "-"}
+                {row.threePtPct != null ? `${(row.threePtPct * 100).toFixed(1)}%` : "-"}
               </TableCell>
               <TableCell className="text-right font-mono">
                 {row.per?.toFixed(1) ?? "-"}
