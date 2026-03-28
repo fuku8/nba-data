@@ -2,18 +2,11 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { getStandings, getTeamAdvanced, getTeamPerGame } from "@/lib/data/teams";
 import { getPlayerPerGame, getPlayerAdvanced } from "@/lib/data/players";
 import { NBA_TEAMS, getTeamAbbr } from "@/lib/constants/teams";
+import { TeamRosterTable } from "./roster-table";
 
 export const revalidate = 3600;
 
@@ -60,7 +53,25 @@ export default async function TeamDetailPage({
     allAdvanced.filter((p) => p.team === abbr).map((p) => [p.player, p])
   );
 
-  const rosterSorted = [...roster].sort((a, b) => b.pts - a.pts);
+  const rosterRows = roster.map((player) => {
+    const advancedStats = rosterAdvanced.get(player.player);
+
+    return {
+      player: player.player,
+      pos: player.pos,
+      gp: player.gp,
+      mpg: player.mpg,
+      pts: player.pts,
+      trb: player.trb,
+      ast: player.ast,
+      stl: player.stl,
+      blk: player.blk,
+      fgPct: player.fgPct,
+      threePtPct: player.threePtPct,
+      per: advancedStats?.per ?? null,
+      ws: advancedStats?.ws ?? null,
+    };
+  });
 
   return (
     <div className="space-y-6">
@@ -158,63 +169,10 @@ export default async function TeamDetailPage({
       {/* ロスター */}
       <Card>
         <CardHeader>
-          <CardTitle>Roster ({rosterSorted.length} players)</CardTitle>
+          <CardTitle>Roster ({rosterRows.length} players)</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Player</TableHead>
-                  <TableHead>Pos</TableHead>
-                  <TableHead className="text-right">GP</TableHead>
-                  <TableHead className="text-right">MPG</TableHead>
-                  <TableHead className="text-right">PTS</TableHead>
-                  <TableHead className="text-right">REB</TableHead>
-                  <TableHead className="text-right">AST</TableHead>
-                  <TableHead className="text-right">STL</TableHead>
-                  <TableHead className="text-right">BLK</TableHead>
-                  <TableHead className="text-right">FG%</TableHead>
-                  <TableHead className="text-right">3P%</TableHead>
-                  <TableHead className="text-right">PER</TableHead>
-                  <TableHead className="text-right">WS</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rosterSorted.map((p) => {
-                  const pa = rosterAdvanced.get(p.player);
-                  return (
-                    <TableRow key={p.player} className="hover:bg-accent/50">
-                      <TableCell>
-                        <Link
-                          href={`/players/${encodeURIComponent(p.player)}`}
-                          className="hover:underline font-medium"
-                        >
-                          {p.player}
-                        </Link>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{p.pos}</TableCell>
-                      <TableCell className="text-right font-mono">{p.gp}</TableCell>
-                      <TableCell className="text-right font-mono">{p.mpg.toFixed(1)}</TableCell>
-                      <TableCell className="text-right font-mono font-semibold">{p.pts.toFixed(1)}</TableCell>
-                      <TableCell className="text-right font-mono">{p.trb.toFixed(1)}</TableCell>
-                      <TableCell className="text-right font-mono">{p.ast.toFixed(1)}</TableCell>
-                      <TableCell className="text-right font-mono">{p.stl.toFixed(1)}</TableCell>
-                      <TableCell className="text-right font-mono">{p.blk.toFixed(1)}</TableCell>
-                      <TableCell className="text-right font-mono">
-                        {p.fgPct ? (p.fgPct * 100).toFixed(1) + "%" : "-"}
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {p.threePtPct ? (p.threePtPct * 100).toFixed(1) + "%" : "-"}
-                      </TableCell>
-                      <TableCell className="text-right font-mono">{pa?.per.toFixed(1) ?? "-"}</TableCell>
-                      <TableCell className="text-right font-mono">{pa?.ws.toFixed(1) ?? "-"}</TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
+          <TeamRosterTable rows={rosterRows} />
         </CardContent>
       </Card>
     </div>
