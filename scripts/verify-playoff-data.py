@@ -17,29 +17,29 @@ SLEEP_SEC = 5
 
 TARGETS = [
     {
-        "label": "プレーオフ ブラケット / シリーズ結果",
-        "url": f"https://www.basketball-reference.com/playoffs/NBA_{SEASON_YEAR}.html",
-        "expected_data": "po_series.csv / po_team_per_game.csv の元データ",
+        "label": "チーム順位 / スタッツ",
+        "url": f"https://www.basketball-reference.com/playoffs/NBA_{SEASON_YEAR}_standings.html",
+        "expected_data": "po_team_per_game.csv の元データ",
     },
     {
-        "label": "選手 PO per game スタッツ",
-        "url": f"https://www.basketball-reference.com/leagues/NBA_{SEASON_YEAR}_playoffs_per_game.html",
-        "expected_data": "po_player_per_game.csv の元データ",
+        "label": "試合結果",
+        "url": f"https://www.basketball-reference.com/playoffs/NBA_{SEASON_YEAR}_games.html",
+        "expected_data": "プレーオフ試合結果",
+    },
+    {
+        "label": "スタッツリーダー",
+        "url": f"https://www.basketball-reference.com/playoffs/NBA_{SEASON_YEAR}_leaders.html",
+        "expected_data": "カテゴリ別リーダー",
     },
     {
         "label": "選手 PO totals スタッツ",
-        "url": f"https://www.basketball-reference.com/leagues/NBA_{SEASON_YEAR}_playoffs_totals.html",
+        "url": f"https://www.basketball-reference.com/playoffs/NBA_{SEASON_YEAR}_totals.html",
         "expected_data": "po_player_totals.csv の元データ",
     },
     {
-        "label": "選手 PO advanced スタッツ",
-        "url": f"https://www.basketball-reference.com/leagues/NBA_{SEASON_YEAR}_playoffs_advanced.html",
-        "expected_data": "po_player_advanced.csv の元データ",
-    },
-    {
-        "label": "チーム PO スタッツ",
-        "url": f"https://www.basketball-reference.com/leagues/NBA_{SEASON_YEAR}_playoffs_team.html",
-        "expected_data": "po_team_per_game.csv の元データ（補完用）",
+        "label": "選手 PO per game スタッツ",
+        "url": f"https://www.basketball-reference.com/playoffs/NBA_{SEASON_YEAR}_per_game.html",
+        "expected_data": "po_player_per_game.csv の元データ",
     },
 ]
 
