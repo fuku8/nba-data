@@ -76,18 +76,18 @@ export function CompareClient({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">選手比較</h1>
+      <h1 className="text-3xl font-bold tracking-tight">検索</h1>
+      <p className="text-muted-foreground mt-1">最大4名を同時に検索・スタッツを比較できます。</p>
 
       {/* Search + Selected */}
-      <Card>
-        <CardContent className="pt-6 space-y-4">
-          <div className="relative">
-            <Input
-              placeholder="選手名を入力（最大4人）..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              disabled={selectedNames.length >= 4}
-            />
+      <div className="space-y-4">
+        <div className="relative max-w-sm">
+          <Input
+            placeholder="選手名を入力（最大4人）..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            disabled={selectedNames.length >= 4}
+          />
             {suggestions.length > 0 && (
               <div className="absolute z-10 w-full mt-1 bg-popover border rounded-md shadow-lg">
                 {suggestions.map((p) => (
@@ -103,25 +103,24 @@ export function CompareClient({
                 ))}
               </div>
             )}
-          </div>
+        </div>
 
-          <div className="flex flex-wrap gap-2">
-            {selectedPlayers.map((p, i) => (
-              <Badge
-                key={p.player}
-                variant="secondary"
-                className="text-sm py-1 px-3 gap-1.5"
-                style={{ borderLeft: `3px solid ${COLORS[i]}` }}
-              >
-                {p.player} ({p.team})
-                <button onClick={() => removePlayer(p.player)}>
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+        <div className="flex flex-wrap gap-2">
+          {selectedPlayers.map((p, i) => (
+            <Badge
+              key={p.player}
+              variant="secondary"
+              className="text-sm py-1 px-3 gap-1.5"
+              style={{ borderLeft: `3px solid ${COLORS[i]}` }}
+            >
+              {p.player} ({p.team})
+              <button onClick={() => removePlayer(p.player)}>
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+      </div>
 
       {selectedPlayers.length >= 2 && (
         <>

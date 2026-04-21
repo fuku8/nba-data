@@ -49,6 +49,24 @@ export function num(val: string | undefined): number {
   return isNaN(n) ? 0 : n;
 }
 
+export function getPoDataTimestamp(): string {
+  try {
+    const filepath = path.join(DATA_DIR, "po_player_per_game.csv");
+    if (!fs.existsSync(filepath)) return "";
+    const mtime = fs.statSync(filepath).mtime;
+    return mtime.toLocaleDateString("ja-JP", {
+      timeZone: "Asia/Tokyo",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return "";
+  }
+}
+
 export function getLatestGameDate(): string {
   try {
     const filepath = path.join(DATA_DIR, "games.csv");

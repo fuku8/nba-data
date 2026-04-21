@@ -54,8 +54,8 @@ export function PlayoffCompareClient({ players }: { players: PlayoffPlayerPerGam
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">PO 選手比較</h1>
-        <p className="text-muted-foreground mt-1">最大4名のプレーオフスタッツを比較</p>
+        <h1 className="text-3xl font-bold tracking-tight">検索</h1>
+        <p className="text-muted-foreground mt-1">最大4名を同時に検索・スタッツを比較できます。</p>
       </div>
 
       {selected.length < MAX_PLAYERS && (

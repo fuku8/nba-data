@@ -7,7 +7,6 @@ import {
   Users,
   BarChart3,
   Search,
-  GitCompareArrows,
   Calendar,
   Medal,
   LayoutDashboard,
@@ -15,23 +14,21 @@ import {
 import { cn } from "@/lib/utils";
 
 const rsNavItems = [
-  { href: "/", label: "ホーム", icon: LayoutDashboard },
   { href: "/standings", label: "順位表", icon: Trophy },
   { href: "/teams", label: "チーム", icon: BarChart3 },
   { href: "/players", label: "選手", icon: Users },
   { href: "/leaders", label: "リーダーズ", icon: Medal },
-  { href: "/compare", label: "比較", icon: GitCompareArrows },
+  { href: "/compare", label: "検索", icon: Search },
   { href: "/games", label: "試合", icon: Calendar },
-  { href: "/search", label: "検索", icon: Search },
 ];
 
 const poNavItems = [
   { href: "/playoffs", label: "トップ", icon: LayoutDashboard },
+  { href: "/playoffs/teams", label: "チーム", icon: BarChart3 },
   { href: "/playoffs/players", label: "選手", icon: Users },
   { href: "/playoffs/leaders", label: "リーダーズ", icon: Medal },
-  { href: "/playoffs/compare", label: "比較", icon: GitCompareArrows },
+  { href: "/playoffs/compare", label: "検索", icon: Search },
   { href: "/playoffs/games", label: "試合", icon: Calendar },
-  { href: "/playoffs/search", label: "検索", icon: Search },
 ];
 
 function NavLink({
