@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getTeamColor } from "@/lib/constants/teams";
+import { getTeamColor, getTeamAbbr } from "@/lib/constants/teams";
 import type { PlayoffSeries, PlayoffPlayerPerGame } from "@/lib/types";
 
 const ROUND_ORDER = [1, 2, 3, 4];
@@ -19,7 +19,7 @@ function SeriesCard({ s }: { s: PlayoffSeries }) {
       <CardContent className="pt-4 pb-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex flex-col items-center flex-1 min-w-0">
-            <span className="text-sm font-semibold truncate w-full text-center" style={{ color: t1Color }}>{s.team1}</span>
+            <Link href={`/playoffs/teams/${getTeamAbbr(s.team1)}`} className="text-sm font-semibold truncate w-full text-center hover:underline" style={{ color: t1Color }}>{s.team1}</Link>
             <span className="text-3xl font-bold mt-1">{s.team1Wins}</span>
           </div>
           <div className="flex flex-col items-center px-2">
@@ -31,7 +31,7 @@ function SeriesCard({ s }: { s: PlayoffSeries }) {
             <span className="text-xs text-muted-foreground mt-1">{s.seriesStatus}</span>
           </div>
           <div className="flex flex-col items-center flex-1 min-w-0">
-            <span className="text-sm font-semibold truncate w-full text-center" style={{ color: t2Color }}>{s.team2}</span>
+            <Link href={`/playoffs/teams/${getTeamAbbr(s.team2)}`} className="text-sm font-semibold truncate w-full text-center hover:underline" style={{ color: t2Color }}>{s.team2}</Link>
             <span className="text-3xl font-bold mt-1">{s.team2Wins}</span>
           </div>
         </div>

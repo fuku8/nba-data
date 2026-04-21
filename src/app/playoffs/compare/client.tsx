@@ -110,13 +110,13 @@ export function PlayoffCompareClient({ players }: { players: PlayoffPlayerPerGam
             <tbody>
               {STAT_ROWS.map((row) => {
                 const values = selected.map((p) => p[row.key] as number);
-                const max = Math.max(...values);
+                const best = row.key === "tov" ? Math.min(...values) : Math.max(...values);
                 return (
                   <tr key={row.key} className="border-t">
                     <td className="py-2 pr-4 text-muted-foreground">{row.label}</td>
                     {selected.map((p) => {
                       const v = p[row.key] as number;
-                      const isBest = selected.length > 1 && v === max;
+                      const isBest = selected.length > 1 && v === best;
                       return (
                         <td key={p.player} className={`py-2 px-3 text-center font-mono ${isBest ? "font-bold text-orange-400" : ""}`}>
                           {fmt(p, row.key, row.pct)}

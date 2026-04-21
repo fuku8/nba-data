@@ -27,11 +27,11 @@ function GameCard({ game }: { game: Game }) {
         <div className="flex items-center justify-between gap-3">
           <div className="flex-1 text-right">
             <span className="text-sm font-medium" style={{ color: getTeamColor(game.Visitor) }}>{game.Visitor}</span>
-            <span className={`text-2xl font-bold ml-2 ${vWin ? "text-foreground" : "text-muted-foreground"}`}>{game.VisitorPTS}</span>
+            <span className={`text-2xl font-bold ml-2 ${vWin ? "text-foreground" : "text-muted-foreground"}`}>{vPts}</span>
           </div>
           <span className="text-muted-foreground text-xs">@</span>
           <div className="flex-1">
-            <span className={`text-2xl font-bold mr-2 ${hWin ? "text-foreground" : "text-muted-foreground"}`}>{game.HomePTS}</span>
+            <span className={`text-2xl font-bold mr-2 ${hWin ? "text-foreground" : "text-muted-foreground"}`}>{hPts}</span>
             <span className="text-sm font-medium" style={{ color: getTeamColor(game.Home) }}>{game.Home}</span>
           </div>
         </div>

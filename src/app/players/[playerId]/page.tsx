@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { getPlayerPerGame, getPlayerAdvanced, getPlayerTotals } from "@/lib/data/players";
+import { getPlayoffPlayerPerGame } from "@/lib/data/playoffs";
 import { getTeamColor, getTeamInfo } from "@/lib/constants/teams";
 
 export const revalidate = 3600;
@@ -27,6 +29,7 @@ export default async function PlayerDetailPage({
   const allPerGame = getPlayerPerGame();
   const allAdvanced = getPlayerAdvanced();
   const allTotals = getPlayerTotals();
+  const allPoPerGame = getPlayoffPlayerPerGame();
 
   // TOTでないレコードを優先、なければTOTを使用
   const pg = allPerGame.find((p) => p.player === playerName && p.team !== "TOT")
@@ -35,6 +38,8 @@ export default async function PlayerDetailPage({
     || allAdvanced.find((p) => p.player === playerName);
   const totals = allTotals.find((p) => p.player === playerName && p.team !== "TOT")
     || allTotals.find((p) => p.player === playerName);
+  const poPg = allPoPerGame.find((p) => p.player === playerName && p.team !== "TOT")
+    || allPoPerGame.find((p) => p.player === playerName);
 
   if (!pg) notFound();
 
@@ -175,6 +180,62 @@ export default async function PlayerDetailPage({
               <StatBlock label="BLK" value={String(totals.blk)} />
               <StatBlock label="3PM" value={String(totals.threePt)} />
               <StatBlock label="FTM" value={String(totals.ft)} />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* RS / PO 比較 */}
+      {poPg && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <CardTitle>RS / Playoffs 比較</CardTitle>
+              <Badge className="bg-orange-500 text-white border-0 text-xs">Playoffs</Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="border-b">
+                  <tr>
+                    <th className="text-left py-2 pr-4 font-medium text-muted-foreground w-24">シーズン</th>
+                    {["GP", "PTS", "REB", "AST", "STL", "BLK", "TOV", "FG%", "3P%", "FT%", "MIN"].map((h) => (
+                      <th key={h} className="py-2 px-3 text-center font-medium text-muted-foreground">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b">
+                    <td className="py-2 pr-4 font-medium text-muted-foreground">Regular Season</td>
+                    <td className="py-2 px-3 text-center font-mono">{pg.gp}</td>
+                    <td className="py-2 px-3 text-center font-mono font-semibold">{pg.pts.toFixed(1)}</td>
+                    <td className="py-2 px-3 text-center font-mono">{pg.trb.toFixed(1)}</td>
+                    <td className="py-2 px-3 text-center font-mono">{pg.ast.toFixed(1)}</td>
+                    <td className="py-2 px-3 text-center font-mono">{pg.stl.toFixed(1)}</td>
+                    <td className="py-2 px-3 text-center font-mono">{pg.blk.toFixed(1)}</td>
+                    <td className="py-2 px-3 text-center font-mono">{pg.tov.toFixed(1)}</td>
+                    <td className="py-2 px-3 text-center font-mono">{(pg.fgPct * 100).toFixed(1)}%</td>
+                    <td className="py-2 px-3 text-center font-mono">{(pg.threePtPct * 100).toFixed(1)}%</td>
+                    <td className="py-2 px-3 text-center font-mono">{(pg.ftPct * 100).toFixed(1)}%</td>
+                    <td className="py-2 px-3 text-center font-mono">{pg.mpg.toFixed(1)}</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 pr-4 font-semibold text-orange-400">Playoffs</td>
+                    <td className="py-2 px-3 text-center font-mono">{poPg.gp}</td>
+                    <td className="py-2 px-3 text-center font-mono font-bold">{poPg.pts.toFixed(1)}</td>
+                    <td className="py-2 px-3 text-center font-mono">{poPg.trb.toFixed(1)}</td>
+                    <td className="py-2 px-3 text-center font-mono">{poPg.ast.toFixed(1)}</td>
+                    <td className="py-2 px-3 text-center font-mono">{poPg.stl.toFixed(1)}</td>
+                    <td className="py-2 px-3 text-center font-mono">{poPg.blk.toFixed(1)}</td>
+                    <td className="py-2 px-3 text-center font-mono">{poPg.tov.toFixed(1)}</td>
+                    <td className="py-2 px-3 text-center font-mono">{(poPg.fgPct * 100).toFixed(1)}%</td>
+                    <td className="py-2 px-3 text-center font-mono">{(poPg.threePtPct * 100).toFixed(1)}%</td>
+                    <td className="py-2 px-3 text-center font-mono">{(poPg.ftPct * 100).toFixed(1)}%</td>
+                    <td className="py-2 px-3 text-center font-mono">{poPg.mpg.toFixed(1)}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </CardContent>
         </Card>
