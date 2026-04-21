@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getTeamColor } from "@/lib/constants/teams";
@@ -17,22 +18,30 @@ interface Game {
 function GameCard({ game }: { game: Game }) {
   const vPts = parseInt(game.VisitorPTS);
   const hPts = parseInt(game.HomePTS);
-  const vWin = vPts > hPts;
-  const hWin = hPts > vPts;
+  const homeWin = hPts > vPts;
 
   return (
     <Card>
-      <CardContent className="pt-4 pb-3">
-        <p className="text-xs text-muted-foreground mb-2">{game.Date}</p>
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex-1 text-right">
-            <span className="text-sm font-medium" style={{ color: getTeamColor(game.Visitor) }}>{game.Visitor}</span>
-            <span className={`text-2xl font-bold ml-2 ${vWin ? "text-foreground" : "text-muted-foreground"}`}>{vPts}</span>
+      <CardContent className="pt-6">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs text-muted-foreground">{game.Date}</span>
+          <Badge variant="secondary" className="text-xs">Final</Badge>
+        </div>
+        <div className="space-y-2">
+          <div className={`flex items-center justify-between ${homeWin ? "opacity-60" : ""}`}>
+            <Link href={`/playoffs/teams/${game.Visitor}`} className="flex items-center gap-2 hover:underline">
+              <div className="h-3 w-3 rounded-full" style={{ backgroundColor: getTeamColor(game.Visitor) }} />
+              <span className={`font-medium ${!homeWin ? "font-semibold" : ""}`}>{game.Visitor}</span>
+            </Link>
+            <span className={`font-mono text-lg ${!homeWin ? "font-bold" : ""}`}>{vPts}</span>
           </div>
-          <span className="text-muted-foreground text-xs">@</span>
-          <div className="flex-1">
-            <span className={`text-2xl font-bold mr-2 ${hWin ? "text-foreground" : "text-muted-foreground"}`}>{hPts}</span>
-            <span className="text-sm font-medium" style={{ color: getTeamColor(game.Home) }}>{game.Home}</span>
+          <div className={`flex items-center justify-between ${!homeWin ? "opacity-60" : ""}`}>
+            <Link href={`/playoffs/teams/${game.Home}`} className="flex items-center gap-2 hover:underline">
+              <div className="h-3 w-3 rounded-full" style={{ backgroundColor: getTeamColor(game.Home) }} />
+              <span className={`font-medium ${homeWin ? "font-semibold" : ""}`}>{game.Home}</span>
+              <span className="text-xs text-muted-foreground">HOME</span>
+            </Link>
+            <span className={`font-mono text-lg ${homeWin ? "font-bold" : ""}`}>{hPts}</span>
           </div>
         </div>
       </CardContent>
