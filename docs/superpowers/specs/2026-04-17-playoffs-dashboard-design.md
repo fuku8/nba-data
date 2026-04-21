@@ -257,27 +257,27 @@ nba-data/
 - [x] 各URL の取得可否・列構造を確認
 - [x] データソース確定（advancedはスコープ外、po_series.csvはgames.htmlから集計）
 
-### Phase 1: データ層（1日）
-- [ ] `fetch-bref-data.py` にPOフェッチ追記
-- [ ] GitHub Actions で手動実行 → po_*.csv 生成確認
-- [ ] `src/lib/types.ts` に型追加
-- [ ] `src/lib/data/playoffs.ts` 作成
+### Phase 1: データ層（完了 2026-04-21）
+- [x] `fetch-bref-data.py` にPOフェッチ追記
+- [x] GitHub Actions で手動実行 → po_*.csv 生成確認（po_series / po_player_per_game / po_player_totals / po_team_stats）
+- [x] `src/lib/types.ts` に型追加
+- [x] `src/lib/data/playoffs.ts` 作成
 
-### Phase 2: ページ実装（3〜4日）
-- [ ] ナビゲーション更新（POセクション追加）
-- [ ] `/playoffs` トップ（ブラケット + シリーズカード + 直近試合 + リーダー）
-- [ ] `/playoffs/games`（試合結果・日付移動）
-- [ ] `/playoffs/players`（一覧・ソート・RS比較）
-- [ ] `/playoffs/teams/[teamId]`（チームスタッツ + ロスター）
-- [ ] `/playoffs/leaders`（カテゴリ別リーダー）
-- [ ] `/playoffs/search`（選手検索）
-- [ ] `/playoffs/compare`（選手比較チャート）
+### Phase 2: ページ実装（完了 2026-04-21）
+- [x] ナビゲーション更新（POセクション追加）
+- [x] `/playoffs` トップ（シリーズカード + 直近試合 + リーダー）
+- [x] `/playoffs/games`（試合結果・日付移動）
+- [x] `/playoffs/players`（一覧・ソート）
+- [x] `/playoffs/teams/[teamId]`（チームスタッツ + ロスター）
+- [x] `/playoffs/leaders`（カテゴリ別リーダー）
+- [x] `/playoffs/search`（選手検索）
+- [x] `/playoffs/compare`（選手比較チャート）
 
-### Phase 3: 仕上げ（1日）
-- [ ] RS比較表示の調整
-- [ ] プレーオフ進行中の場合の表示（未確定シリーズのハンドリング）
-- [ ] レスポンシブ対応確認
-- [ ] デプロイ・動作確認
+### Phase 3: 仕上げ（完了 2026-04-21）
+- [x] RS比較表示の調整（現状の実装で確定）
+- [x] プレーオフ進行中の場合の表示（未確定シリーズのハンドリング）
+- [x] レスポンシブ対応確認
+- [x] デプロイ・動作確認
 
 ---
 
