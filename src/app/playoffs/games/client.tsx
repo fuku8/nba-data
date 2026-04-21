@@ -72,7 +72,7 @@ export function PlayoffGamesClient({ series, games }: { series: PlayoffSeries[];
     <div className="space-y-4">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">PO 試合結果</h1>
-        <p className="text-muted-foreground mt-1">プレーオフ 試合スコア</p>
+        <p className="text-muted-foreground mt-1">プレーオフ 試合スコア · 日付は米国東部時間(ET)基準</p>
       </div>
 
       <div className="flex items-center gap-2">
