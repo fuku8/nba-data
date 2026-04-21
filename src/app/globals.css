@@ -127,4 +127,7 @@
   html {
     @apply font-sans;
   }
+  body.playoff-page {
+    background-color: #3f3f46;
+  }
 }
