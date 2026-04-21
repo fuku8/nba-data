@@ -428,6 +428,266 @@ def fetch_games() -> bool:
         return False
 
 
+def _parse_playoff_games_html(html: str) -> pd.DataFrame:
+    """プレーオフ試合ページのHTMLをパース"""
+    tables = pd.read_html(io.StringIO(html))
+    if not tables:
+        return pd.DataFrame()
+
+    df = tables[0]
+    if "Date" in df.columns:
+        df = df[df["Date"] != "Date"]
+
+    col_map = {}
+    for c in df.columns:
+        if "Visitor" in str(c) or c == "Visitor/Neutral":
+            col_map[c] = "Visitor"
+        elif "Home" in str(c) or c == "Home/Neutral":
+            col_map[c] = "Home"
+    df = df.rename(columns=col_map)
+
+    col_indices = [i for i, c in enumerate(df.columns) if str(c).startswith("PTS")]
+    if len(col_indices) >= 2:
+        new_cols = list(df.columns)
+        new_cols[col_indices[0]] = "VisitorPTS"
+        new_cols[col_indices[1]] = "HomePTS"
+        df.columns = new_cols
+
+    keep_cols = ["Date", "Visitor", "VisitorPTS", "Home", "HomePTS"]
+    available = [c for c in keep_cols if c in df.columns]
+    df = df[available]
+    df = df.dropna(subset=["Date", "Visitor", "Home"])
+    if "VisitorPTS" in df.columns:
+        df["VisitorPTS"] = pd.to_numeric(df["VisitorPTS"], errors="coerce")
+    if "HomePTS" in df.columns:
+        df["HomePTS"] = pd.to_numeric(df["HomePTS"], errors="coerce")
+    return df.dropna(subset=["VisitorPTS", "HomePTS"])
+
+
+def _compute_series_from_games(games_df: pd.DataFrame) -> pd.DataFrame:
+    """プレーオフ試合データからシリーズ勝敗を集計してDataFrameを返す"""
+    series_data = {}
+
+    for _, row in games_df.iterrows():
+        visitor = str(row.get("Visitor", "")).strip()
+        home = str(row.get("Home", "")).strip()
+        visitor_pts = row.get("VisitorPTS")
+        home_pts = row.get("HomePTS")
+        date = str(row.get("Date", "")).strip()
+
+        if not visitor or not home:
+            continue
+
+        teams = sorted([visitor, home])
+        key = f"{teams[0]}_{teams[1]}"
+
+        if key not in series_data:
+            series_data[key] = {
+                "team1": teams[0], "team2": teams[1],
+                "team1_wins": 0, "team2_wins": 0,
+                "first_game_date": date, "last_game_date": date,
+            }
+
+        entry = series_data[key]
+        entry["last_game_date"] = date
+
+        if pd.notna(visitor_pts) and pd.notna(home_pts):
+            winner_team = visitor if visitor_pts > home_pts else home
+            if winner_team == teams[0]:
+                entry["team1_wins"] += 1
+            else:
+                entry["team2_wins"] += 1
+
+    if not series_data:
+        return pd.DataFrame()
+
+    def parse_date_safe(d):
+        try:
+            return datetime.strptime(d.strip(), "%a, %b %d, %Y")
+        except Exception:
+            return datetime.min
+
+    series_list = sorted(series_data.values(), key=lambda x: parse_date_safe(x["first_game_date"]))
+
+    # NBAプレーオフ構造: Round 1=8シリーズ, Round 2=4, CF=2, Finals=1
+    round_map = [(1, "First Round", 8), (2, "Second Round", 4),
+                 (3, "Conference Finals", 2), (4, "Finals", 1)]
+    idx = 0
+    for round_num, round_name, size in round_map:
+        for _ in range(size):
+            if idx >= len(series_list):
+                break
+            series_list[idx]["round"] = round_num
+            series_list[idx]["round_name"] = round_name
+            idx += 1
+
+    for s in series_list:
+        if s["team1_wins"] >= 4:
+            s["winner"] = s["team1"]
+        elif s["team2_wins"] >= 4:
+            s["winner"] = s["team2"]
+        else:
+            s["winner"] = ""
+        s["series_status"] = f"{s['team1_wins']}-{s['team2_wins']}"
+
+    return pd.DataFrame(series_list)
+
+
+def fetch_playoff_player_stats(page_suffix: str, filename: str) -> bool:
+    """プレーオフ選手スタッツページを取得して保存"""
+    try:
+        url = f"https://www.basketball-reference.com/playoffs/NBA_{SEASON_YEAR}_{page_suffix}.html"
+        print(f"Fetching: {url}")
+        html = _fetch_html(url)
+        html_expanded = html.replace("<!--", "").replace("-->", "")
+        tables = pd.read_html(io.StringIO(html_expanded))
+
+        df = None
+        for table in tables:
+            t = table.copy()
+            if isinstance(t.columns, pd.MultiIndex):
+                t.columns = [c[1] if c[1] and "Unnamed" not in str(c[1]) else c[0] for c in t.columns]
+            if "Player" in t.columns:
+                df = t
+                break
+
+        if df is None:
+            print(f"  ✗ Player列のあるテーブルが見つかりません")
+            return False
+
+        if isinstance(df.columns, pd.MultiIndex):
+            df.columns = [c[1] if c[1] and "Unnamed" not in str(c[1]) else c[0] for c in df.columns]
+
+        df = df.loc[:, ~df.columns.duplicated()]
+
+        if "Player" in df.columns:
+            df = df[df["Player"] != "Player"]
+            df = df.dropna(subset=["Player"])
+            df["Player"] = df["Player"].str.replace(r"\*$", "", regex=True)
+
+        if "Rk" in df.columns:
+            df = df.drop(columns=["Rk"])
+
+        if "Team" in df.columns and "Tm" not in df.columns:
+            df = df.rename(columns={"Team": "Tm"})
+
+        if "Tm" in df.columns and isinstance(df["Tm"], pd.Series):
+            df["Tm"] = df["Tm"].apply(normalize_team_abbr)
+
+        for col in df.columns:
+            if col not in ("Player", "Tm", "Pos") and isinstance(df[col], pd.Series):
+                df[col] = pd.to_numeric(df[col], errors="coerce")
+
+        df.to_csv(os.path.join(DATA_DIR, filename), index=False)
+        print(f"  ✓ {filename}: {len(df)} 選手")
+        return True
+    except urllib.error.HTTPError as e:
+        print(f"  ✗ HTTP {e.code}: {page_suffix}")
+        return False
+    except Exception as e:
+        print(f"  ✗ {page_suffix} エラー: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
+def fetch_playoff_team_stats() -> bool:
+    """プレーオフチームスタッツをstandings.htmlから取得して保存"""
+    try:
+        url = f"https://www.basketball-reference.com/playoffs/NBA_{SEASON_YEAR}_standings.html"
+        print(f"Fetching: {url}")
+        html = _fetch_html(url)
+        html_expanded = html.replace("<!--", "").replace("-->", "")
+        tables = pd.read_html(io.StringIO(html_expanded))
+
+        df = None
+        for table in tables:
+            t = table.copy()
+            if isinstance(t.columns, pd.MultiIndex):
+                t.columns = [c[1] if c[1] and "Unnamed" not in str(c[1]) else c[0] for c in t.columns]
+            if "Team" in t.columns and "Player" not in t.columns:
+                df = t
+                break
+
+        if df is None:
+            print("  ✗ チームスタッツテーブルが見つかりません")
+            return False
+
+        if isinstance(df.columns, pd.MultiIndex):
+            df.columns = [c[1] if c[1] and "Unnamed" not in str(c[1]) else c[0] for c in df.columns]
+
+        df = df.loc[:, ~df.columns.duplicated()]
+        drop_cols = [c for c in df.columns if "Unnamed" in str(c) or c == "Rk"]
+        if drop_cols:
+            df = df.drop(columns=drop_cols)
+
+        if "Team" in df.columns:
+            df["Team"] = df["Team"].apply(clean_team_name)
+            df = df[df["Team"] != "League Average"]
+            df = df.dropna(subset=["Team"])
+
+        for col in df.columns:
+            if col != "Team" and isinstance(df[col], pd.Series):
+                df[col] = pd.to_numeric(df[col], errors="coerce")
+
+        df.to_csv(os.path.join(DATA_DIR, "po_team_stats.csv"), index=False)
+        print(f"  ✓ po_team_stats.csv: {len(df)} チーム")
+        return True
+    except urllib.error.HTTPError as e:
+        print(f"  ✗ HTTP {e.code}: standings.html")
+        return False
+    except Exception as e:
+        print(f"  ✗ standings エラー: {e}")
+        return False
+
+
+def fetch_playoff_data() -> dict:
+    """プレーオフデータ一式を取得（エラー時はスキップして続行）"""
+    results = {}
+
+    # 1. games.html → po_series.csv
+    print("\nFetching playoff games...")
+    try:
+        url = f"https://www.basketball-reference.com/playoffs/NBA_{SEASON_YEAR}_games.html"
+        html = _fetch_html(url)
+        games_df = _parse_playoff_games_html(html)
+        if games_df.empty:
+            print("  ✗ プレーオフ試合データが空です")
+            results["po_series"] = False
+        else:
+            series_df = _compute_series_from_games(games_df)
+            if not series_df.empty:
+                series_df.to_csv(os.path.join(DATA_DIR, "po_series.csv"), index=False)
+                print(f"  ✓ po_series.csv: {len(series_df)} シリーズ")
+                results["po_series"] = True
+            else:
+                print("  ✗ シリーズデータが生成できませんでした")
+                results["po_series"] = False
+    except urllib.error.HTTPError as e:
+        print(f"  ✗ games.html HTTP {e.code}")
+        results["po_series"] = False
+    except Exception as e:
+        print(f"  ✗ games エラー: {e}")
+        results["po_series"] = False
+
+    # 2. standings.html → po_team_stats.csv
+    print(f"\n{SLEEP_SEC}秒待機中...")
+    time.sleep(SLEEP_SEC)
+    results["po_team_stats"] = fetch_playoff_team_stats()
+
+    # 3. per_game.html → po_player_per_game.csv
+    print(f"\n{SLEEP_SEC}秒待機中...")
+    time.sleep(SLEEP_SEC)
+    results["po_player_per_game"] = fetch_playoff_player_stats("per_game", "po_player_per_game.csv")
+
+    # 4. totals.html → po_player_totals.csv
+    print(f"\n{SLEEP_SEC}秒待機中...")
+    time.sleep(SLEEP_SEC)
+    results["po_player_totals"] = fetch_playoff_player_stats("totals", "po_player_totals.csv")
+
+    return results
+
+
 def main():
     os.makedirs(DATA_DIR, exist_ok=True)
     results = {}
@@ -471,6 +731,13 @@ def main():
     print(f"\n{SLEEP_SEC}秒待機中...")
     time.sleep(SLEEP_SEC)
     results["games"] = fetch_games()
+
+    # 4. プレーオフデータ取得
+    print("\n=== プレーオフデータ取得 ===")
+    print(f"\n{SLEEP_SEC}秒待機中...")
+    time.sleep(SLEEP_SEC)
+    playoff_results = fetch_playoff_data()
+    results.update(playoff_results)
 
     # 結果サマリ
     print("\n=== 結果サマリ ===")

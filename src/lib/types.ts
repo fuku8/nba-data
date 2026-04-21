@@ -157,6 +157,37 @@ export interface PlayerTotals {
   pts: number;
 }
 
+// ===== プレーオフ =====
+
+export interface PlayoffSeries {
+  team1: string;
+  team2: string;
+  team1Wins: number;
+  team2Wins: number;
+  winner: string;        // 空文字列 = 進行中
+  seriesStatus: string;  // "3-2" など
+  round: number;         // 1=1回戦, 2=2回戦, 3=カンファレンス決勝, 4=ファイナル
+  roundName: string;     // "First Round" | "Second Round" | "Conference Finals" | "Finals"
+  firstGameDate: string;
+  lastGameDate: string;
+}
+
+export interface PlayoffTeamStats {
+  team: string;
+  pts: number;
+  trb: number;
+  ast: number;
+  stl: number;
+  blk: number;
+  tov: number;
+  fgPct: number;
+  threePtPct: number;
+  ftPct: number;
+}
+
+export type PlayoffPlayerPerGame = PlayerPerGame;
+export type PlayoffPlayerTotals = PlayerTotals;
+
 // ===== ソート =====
 
 export type SortDirection = "asc" | "desc";

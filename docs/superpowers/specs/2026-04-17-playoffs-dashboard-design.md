@@ -1,6 +1,7 @@
 # NBAプレーオフ ダッシュボード 設計ドキュメント
 
 作成日: 2026-04-17
+最終更新: 2026-04-21（verify結果を反映・データソース確定）
 
 ---
 
@@ -11,24 +12,24 @@
 
 ---
 
-## 1. 検証フェーズ（実装前に必須）
+## 1. 検証フェーズ（完了）
 
-> Basketball Reference のプレーオフ専用 URL が GitHub Actions から取得できるか確認するため、
-> 実装前に検証スクリプトを実行する。
+> 2026-04-21 verify完了。URLパターンが `/leagues/` ではなく `/playoffs/` であることを確認。
 
-### 検証対象 URL
+### 検証結果
 
-| URL | 確認内容 |
-|---|---|
-| `/playoffs/NBA_2026.html` | ブラケット・シリーズ勝敗テーブルが存在するか |
-| `/leagues/NBA_2026_playoffs_per_game.html` | 選手PO per gameスタッツが存在するか（RS版と列が同じか） |
-| `/leagues/NBA_2026_playoffs_advanced.html` | 選手POアドバンスドスタッツが存在するか |
-| `/leagues/NBA_2026_playoffs_team.html` | チームPOスタッツが存在するか |
+| URL | 結果 | 備考 |
+|---|---|---|
+| `/playoffs/NBA_2026_standings.html` | ✓ 取得可 | 選手per gameスタッツ（179選手）が含まれる |
+| `/playoffs/NBA_2026_games.html` | ✓ 取得可 | 試合日程・結果 |
+| `/playoffs/NBA_2026_leaders.html` | ✗ 取得不可 | 不要（per gameから算出で代替） |
+| `/playoffs/NBA_2026_totals.html` | ✓ 取得可 | 選手totalsスタッツ |
+| `/playoffs/NBA_2026_per_game.html` | ✓ 取得可 | 選手per gameスタッツ |
+| `/playoffs/NBA_2026_advanced.html` | — | 未確認・データなし可能性あり → 今期はスコープ外 |
 
 ### 検証スクリプト
 
-`scripts/verify-playoff-data.py` を作成し、GitHub Actions で `workflow_dispatch` で1回実行する。
-各URLのテーブル数・列名・行数を出力して確認する。
+`scripts/verify-playoff-data.py`（URLを `/playoffs/NBA_2026_*.html` パターンに修正済み）
 
 ---
 
@@ -36,13 +37,14 @@
 
 ### 新規追加CSVファイル（`data/` に追加）
 
-| ファイル名 | 取得元 URL | 内容 |
-|---|---|---|
-| `po_series.csv` | `/playoffs/NBA_2026.html` | シリーズ勝敗・ラウンド・対戦カード |
-| `po_team_per_game.csv` | `/playoffs/NBA_2026.html` または `/leagues/NBA_2026_playoffs_team.html` | チームPOスタッツ |
-| `po_player_per_game.csv` | `/leagues/NBA_2026_playoffs_per_game.html` | 選手PO平均スタッツ |
-| `po_player_totals.csv` | `/leagues/NBA_2026_playoffs_totals.html` | 選手PO合計スタッツ |
-| `po_player_advanced.csv` | `/leagues/NBA_2026_playoffs_advanced.html` | 選手POアドバンスドスタッツ |
+| ファイル名 | 取得元 URL | 内容 | 備考 |
+|---|---|---|---|
+| `po_series.csv` | `games.html` の集計で生成 | シリーズ勝敗・ラウンド・対戦カード | ブラケットページではなくgames.htmlの試合結果から対戦カード・勝敗を算出 |
+| `po_team_stats.csv` | `/playoffs/NBA_2026_standings.html` | チームPOスタッツ | standings.htmlに含まれるチームスタッツテーブルを抽出 |
+| `po_player_per_game.csv` | `/playoffs/NBA_2026_per_game.html` | 選手PO平均スタッツ | |
+| `po_player_totals.csv` | `/playoffs/NBA_2026_totals.html` | 選手PO合計スタッツ | |
+
+> **スコープ外（今期）:** `po_player_advanced.csv` — advancedスタッツページが取得不可のため除外
 
 ### 既存CSVの活用（追加不要）
 
@@ -63,16 +65,16 @@
 
 ```
 追加処理フロー:
-1. /playoffs/NBA_2026.html → po_series.csv, po_team_per_game.csv
+1. /playoffs/NBA_2026_games.html → po_series.csv（試合結果から対戦カード・シリーズ勝敗を集計して生成）
 2. sleep(5)
-3. /leagues/NBA_2026_playoffs_per_game.html → po_player_per_game.csv
+3. /playoffs/NBA_2026_standings.html → po_team_stats.csv（チームスタッツテーブルを抽出）
 4. sleep(5)
-5. /leagues/NBA_2026_playoffs_totals.html → po_player_totals.csv
+5. /playoffs/NBA_2026_per_game.html → po_player_per_game.csv
 6. sleep(5)
-7. /leagues/NBA_2026_playoffs_advanced.html → po_player_advanced.csv
+7. /playoffs/NBA_2026_totals.html → po_player_totals.csv
 ```
 
-プレーオフデータが取得できない場合（シーズン中はまだ存在しない等）はスキップして続行。
+プレーオフデータが取得できない場合はスキップして続行（エラーで終了しない）。
 
 ---
 
@@ -177,8 +179,8 @@ export interface PlayoffSeries {
 
 // プレーオフ 選手スタッツ（RSと同じ形状）
 export type PlayoffPlayerPerGame = PlayerPerGame;
-export type PlayoffPlayerAdvanced = PlayerAdvanced;
 export type PlayoffPlayerTotals = PlayerTotals;
+// PlayoffPlayerAdvanced は今期スコープ外（データなし）
 
 // プレーオフ チームスタッツ
 export interface PlayoffTeamStats {
@@ -211,11 +213,12 @@ src/lib/data/
 ```
 
 `playoffs.ts` が提供する関数:
-- `getPlayoffSeries()` → `PlayoffSeries[]`
+- `getPlayoffSeries()` → `PlayoffSeries[]`（po_series.csvから）
 - `getPlayoffPlayerPerGame()` → `PlayoffPlayerPerGame[]`
-- `getPlayoffPlayerAdvanced()` → `PlayoffPlayerAdvanced[]`
+- `getPlayoffPlayerTotals()` → `PlayoffPlayerTotals[]`
 - `getPlayoffTeamStats()` → `PlayoffTeamStats[]`
-- `getPlayoffGames()` → `games.csv` から4月以降をフィルタして返す
+- `getPlayoffGames()` → po_series.csvの試合結果から返す
+// getPlayoffPlayerAdvanced は今期スコープ外
 
 ---
 
@@ -225,14 +228,13 @@ src/lib/data/
 nba-data/
 ├── data/
 │   ├── (既存CSVはそのまま)
-│   ├── po_series.csv              # 新規
-│   ├── po_team_per_game.csv       # 新規
+│   ├── po_series.csv              # 新規（games.htmlの集計から生成）
+│   ├── po_team_stats.csv          # 新規（standings.htmlから抽出）
 │   ├── po_player_per_game.csv     # 新規
-│   ├── po_player_totals.csv       # 新規
-│   └── po_player_advanced.csv     # 新規
+│   └── po_player_totals.csv       # 新規
 ├── scripts/
 │   ├── fetch-bref-data.py         # playoff フェッチを追記
-│   └── verify-playoff-data.py     # 新規（検証用・使い捨て）
+│   └── verify-playoff-data.py     # 検証用（完了済み）
 └── src/
     ├── app/
     │   └── playoffs/              # 新規（7ページ）
@@ -249,10 +251,11 @@ nba-data/
 
 ## 9. 実装フェーズ
 
-### Phase 0: 検証（1日）
-- [ ] `verify-playoff-data.py` 作成・実行
-- [ ] 各URL の取得可否・列構造を確認
-- [ ] `po_series.csv` のカラム構造を確定
+### Phase 0: 検証（完了 2026-04-21）
+- [x] `verify-playoff-data.py` 作成・実行
+- [x] URLパターンを `/playoffs/NBA_2026_*.html` に修正
+- [x] 各URL の取得可否・列構造を確認
+- [x] データソース確定（advancedはスコープ外、po_series.csvはgames.htmlから集計）
 
 ### Phase 1: データ層（1日）
 - [ ] `fetch-bref-data.py` にPOフェッチ追記
