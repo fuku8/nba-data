@@ -35,7 +35,7 @@ export function CompareClient({
   );
 
   const suggestions = useMemo(() => {
-    if (search.length < 2) return [];
+    if (search.length < 1) return [];
     const q = search.toLowerCase();
     return perGame
       .filter(

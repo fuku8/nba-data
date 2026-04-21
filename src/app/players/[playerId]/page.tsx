@@ -31,7 +31,7 @@ export default async function PlayerDetailPage({
 
   const teamInfo = getTeamInfo(pg.team);
 
-  const fmtPct = (v: number | undefined) => v ? (v * 100).toFixed(1) + "%" : "-";
+  const fmtPct = (v: number | undefined | null) => (v != null && v !== 0) ? (v * 100).toFixed(1) + "%" : "-";
 
   return (
     <div className="space-y-6">

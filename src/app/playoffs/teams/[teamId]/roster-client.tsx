@@ -5,8 +5,8 @@ import Link from "next/link";
 import { SortableHeader } from "@/components/sortable-header";
 import type { PlayoffPlayerPerGame, SortConfig } from "@/lib/types";
 
-const COLS = [
-  { key: "gp", label: "G" },
+const COLS: { key: string; label: string; pct?: boolean; int?: boolean }[] = [
+  { key: "gp", label: "G", int: true },
   { key: "pts", label: "PTS" },
   { key: "trb", label: "REB" },
   { key: "ast", label: "AST" },
@@ -35,7 +35,8 @@ export function RosterClient({ players }: { players: PlayoffPlayerPerGame[] }) {
     return sortConfig.direction === "desc" ? bv - av : av - bv;
   });
 
-  const fmt = (v: number, pct?: boolean) => pct ? (v * 100).toFixed(1) + "%" : v.toFixed(1);
+  const fmt = (v: number, pct?: boolean, int?: boolean) =>
+    pct ? (v * 100).toFixed(1) + "%" : int ? String(Math.round(v)) : v.toFixed(1);
 
   return (
     <div className="rounded-md border overflow-x-auto">
@@ -61,7 +62,7 @@ export function RosterClient({ players }: { players: PlayoffPlayerPerGame[] }) {
               {COLS.map((col) => {
                 const v = ((p as unknown) as Record<string, number>)[col.key] ?? 0;
                 return (
-                  <td key={col.key} className="py-2 px-2 text-right font-mono text-xs">{fmt(v, col.pct)}</td>
+                  <td key={col.key} className="py-2 px-2 text-right font-mono text-xs">{fmt(v, col.pct, col.int)}</td>
                 );
               })}
             </tr>

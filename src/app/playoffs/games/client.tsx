@@ -86,7 +86,7 @@ export function PlayoffGamesClient({ series, games }: { series: PlayoffSeries[];
         <p className="text-muted-foreground">この日の試合はありません</p>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {dayGames.map((g, i) => <GameCard key={i} game={g} />)}
+          {dayGames.map((g) => <GameCard key={`${g.Visitor}-${g.Home}-${g.Date}`} game={g} />)}
         </div>
       )}
 

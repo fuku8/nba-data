@@ -3,6 +3,8 @@ import "./globals.css";
 import { Navigation } from "@/components/layout/navigation";
 import { isPlayoffDataAvailable } from "@/lib/data/playoffs";
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: "NBA Data Dashboard",
   description: "NBA チーム・選手スタッツダッシュボード",
