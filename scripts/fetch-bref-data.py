@@ -642,10 +642,10 @@ def fetch_playoff_team_stats() -> bool:
             print("  ✗ チームスタッツ行が取得できませんでした")
             return False
 
-        # G=0またはチーム名なしの行をスキップ
+        # チーム名なし・League Averageの行をスキップ
         df = df[df["Team"] != ""]
-        df["G"] = pd.to_numeric(df["G"], errors="coerce")
-        df = df[df["G"] > 0]
+        df = df[df["Team"] != "League Average"]
+        print(f"  取得行数: {len(df)} チーム (G列フィルタ前)")
 
         # フルチーム名を標準略称に変換
         df["Team"] = df["Team"].apply(lambda n: TEAM_ABBR_MAP.get(n, n))
