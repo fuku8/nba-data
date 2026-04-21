@@ -92,7 +92,7 @@ export default async function PlayoffTeamPage({
       {/* チームスタッツ */}
       {teamStats && (
         <section>
-          <h2 className="text-lg font-semibold mb-3">チームスタッツ（選手平均値）</h2>
+          <h2 className="text-lg font-semibold mb-3">チームスタッツ</h2>
           <div className="rounded-md border overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="border-b bg-muted/50">

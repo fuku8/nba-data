@@ -61,7 +61,7 @@ export function PlayoffTeamsClient({
     <div className="space-y-4">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">PO チームスタッツ</h1>
-        <p className="text-muted-foreground mt-1">プレーオフ参加チーム スタッツ（選手平均値）</p>
+        <p className="text-muted-foreground mt-1">プレーオフ参加チーム スタッツ</p>
       </div>
 
       <div className="rounded-md border overflow-x-auto">
