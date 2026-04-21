@@ -591,6 +591,83 @@ def fetch_playoff_player_stats(page_suffix: str, filename: str) -> bool:
         return False
 
 
+def fetch_playoff_team_stats() -> bool:
+    """プレーオフチームスタッツ（per game）をNBA_2026.htmlから取得して保存"""
+    try:
+        url = f"https://www.basketball-reference.com/playoffs/NBA_{SEASON_YEAR}.html"
+        print(f"Fetching: {url}")
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"})
+        with urllib.request.urlopen(req, timeout=20) as response:
+            html = response.read().decode("utf-8", errors="replace")
+
+        # HTMLコメント展開（BRはコメントアウトでテーブルを埋め込む）
+        html_expanded = html.replace("<!--", "").replace("-->", "")
+        soup = BeautifulSoup(html_expanded, "html.parser")
+
+        table = soup.find("table", {"id": "per_game-team"})
+        if table is None:
+            print("  ✗ per_game-team テーブルが見つかりません")
+            return False
+
+        stat_cols = [
+            ("team_id", "Team"), ("g", "G"), ("mp", "MP"),
+            ("fg", "FG"), ("fga", "FGA"), ("fg_pct", "FG%"),
+            ("fg3", "3P"), ("fg3a", "3PA"), ("fg3_pct", "3P%"),
+            ("ft", "FT"), ("fta", "FTA"), ("ft_pct", "FT%"),
+            ("orb", "ORB"), ("drb", "DRB"), ("trb", "TRB"),
+            ("ast", "AST"), ("stl", "STL"), ("blk", "BLK"),
+            ("tov", "TOV"), ("pf", "PF"), ("pts", "PTS"),
+        ]
+
+        rows = []
+        for tr in table.find("tbody").find_all("tr"):
+            if "thead" in tr.get("class", []):
+                continue
+            row = {}
+            for data_stat, col_name in stat_cols:
+                td = tr.find(["td", "th"], {"data-stat": data_stat})
+                if td is None:
+                    row[col_name] = ""
+                    continue
+                if data_stat == "team_id":
+                    a = td.find("a")
+                    text = a.text.strip() if a else td.text.strip()
+                    row[col_name] = clean_team_name(text)
+                else:
+                    row[col_name] = td.text.strip()
+            rows.append(row)
+
+        df = pd.DataFrame(rows)
+        if df.empty:
+            print("  ✗ チームスタッツ行が取得できませんでした")
+            return False
+
+        # G=0またはチーム名なしの行をスキップ
+        df = df[df["Team"] != ""]
+        df["G"] = pd.to_numeric(df["G"], errors="coerce")
+        df = df[df["G"] > 0]
+
+        # フルチーム名を標準略称に変換
+        df["Team"] = df["Team"].apply(lambda n: TEAM_ABBR_MAP.get(n, n))
+
+        # 数値変換
+        for col in df.columns:
+            if col != "Team":
+                df[col] = pd.to_numeric(df[col], errors="coerce")
+
+        df.to_csv(os.path.join(DATA_DIR, "po_team_stats.csv"), index=False)
+        print(f"  ✓ po_team_stats.csv: {len(df)} チーム")
+        return True
+    except urllib.error.HTTPError as e:
+        print(f"  ✗ HTTP {e.code}: playoff team stats")
+        return False
+    except Exception as e:
+        print(f"  ✗ playoff team stats エラー: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
 def fetch_playoff_data() -> dict:
     """プレーオフデータ一式を取得（エラー時はスキップして続行）"""
     results = {}
@@ -629,6 +706,11 @@ def fetch_playoff_data() -> dict:
     print(f"\n{SLEEP_SEC}秒待機中...")
     time.sleep(SLEEP_SEC)
     results["po_player_totals"] = fetch_playoff_player_stats("totals", "po_player_totals.csv")
+
+    # 5. NBA_2026.html per_game-team → po_team_stats.csv
+    print(f"\n{SLEEP_SEC}秒待機中...")
+    time.sleep(SLEEP_SEC)
+    results["po_team_stats"] = fetch_playoff_team_stats()
 
     return results
 

@@ -31,28 +31,68 @@ export function getPlayoffSeries(): PlayoffSeries[] {
 }
 
 export function getPlayoffTeamStats(): PlayoffTeamStats[] {
-  const players = getPlayoffPlayerPerGame();
-  const teamMap = new Map<string, { pts: number[]; trb: number[]; ast: number[]; stl: number[]; blk: number[]; tov: number[]; fgPct: number[]; threePtPct: number[]; ftPct: number[] }>();
+  // po_team_stats.csv が存在すればBRの公式per game値を優先使用
+  const csvRows = readCsvFile("po_team_stats.csv");
+  if (csvRows.length > 1) {
+    const data = csvToObjects(csvRows);
+    return data
+      .filter((d) => d["Team"] && num(d["G"]) > 0)
+      .map((d) => ({
+        team: d["Team"] || "",
+        pts: num(d["PTS"]),
+        trb: num(d["TRB"]),
+        ast: num(d["AST"]),
+        stl: num(d["STL"]),
+        blk: num(d["BLK"]),
+        tov: num(d["TOV"]),
+        fgPct: num(d["FG%"]),
+        threePtPct: num(d["3P%"]),
+        ftPct: num(d["FT%"]),
+      }));
+  }
+
+  // フォールバック: po_player_totals.csv から集計
+  const players = getPlayoffPlayerTotals();
+
+  type TeamAccum = {
+    fg: number; fga: number;
+    threePt: number; threePtA: number;
+    ft: number; fta: number;
+    pts: number; trb: number; ast: number; stl: number; blk: number; tov: number;
+    maxGp: number;
+  };
+
+  const teamMap = new Map<string, TeamAccum>();
 
   for (const p of players) {
     if (!p.team || p.team === "TOT") continue;
     if (!teamMap.has(p.team)) {
-      teamMap.set(p.team, { pts: [], trb: [], ast: [], stl: [], blk: [], tov: [], fgPct: [], threePtPct: [], ftPct: [] });
+      teamMap.set(p.team, { fg: 0, fga: 0, threePt: 0, threePtA: 0, ft: 0, fta: 0, pts: 0, trb: 0, ast: 0, stl: 0, blk: 0, tov: 0, maxGp: 0 });
     }
     const t = teamMap.get(p.team)!;
-    t.pts.push(p.pts); t.trb.push(p.trb); t.ast.push(p.ast);
-    t.stl.push(p.stl); t.blk.push(p.blk); t.tov.push(p.tov);
-    t.fgPct.push(p.fgPct); t.threePtPct.push(p.threePtPct); t.ftPct.push(p.ftPct);
+    t.fg += p.fg; t.fga += p.fga;
+    t.threePt += p.threePt; t.threePtA += p.threePtA;
+    t.ft += p.ft; t.fta += p.fta;
+    t.pts += p.pts; t.trb += p.trb; t.ast += p.ast;
+    t.stl += p.stl; t.blk += p.blk; t.tov += p.tov;
+    t.maxGp = Math.max(t.maxGp, p.gp);
   }
 
-  const avg = (arr: number[]) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
-
-  return Array.from(teamMap.entries()).map(([team, s]) => ({
-    team,
-    pts: avg(s.pts), trb: avg(s.trb), ast: avg(s.ast),
-    stl: avg(s.stl), blk: avg(s.blk), tov: avg(s.tov),
-    fgPct: avg(s.fgPct), threePtPct: avg(s.threePtPct), ftPct: avg(s.ftPct),
-  }));
+  return Array.from(teamMap.entries()).map(([team, s]) => {
+    const gp = s.maxGp || 1;
+    return {
+      team,
+      pts: s.pts / gp,
+      trb: s.trb / gp,
+      ast: s.ast / gp,
+      stl: s.stl / gp,
+      blk: s.blk / gp,
+      tov: s.tov / gp,
+      fgPct: s.fga > 0 ? s.fg / s.fga : 0,
+      threePtPct: s.threePtA > 0 ? s.threePt / s.threePtA : 0,
+      ftPct: s.fta > 0 ? s.ft / s.fta : 0,
+    };
+  });
 }
 
 export function getPlayoffPlayerPerGame(): PlayoffPlayerPerGame[] {
