@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getTeamColor } from "@/lib/constants/teams";
+import { getTeamColor, getTeamAbbr } from "@/lib/constants/teams";
 import type { PlayoffSeries } from "@/lib/types";
 
 interface Game {
@@ -19,6 +19,8 @@ function GameCard({ game }: { game: Game }) {
   const vPts = parseInt(game.VisitorPTS);
   const hPts = parseInt(game.HomePTS);
   const homeWin = hPts > vPts;
+  const visitorAbbr = getTeamAbbr(game.Visitor);
+  const homeAbbr = getTeamAbbr(game.Home);
 
   return (
     <Card>
@@ -29,15 +31,15 @@ function GameCard({ game }: { game: Game }) {
         </div>
         <div className="space-y-2">
           <div className={`flex items-center justify-between ${homeWin ? "opacity-60" : ""}`}>
-            <Link href={`/playoffs/teams/${game.Visitor}`} className="flex items-center gap-2 hover:underline">
-              <div className="h-3 w-3 rounded-full" style={{ backgroundColor: getTeamColor(game.Visitor) }} />
+            <Link href={`/playoffs/teams/${visitorAbbr}`} className="flex items-center gap-2 hover:underline">
+              <div className="h-3 w-3 rounded-full" style={{ backgroundColor: getTeamColor(visitorAbbr) }} />
               <span className={`font-medium ${!homeWin ? "font-semibold" : ""}`}>{game.Visitor}</span>
             </Link>
             <span className={`font-mono text-lg ${!homeWin ? "font-bold" : ""}`}>{vPts}</span>
           </div>
           <div className={`flex items-center justify-between ${!homeWin ? "opacity-60" : ""}`}>
-            <Link href={`/playoffs/teams/${game.Home}`} className="flex items-center gap-2 hover:underline">
-              <div className="h-3 w-3 rounded-full" style={{ backgroundColor: getTeamColor(game.Home) }} />
+            <Link href={`/playoffs/teams/${homeAbbr}`} className="flex items-center gap-2 hover:underline">
+              <div className="h-3 w-3 rounded-full" style={{ backgroundColor: getTeamColor(homeAbbr) }} />
               <span className={`font-medium ${homeWin ? "font-semibold" : ""}`}>{game.Home}</span>
               <span className="text-xs text-muted-foreground">HOME</span>
             </Link>
