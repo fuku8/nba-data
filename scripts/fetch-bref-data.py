@@ -610,7 +610,7 @@ def fetch_playoff_team_stats() -> bool:
             return False
 
         stat_cols = [
-            ("team_id", "Team"), ("g", "G"), ("mp", "MP"),
+            ("team", "Team"), ("g", "G"), ("mp", "MP"),
             ("fg", "FG"), ("fga", "FGA"), ("fg_pct", "FG%"),
             ("fg3", "3P"), ("fg3a", "3PA"), ("fg3_pct", "3P%"),
             ("ft", "FT"), ("fta", "FTA"), ("ft_pct", "FT%"),
@@ -629,7 +629,7 @@ def fetch_playoff_team_stats() -> bool:
                 if td is None:
                     row[col_name] = ""
                     continue
-                if data_stat == "team_id":
+                if data_stat == "team":
                     a = td.find("a")
                     text = a.text.strip() if a else td.text.strip()
                     row[col_name] = clean_team_name(text)
