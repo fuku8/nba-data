@@ -31,22 +31,28 @@ export function getPlayoffSeries(): PlayoffSeries[] {
 }
 
 export function getPlayoffTeamStats(): PlayoffTeamStats[] {
-  const rows = readCsvFile("po_team_stats.csv");
-  const data = csvToObjects(rows);
-  return data
-    .filter((d) => d["Team"])
-    .map((d) => ({
-      team: d["Team"] || "",
-      pts: num(d["PTS"]),
-      trb: num(d["TRB"]),
-      ast: num(d["AST"]),
-      stl: num(d["STL"]),
-      blk: num(d["BLK"]),
-      tov: num(d["TOV"]),
-      fgPct: num(d["FG%"]),
-      threePtPct: num(d["3P%"]),
-      ftPct: num(d["FT%"]),
-    }));
+  const players = getPlayoffPlayerPerGame();
+  const teamMap = new Map<string, { pts: number[]; trb: number[]; ast: number[]; stl: number[]; blk: number[]; tov: number[]; fgPct: number[]; threePtPct: number[]; ftPct: number[] }>();
+
+  for (const p of players) {
+    if (!p.team || p.team === "TOT") continue;
+    if (!teamMap.has(p.team)) {
+      teamMap.set(p.team, { pts: [], trb: [], ast: [], stl: [], blk: [], tov: [], fgPct: [], threePtPct: [], ftPct: [] });
+    }
+    const t = teamMap.get(p.team)!;
+    t.pts.push(p.pts); t.trb.push(p.trb); t.ast.push(p.ast);
+    t.stl.push(p.stl); t.blk.push(p.blk); t.tov.push(p.tov);
+    t.fgPct.push(p.fgPct); t.threePtPct.push(p.threePtPct); t.ftPct.push(p.ftPct);
+  }
+
+  const avg = (arr: number[]) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+
+  return Array.from(teamMap.entries()).map(([team, s]) => ({
+    team,
+    pts: avg(s.pts), trb: avg(s.trb), ast: avg(s.ast),
+    stl: avg(s.stl), blk: avg(s.blk), tov: avg(s.tov),
+    fgPct: avg(s.fgPct), threePtPct: avg(s.threePtPct), ftPct: avg(s.ftPct),
+  }));
 }
 
 export function getPlayoffPlayerPerGame(): PlayoffPlayerPerGame[] {

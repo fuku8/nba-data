@@ -591,56 +591,6 @@ def fetch_playoff_player_stats(page_suffix: str, filename: str) -> bool:
         return False
 
 
-def fetch_playoff_team_stats() -> bool:
-    """プレーオフチームスタッツをstandings.htmlから取得して保存"""
-    try:
-        url = f"https://www.basketball-reference.com/playoffs/NBA_{SEASON_YEAR}_standings.html"
-        print(f"Fetching: {url}")
-        html = _fetch_html(url)
-        html_expanded = html.replace("<!--", "").replace("-->", "")
-        tables = pd.read_html(io.StringIO(html_expanded))
-
-        df = None
-        for table in tables:
-            t = table.copy()
-            if isinstance(t.columns, pd.MultiIndex):
-                t.columns = [c[1] if c[1] and "Unnamed" not in str(c[1]) else c[0] for c in t.columns]
-            if "Team" in t.columns and "Player" not in t.columns:
-                df = t
-                break
-
-        if df is None:
-            print("  ✗ チームスタッツテーブルが見つかりません")
-            return False
-
-        if isinstance(df.columns, pd.MultiIndex):
-            df.columns = [c[1] if c[1] and "Unnamed" not in str(c[1]) else c[0] for c in df.columns]
-
-        df = df.loc[:, ~df.columns.duplicated()]
-        drop_cols = [c for c in df.columns if "Unnamed" in str(c) or c == "Rk"]
-        if drop_cols:
-            df = df.drop(columns=drop_cols)
-
-        if "Team" in df.columns:
-            df["Team"] = df["Team"].apply(clean_team_name)
-            df = df[df["Team"] != "League Average"]
-            df = df.dropna(subset=["Team"])
-
-        for col in df.columns:
-            if col != "Team" and isinstance(df[col], pd.Series):
-                df[col] = pd.to_numeric(df[col], errors="coerce")
-
-        df.to_csv(os.path.join(DATA_DIR, "po_team_stats.csv"), index=False)
-        print(f"  ✓ po_team_stats.csv: {len(df)} チーム")
-        return True
-    except urllib.error.HTTPError as e:
-        print(f"  ✗ HTTP {e.code}: standings.html")
-        return False
-    except Exception as e:
-        print(f"  ✗ standings エラー: {e}")
-        return False
-
-
 def fetch_playoff_data() -> dict:
     """プレーオフデータ一式を取得（エラー時はスキップして続行）"""
     results = {}
@@ -670,12 +620,7 @@ def fetch_playoff_data() -> dict:
         print(f"  ✗ games エラー: {e}")
         results["po_series"] = False
 
-    # 2. standings.html → po_team_stats.csv
-    print(f"\n{SLEEP_SEC}秒待機中...")
-    time.sleep(SLEEP_SEC)
-    results["po_team_stats"] = fetch_playoff_team_stats()
-
-    # 3. per_game.html → po_player_per_game.csv
+    # 2. per_game.html → po_player_per_game.csv
     print(f"\n{SLEEP_SEC}秒待機中...")
     time.sleep(SLEEP_SEC)
     results["po_player_per_game"] = fetch_playoff_player_stats("per_game", "po_player_per_game.csv")
