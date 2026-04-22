@@ -50,7 +50,6 @@
 | `data/player_shooting.csv` | 選手シューティングスタッツ | LeagueDashPlayerStats (Shooting) |
 | `data/games.csv` | RS試合結果 | LeagueGameFinder (Regular Season) |
 | `data/po_series.csv` | POシリーズ勝敗 | LeagueGameFinder (Playoffs) 集計 |
-| `data/po_team_stats.csv` | POチームスタッツ | LeagueDashTeamStats (Playoffs) |
 | `data/po_player_per_game.csv` | PO選手Per Gameスタッツ | LeagueDashPlayerStats (Playoffs, PerGame) |
 | `data/po_player_totals.csv` | PO選手Totalsスタッツ | LeagueDashPlayerStats (Playoffs, Totals) |
 | `data/po_player_advanced.csv` | PO選手Advancedスタッツ | LeagueDashPlayerStats (Playoffs, Advanced) |
