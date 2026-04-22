@@ -1,7 +1,7 @@
 # NBAプレーオフ ダッシュボード 設計ドキュメント
 
 作成日: 2026-04-17
-最終更新: 2026-04-21（verify結果を反映・データソース確定）
+最終更新: 2026-04-22（Phase 4/5 完了・全チェックリスト更新）
 
 ---
 
@@ -410,15 +410,15 @@ BoxScoreSummaryV3 で確定取得済み。BoxScoreTraditionalV3 は要調査。
 
 ---
 
-#### チェックリスト
+#### チェックリスト（完了 2026-04-22）
 - [x] `verify-nba-api.py` 実行・エンドポイント確認完了
-- [ ] `fetch-nba-data.py` 作成
-- [ ] 新スキーマでの型定義更新（`src/lib/types.ts`）
-- [ ] データローダー更新（`src/lib/data/*.ts`）
-- [ ] UIコンポーネントの列名参照を新列名に更新
-- [ ] BoxScoreTraditionalV3 の代替手段調査（NBAのCDN APIなど）
-- [ ] PO試合のboxscore JSON生成確認
-- [ ] GitHub Actions の `fetch-data` コマンドを新スクリプトに切り替え
+- [x] `fetch-nba-data.py` 作成（`scripts/fetch-nba-data.py`）
+- [x] 新スキーマでの型定義更新（`src/lib/types.ts`）
+- [x] データローダー更新（`src/lib/data/*.ts`）
+- [x] UIコンポーネントの列名参照を新列名に更新（全38ファイル）
+- [x] BoxScoreTraditionalV3 解決（`firstName`+`familyName` 列を使用・`minutes` フィルタでDNP除外）
+- [x] PO試合のboxscore JSON生成確認（13試合分 `data/boxscores/` に生成）
+- [x] GitHub Actions の fetch コマンドを `fetch-nba-data.py` に切り替え
 
 ---
 
@@ -463,12 +463,12 @@ src/app/playoffs/games/[gameId]/page.tsx
 }
 ```
 
-**チェックリスト**
-- [ ] `src/lib/types.ts` に `BoxScore` 型追加
-- [ ] `src/lib/data/boxscores.ts` 作成（JSONローダー）
-- [ ] `/playoffs/games/[gameId]/page.tsx` 作成
-- [ ] `/playoffs/games` のリスト側に詳細リンク追加
-- [ ] モバイルレスポンシブ確認
+**チェックリスト（完了 2026-04-22）**
+- [x] `BoxScore` 型を `[gameId]/page.tsx` 内で定義
+- [x] `getBoxScore()` ローダー実装（`data/boxscores/{gameId}.json` 読み込み）
+- [x] `/playoffs/games/[gameId]/page.tsx` 作成（ScoreHeader / QuarterScores / TeamStatsComparison / PlayerTable コンポーネント）
+- [x] `/playoffs/games` のカードから詳細ページへ遷移（`useRouter` で実装、nested Link 解消）
+- [x] モバイルレスポンシブ対応（レスポンシブグリッド使用）
 
 ---
 
