@@ -104,18 +104,18 @@ export function LeadersClient({
             <LeaderBoard title="FT%" entries={makeLeaders(perGame.filter((p) => p.fta >= 2), (p) => p.ftPct, "pct")} />
             <LeaderBoard title="TS%" entries={makeLeaders(advanced, (p) => p.tsPct, "pct")} />
             <LeaderBoard title="eFG%" entries={makeLeaders(advanced, (p) => p.efgPct, "pct")} />
-            <LeaderBoard title="PER" entries={makeLeaders(advanced, (p) => p.per)} />
+            <LeaderBoard title="USG%" entries={makeLeaders(advanced, (p) => p.usgPct, "pct")} />
           </div>
         </TabsContent>
 
         <TabsContent value="advanced">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <LeaderBoard title="Win Shares (WS)" entries={makeLeaders(advanced, (p) => p.ws)} />
-            <LeaderBoard title="WS/48" entries={makeLeaders(advanced, (p) => p.wsPer48)} />
-            <LeaderBoard title="BPM" entries={makeLeaders(advanced, (p) => p.bpm, "plus")} />
-            <LeaderBoard title="OBPM" entries={makeLeaders(advanced, (p) => p.obpm, "plus")} />
-            <LeaderBoard title="DBPM" entries={makeLeaders(advanced, (p) => p.dbpm, "plus")} />
-            <LeaderBoard title="VORP" entries={makeLeaders(advanced, (p) => p.vorp)} />
+            <LeaderBoard title="Off Rating" entries={makeLeaders(advanced, (p) => p.offRating, "plus")} />
+            <LeaderBoard title="Def Rating" entries={makeLeaders(advanced, (p) => p.defRating, undefined, false)} />
+            <LeaderBoard title="Net Rating" entries={makeLeaders(advanced, (p) => p.netRating, "plus")} />
+            <LeaderBoard title="PIE" entries={makeLeaders(advanced, (p) => p.pie, "pct")} />
+            <LeaderBoard title="AST%" entries={makeLeaders(advanced, (p) => p.astPct, "pct")} />
+            <LeaderBoard title="REB%" entries={makeLeaders(advanced, (p) => p.rebPct, "pct")} />
           </div>
         </TabsContent>
       </Tabs>

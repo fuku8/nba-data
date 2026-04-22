@@ -26,7 +26,7 @@ function PlayerCard({ p }: { p: PlayoffPlayerPerGame }) {
             <Link href={`/players/${encodeURIComponent(p.player)}`} className="font-semibold hover:underline text-base">
               {p.player}
             </Link>
-            <p className="text-xs text-muted-foreground mt-0.5">{p.pos} · {p.gp}G</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{p.gp}G</p>
           </div>
           <Badge variant="outline" style={{ borderColor: getTeamColor(p.team) }}>{p.team}</Badge>
         </div>

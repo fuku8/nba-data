@@ -44,7 +44,6 @@ export function RosterClient({ players }: { players: PlayoffPlayerPerGame[] }) {
         <thead className="border-b bg-muted/50">
           <tr>
             <th className="text-left py-2 px-3 font-medium sticky left-0 bg-muted/50">選手</th>
-            <th className="py-2 px-2 text-center text-muted-foreground font-medium w-8">POS</th>
             {COLS.map((col) => (
               <th key={col.key} className="py-2 px-2 text-right font-medium">
                 <SortableHeader sortKey={col.key} label={col.label} sortConfig={sortConfig} onSort={handleSort} className="justify-end" />
@@ -58,7 +57,6 @@ export function RosterClient({ players }: { players: PlayoffPlayerPerGame[] }) {
               <td className="py-2 px-3 font-medium sticky left-0 bg-background">
                 <Link href={`/players/${encodeURIComponent(p.player)}`} className="hover:underline">{p.player}</Link>
               </td>
-              <td className="py-2 px-2 text-center text-muted-foreground text-xs">{p.pos}</td>
               {COLS.map((col) => {
                 const v = ((p as unknown) as Record<string, number>)[col.key] ?? 0;
                 return (

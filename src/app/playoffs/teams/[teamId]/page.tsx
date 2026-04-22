@@ -105,13 +105,13 @@ export default async function PlayoffTeamPage({
               <tbody>
                 <tr>
                   <td className="py-3 px-4 text-center font-mono font-semibold">{teamStats.pts.toFixed(1)}</td>
-                  <td className="py-3 px-4 text-center font-mono">{teamStats.trb.toFixed(1)}</td>
+                  <td className="py-3 px-4 text-center font-mono">{teamStats.reb.toFixed(1)}</td>
                   <td className="py-3 px-4 text-center font-mono">{teamStats.ast.toFixed(1)}</td>
                   <td className="py-3 px-4 text-center font-mono">{teamStats.stl.toFixed(1)}</td>
                   <td className="py-3 px-4 text-center font-mono">{teamStats.blk.toFixed(1)}</td>
                   <td className="py-3 px-4 text-center font-mono">{teamStats.tov.toFixed(1)}</td>
                   <td className="py-3 px-4 text-center font-mono">{(teamStats.fgPct * 100).toFixed(1)}%</td>
-                  <td className="py-3 px-4 text-center font-mono">{(teamStats.threePtPct * 100).toFixed(1)}%</td>
+                  <td className="py-3 px-4 text-center font-mono">{(teamStats.fg3Pct * 100).toFixed(1)}%</td>
                   <td className="py-3 px-4 text-center font-mono">{(teamStats.ftPct * 100).toFixed(1)}%</td>
                 </tr>
               </tbody>

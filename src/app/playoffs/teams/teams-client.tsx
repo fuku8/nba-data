@@ -8,13 +8,13 @@ import type { PlayoffTeamStats, PlayoffSeries, SortConfig } from "@/lib/types";
 
 const COLS = [
   { key: "pts", label: "PTS" },
-  { key: "trb", label: "REB" },
+  { key: "reb", label: "REB" },
   { key: "ast", label: "AST" },
   { key: "stl", label: "STL" },
   { key: "blk", label: "BLK" },
   { key: "tov", label: "TOV" },
   { key: "fgPct", label: "FG%", pct: true },
-  { key: "threePtPct", label: "3P%", pct: true },
+  { key: "fg3Pct", label: "3P%", pct: true },
   { key: "ftPct", label: "FT%", pct: true },
 ];
 

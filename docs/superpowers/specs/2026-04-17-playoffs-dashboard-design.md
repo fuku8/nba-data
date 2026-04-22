@@ -281,6 +281,197 @@ nba-data/
 
 ---
 
+### Phase 4: データソース移行（nba_api 化）（2026-04-22〜）
+
+> Basketball Reference スクレイピングを廃止し、nba_api（NBA.com公式）に完全移行する。
+> CSVスキーマをnba_apiネイティブな列名で刷新。TypeScript型定義・データローダー・UIも更新する。
+
+---
+
+#### 4-A. verify-nba-api.py 実行結果（2026-04-22 確定）
+
+| エンドポイント | 状態 | 補足 |
+|---|---|---|
+| LeagueStandingsV3 | ✓ | 30チーム、80+列 |
+| LeagueDashTeamStats (Base) | ✓ | 30チーム |
+| LeagueDashTeamStats (Advanced) | ✓ | 30チーム |
+| LeagueDashPlayerStats (PerGame) | ✓ | 582選手 |
+| LeagueDashPlayerStats (Totals) | ✓ | 582選手 |
+| LeagueDashPlayerStats (Advanced) | ✓ | 582選手 |
+| LeagueGameFinder (RS) | ✓ | 2460行（チーム×試合） |
+| LeagueDashPlayerStats (Playoffs) | ✓ | 182選手 |
+| LeagueGameFinder (Playoffs) | ✓ | 26行 |
+| BoxScoreTraditionalV3 | ✗ | NoneType エラー（要調査） |
+| BoxScoreSummaryV3 | ✓ | 9 frames、クォーター+チームスタッツ取得可 |
+
+**確定パラメータ名**
+- `per_mode_detailed`（`PerGame` / `Totals`）
+- `measure_type_detailed_defense`（`"Base"` / `"Advanced"`）
+- `season_type_all_star`（`"Regular Season"` / `"Playoffs"`）
+
+---
+
+#### 4-B. 新CSVスキーマ（nba_apiネイティブ列名）
+
+##### `standings.csv`
+```
+TEAM_ID, TEAM_NAME, TEAM_ABBREVIATION, CONFERENCE, WINS, LOSSES, WIN_PCT,
+CONFERENCE_GB, PLAYOFF_RANK, POINTS_PG, OPP_POINTS_PG, DIFF_POINTS_PG,
+HOME, ROAD, L10, CURRENT_STREAK, CLINCHED_PLAYOFF
+```
+*ソース: LeagueStandingsV3*
+
+##### `team_per_game.csv`
+```
+TEAM_ID, TEAM_NAME, GP, W, L, W_PCT, MIN,
+FGM, FGA, FG_PCT, FG3M, FG3A, FG3_PCT, FTM, FTA, FT_PCT,
+OREB, DREB, REB, AST, TOV, STL, BLK, BLKA, PF, PFD, PTS, PLUS_MINUS
+```
+*ソース: LeagueDashTeamStats (Base, PerGame)*
+
+##### `team_advanced.csv`
+```
+TEAM_ID, TEAM_NAME, GP,
+OFF_RATING, DEF_RATING, NET_RATING,
+AST_PCT, AST_TO, AST_RATIO,
+OREB_PCT, DREB_PCT, REB_PCT, TM_TOV_PCT,
+EFG_PCT, TS_PCT, PACE, POSS, PIE
+```
+*ソース: LeagueDashTeamStats (Advanced)*
+
+##### `player_per_game.csv`
+```
+PLAYER_ID, PLAYER_NAME, TEAM_ID, TEAM_ABBREVIATION, AGE, GP, W, L, W_PCT, MIN,
+FGM, FGA, FG_PCT, FG3M, FG3A, FG3_PCT, FTM, FTA, FT_PCT,
+OREB, DREB, REB, AST, TOV, STL, BLK, BLKA, PF, PFD, PTS, PLUS_MINUS,
+DD2, TD3
+```
+*ソース: LeagueDashPlayerStats (PerGame)*
+
+##### `player_totals.csv`
+同列構成（Totals モード）
+*ソース: LeagueDashPlayerStats (Totals)*
+
+##### `player_advanced.csv`
+```
+PLAYER_ID, PLAYER_NAME, TEAM_ID, TEAM_ABBREVIATION, AGE, GP, MIN,
+OFF_RATING, DEF_RATING, NET_RATING,
+AST_PCT, AST_TO, AST_RATIO,
+OREB_PCT, DREB_PCT, REB_PCT, TM_TOV_PCT,
+EFG_PCT, TS_PCT, USG_PCT, PACE, PIE, POSS
+```
+*ソース: LeagueDashPlayerStats (Advanced)*
+
+##### `games.csv`（GAME_ID追加・列整理）
+```
+GAME_ID, GAME_DATE, HOME_TEAM, AWAY_TEAM, HOME_PTS, AWAY_PTS, HOME_WL,
+HOME_FG_PCT, HOME_FG3_PCT, AWAY_FG_PCT, AWAY_FG3_PCT
+```
+*ソース: LeagueGameFinder (RS + Playoffs を結合)*
+
+##### `po_player_per_game.csv` / `po_player_totals.csv` / `po_player_advanced.csv`
+player_*.csv と同スキーマ（`season_type_all_star="Playoffs"` で取得）
+
+##### `po_series.csv`
+変更なし（LeagueGameFinder Playoffs から計算して生成）
+
+##### `data/boxscores/{gameId}.json`（POのみ）
+BoxScoreSummaryV3 で確定取得済み。BoxScoreTraditionalV3 は要調査。
+```json
+{
+  "gameId": "0042500152",
+  "gameDate": "...",
+  "homeTeam": { "tricode": "NYK", "wins": 1, "losses": 0,
+    "q1": 28, "q2": 27, "q3": 26, "q4": 27, "score": 108 },
+  "awayTeam": { ... },
+  "teamStats": {
+    "home": { "points": 108, "reboundsTotal": 42, "assists": 26,
+      "steals": 8, "blocks": 5, "turnovers": 12,
+      "fieldGoalsPercentage": 0.48, "threePointersPercentage": 0.38,
+      "freeThrowsPercentage": 0.78, "pointsInThePaint": 44,
+      "pointsFastBreak": 12, "benchPoints": 30 },
+    "away": { ... }
+  },
+  "players": { "home": [...], "away": [...] }  // BoxScoreTraditionalV3 解決後に追加
+}
+```
+
+---
+
+#### 4-C. TypeScript型定義の変更方針
+
+| 現在の型 | 変更後 |
+|---------|--------|
+| `team: string`（チーム名文字列） | `teamId: number` + `teamName: string` + `teamAbbr: string` |
+| `player: string`（選手名文字列） | `playerId: number` + `playerName: string` |
+| `winPct`, `offRating` 等 camelCase | 同上（型名はcamelCase維持、CSV列名はUPPER_SNAKE） |
+
+`/players/[playerId]` はIDベースのルーティングに変更（名前文字列 → 数値ID）
+
+---
+
+#### チェックリスト
+- [x] `verify-nba-api.py` 実行・エンドポイント確認完了
+- [ ] `fetch-nba-data.py` 作成
+- [ ] 新スキーマでの型定義更新（`src/lib/types.ts`）
+- [ ] データローダー更新（`src/lib/data/*.ts`）
+- [ ] UIコンポーネントの列名参照を新列名に更新
+- [ ] BoxScoreTraditionalV3 の代替手段調査（NBAのCDN APIなど）
+- [ ] PO試合のboxscore JSON生成確認
+- [ ] GitHub Actions の `fetch-data` コマンドを新スクリプトに切り替え
+
+---
+
+### Phase 5: POゲームスタッツページ `/playoffs/games/[gameId]`（Phase 4完了後）
+
+**表示内容**
+
+| セクション | データソース |
+|-----------|------------|
+| スコアサマリー（チーム名・最終スコア） | `{gameId}.json` |
+| クォーター別スコア（Q1〜Q4 + OT） | `{gameId}.json` |
+| チームスタッツ比較（FG%/3P%/REB/AST/TOV等） | `{gameId}.json` |
+| 選手ボックススコア × 両チーム | `{gameId}.json` |
+
+**ルート**
+```
+src/app/playoffs/games/[gameId]/page.tsx
+```
+
+**`/playoffs/games` リスト側の変更**
+- 試合カードに "詳細" リンクを追加（`/playoffs/games/{gameId}`）
+- gameId が存在する試合のみリンクを表示
+
+**JSONスキーマ（`data/boxscores/{gameId}.json`）**
+```json
+{
+  "gameId": "...",
+  "date": "...",
+  "homeTeam": "NYK",
+  "awayTeam": "PHI",
+  "homeScore": 108,
+  "awayScore": 96,
+  "quarters": { "home": [28, 27, 26, 27], "away": [22, 25, 24, 25] },
+  "teamStats": {
+    "home": { "fgPct": 0.48, "threePtPct": 0.38, "reb": 42, "ast": 26, "tov": 12 },
+    "away": { "fgPct": 0.43, "threePtPct": 0.31, "reb": 38, "ast": 20, "tov": 15 }
+  },
+  "players": {
+    "home": [{ "name": "Jalen Brunson", "min": "36", "pts": 28, "reb": 4, "ast": 8, "stl": 1, "blk": 0, "fg": "10-18", "threePt": "3-7", "ft": "5-6", "plusMinus": 12 }],
+    "away": [...]
+  }
+}
+```
+
+**チェックリスト**
+- [ ] `src/lib/types.ts` に `BoxScore` 型追加
+- [ ] `src/lib/data/boxscores.ts` 作成（JSONローダー）
+- [ ] `/playoffs/games/[gameId]/page.tsx` 作成
+- [ ] `/playoffs/games` のリスト側に詳細リンク追加
+- [ ] モバイルレスポンシブ確認
+
+---
+
 ## 11. 既存ページへの統合（追加要件）
 
 ### 11-1. トップページ（`/`）のプレーオフ期間中切り替え

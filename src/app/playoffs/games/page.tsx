@@ -1,33 +1,33 @@
-import { getPlayoffSeries, isPlayoffDataAvailable } from "@/lib/data/playoffs";
-import { readCsvFile, csvToObjects } from "@/lib/data/csv-utils";
+import { isPlayoffDataAvailable, getPlayoffSeries } from "@/lib/data/playoffs";
+import { readCsvFile, csvToObjects, num } from "@/lib/data/csv-utils";
 import { PlayoffGamesClient } from "./client";
 
 export const revalidate = 3600;
 
-function getPlayoffGames() {
-  const seriesRows = readCsvFile("po_series.csv");
-  const seriesData = csvToObjects(seriesRows);
+export interface PoGame {
+  gameId:    string;
+  gameDate:  string;
+  homeTeam:  string;
+  awayTeam:  string;
+  homePts:   number;
+  awayPts:   number;
+  homeWl:    string;
+}
 
-  // po_series.csv の first_game_date からプレーオフ開始日を取得
-  const poStartDate = seriesData
-    .map((s) => s["first_game_date"])
-    .filter(Boolean)
-    .reduce<Date | null>((min, d) => {
-      const parsed = new Date(d);
-      return !min || parsed < min ? parsed : min;
-    }, null);
-
-  if (!poStartDate) return [];
-
-  const gameRows = readCsvFile("games.csv");
-  const games = csvToObjects(gameRows);
-
-  return games.filter((g) => {
-    const date = g["Date"];
-    if (!date) return false;
-    const parsed = new Date(date);
-    return !isNaN(parsed.getTime()) && parsed >= poStartDate;
-  });
+function getPoGames(): PoGame[] {
+  const rows = readCsvFile("po_games.csv");
+  const data = csvToObjects(rows);
+  return data
+    .filter((d) => d["GAME_ID"] && d["HOME_TEAM"])
+    .map((d) => ({
+      gameId:   d["GAME_ID"] || "",
+      gameDate: d["GAME_DATE"] || "",
+      homeTeam: d["HOME_TEAM"] || "",
+      awayTeam: d["AWAY_TEAM"] || "",
+      homePts:  num(d["HOME_PTS"]),
+      awayPts:  num(d["AWAY_PTS"]),
+      homeWl:   d["HOME_WL"] || "",
+    }));
 }
 
 export default function PlayoffGamesPage() {
@@ -36,6 +36,6 @@ export default function PlayoffGamesPage() {
   }
 
   const series = getPlayoffSeries();
-  const games = getPlayoffGames();
+  const games  = getPoGames();
   return <PlayoffGamesClient series={series} games={games} />;
 }

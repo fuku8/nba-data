@@ -18,14 +18,13 @@ import { SortableHeader } from "@/components/sortable-header";
 import type { SortConfig } from "@/lib/types";
 
 interface EnrichedStanding {
-  team: string;
+  teamName: string;
   wins: number;
   losses: number;
   winPct: number;
-  gb: string;
-  psPerGame: number;
-  paPerGame: number;
-  srs: number;
+  conferenceGb: string;
+  pointsPg: number;
+  oppPointsPg: number;
   conference: "East" | "West";
   abbr: string;
   offRating: number;
@@ -85,10 +84,10 @@ export function StandingsClient({ standings }: { standings: EnrichedStanding[] }
             </TableHead>
             <TableHead className="text-right">GB</TableHead>
             <TableHead className="text-right">
-              <SortableHeader label="PS/G" sortKey="psPerGame" sortConfig={sortConfig} onSort={handleSort} className="justify-end" />
+              <SortableHeader label="PS/G" sortKey="pointsPg" sortConfig={sortConfig} onSort={handleSort} className="justify-end" />
             </TableHead>
             <TableHead className="text-right">
-              <SortableHeader label="PA/G" sortKey="paPerGame" sortConfig={sortConfig} onSort={handleSort} className="justify-end" />
+              <SortableHeader label="PA/G" sortKey="oppPointsPg" sortConfig={sortConfig} onSort={handleSort} className="justify-end" />
             </TableHead>
             <TableHead className="text-right">
               <SortableHeader label="ORtg" sortKey="offRating" sortConfig={sortConfig} onSort={handleSort} className="justify-end" />
@@ -107,20 +106,20 @@ export function StandingsClient({ standings }: { standings: EnrichedStanding[] }
         </TableHeader>
         <TableBody>
           {teams.map((t, i) => (
-            <TableRow key={t.team} className="hover:bg-accent/50">
+            <TableRow key={t.teamName} className="hover:bg-accent/50">
               <TableCell className="text-muted-foreground">{i + 1}</TableCell>
               <TableCell>
                 <Link href={`/teams/${t.abbr}`} className="flex items-center gap-2 hover:underline font-medium">
                   <div className="h-3 w-3 rounded-full" style={{ backgroundColor: getTeamColor(t.abbr) }} />
-                  {t.team}
+                  {t.teamName}
                 </Link>
               </TableCell>
               <TableCell className="text-right font-mono">{t.wins}</TableCell>
               <TableCell className="text-right font-mono">{t.losses}</TableCell>
               <TableCell className="text-right font-mono font-semibold">{t.winPct.toFixed(3)}</TableCell>
-              <TableCell className="text-right font-mono text-muted-foreground">{t.gb}</TableCell>
-              <TableCell className="text-right font-mono">{t.psPerGame.toFixed(1)}</TableCell>
-              <TableCell className="text-right font-mono">{t.paPerGame.toFixed(1)}</TableCell>
+              <TableCell className="text-right font-mono text-muted-foreground">{t.conferenceGb}</TableCell>
+              <TableCell className="text-right font-mono">{t.pointsPg.toFixed(1)}</TableCell>
+              <TableCell className="text-right font-mono">{t.oppPointsPg.toFixed(1)}</TableCell>
               <TableCell className="text-right font-mono">{t.offRating.toFixed(1)}</TableCell>
               <TableCell className="text-right font-mono">{t.defRating.toFixed(1)}</TableCell>
               <TableCell className={`text-right font-mono font-semibold ${t.netRating > 0 ? "text-green-400" : t.netRating < 0 ? "text-red-400" : ""}`}>

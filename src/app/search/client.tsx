@@ -66,7 +66,7 @@ export function SearchClient({
                           {teamInfo?.name ?? p.team}
                         </div>
                       </div>
-                      <Badge variant="outline" className="text-xs">{p.pos}</Badge>
+                      <Badge variant="outline" className="text-xs">{p.team}</Badge>
                     </div>
                     <div className="grid grid-cols-4 gap-2 text-center text-sm">
                       <div>
@@ -89,18 +89,18 @@ export function SearchClient({
                     {adv && (
                       <div className="grid grid-cols-3 gap-2 text-center text-sm mt-2 pt-2 border-t">
                         <div>
-                          <div className="text-xs text-muted-foreground">PER</div>
-                          <div className="font-mono">{adv.per.toFixed(1)}</div>
+                          <div className="text-xs text-muted-foreground">ORtg</div>
+                          <div className="font-mono">{adv.offRating.toFixed(1)}</div>
                         </div>
                         <div>
-                          <div className="text-xs text-muted-foreground">WS</div>
-                          <div className="font-mono">{adv.ws.toFixed(1)}</div>
-                        </div>
-                        <div>
-                          <div className="text-xs text-muted-foreground">BPM</div>
+                          <div className="text-xs text-muted-foreground">NRtg</div>
                           <div className="font-mono">
-                            {adv.bpm > 0 ? "+" : ""}{adv.bpm.toFixed(1)}
+                            {adv.netRating > 0 ? "+" : ""}{adv.netRating.toFixed(1)}
                           </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-muted-foreground">TS%</div>
+                          <div className="font-mono">{(adv.tsPct * 100).toFixed(1)}%</div>
                         </div>
                       </div>
                     )}

@@ -44,9 +44,9 @@ export default async function TeamDetailPage({
   const allPlayers = getPlayerPerGame();
   const allAdvanced = getPlayerAdvanced();
 
-  const standing = standings.find((s) => getTeamAbbr(s.team) === abbr);
-  const adv = advanced.find((a) => getTeamAbbr(a.team) === abbr);
-  const pg = perGame.find((p) => getTeamAbbr(p.team) === abbr);
+  const standing = standings.find((s) => s.teamAbbr === abbr);
+  const adv = advanced.find((a) => getTeamAbbr(a.teamName) === abbr);
+  const pg = perGame.find((p) => getTeamAbbr(p.teamName) === abbr);
 
   const roster = allPlayers.filter((p) => p.team === abbr && p.gp >= 1);
   const rosterAdvanced = new Map(
@@ -58,7 +58,6 @@ export default async function TeamDetailPage({
 
     return {
       player: player.player,
-      pos: player.pos,
       gp: player.gp,
       mpg: player.mpg,
       pts: player.pts,
@@ -68,8 +67,8 @@ export default async function TeamDetailPage({
       blk: player.blk,
       fgPct: player.fgPct,
       threePtPct: player.threePtPct,
-      per: advancedStats?.per ?? null,
-      ws: advancedStats?.ws ?? null,
+      offRating: advancedStats?.offRating ?? null,
+      tsPct: advancedStats?.tsPct ?? null,
     };
   });
 
@@ -123,9 +122,9 @@ export default async function TeamDetailPage({
           sub="Possessions/48min"
         />
         <StatCard
-          label="SRS"
-          value={adv?.srs.toFixed(2) ?? "-"}
-          sub="Simple Rating System"
+          label="PIE"
+          value={adv?.pie != null ? (adv.pie * 100).toFixed(1) + "%" : "-"}
+          sub="Player Impact Estimate"
         />
       </div>
 
@@ -139,16 +138,16 @@ export default async function TeamDetailPage({
             <div className="grid grid-cols-3 gap-4 sm:grid-cols-5 lg:grid-cols-7">
               {[
                 { label: "PTS", value: pg.pts },
-                { label: "REB", value: pg.trb },
+                { label: "REB", value: pg.reb },
                 { label: "AST", value: pg.ast },
                 { label: "STL", value: pg.stl },
                 { label: "BLK", value: pg.blk },
                 { label: "TOV", value: pg.tov },
                 { label: "FG%", value: pg.fgPct, pct: true },
-                { label: "3P%", value: pg.threePtPct, pct: true },
+                { label: "3P%", value: pg.fg3Pct, pct: true },
                 { label: "FT%", value: pg.ftPct, pct: true },
-                { label: "ORB", value: pg.orb },
-                { label: "DRB", value: pg.drb },
+                { label: "ORB", value: pg.oreb },
+                { label: "DRB", value: pg.dreb },
               ].map((stat) => (
                 <div key={stat.label} className="text-center">
                   <div className="text-xs text-muted-foreground">{stat.label}</div>

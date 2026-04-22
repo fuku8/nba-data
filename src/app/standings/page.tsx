@@ -1,5 +1,4 @@
 import { getStandings, getTeamAdvanced } from "@/lib/data/teams";
-import { getTeamAbbr } from "@/lib/constants/teams";
 import { StandingsClient } from "./client";
 
 export const revalidate = 3600;
@@ -8,11 +7,11 @@ export default function StandingsPage() {
   const standings = getStandings();
   const advanced = getTeamAdvanced();
 
-  const advancedMap = new Map(advanced.map((a) => [a.team, a]));
+  const advancedMap = new Map(advanced.map((a) => [a.teamName, a]));
 
   const enriched = standings.map((s) => {
-    const abbr = getTeamAbbr(s.team);
-    const adv = advancedMap.get(s.team);
+    const abbr = s.teamAbbr;
+    const adv = advancedMap.get(s.teamName);
     return {
       ...s,
       abbr,

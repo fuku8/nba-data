@@ -1,57 +1,77 @@
 // ===== チーム =====
 
 export interface TeamStanding {
-  team: string;
+  teamId: number;
+  teamName: string;
+  teamAbbr: string;
+  conference: "East" | "West";
   wins: number;
   losses: number;
   winPct: number;
-  gb: string;
-  psPerGame: number;
-  paPerGame: number;
-  srs: number;
-  conference: "East" | "West";
+  conferenceGb: string;
+  playoffRank: number;
+  pointsPg: number;
+  oppPointsPg: number;
+  diffPointsPg: number;
+  home: string;
+  road: string;
+  l10: string;
+  currentStreak: string;
+  clinchedPlayoff: number;
 }
 
 export interface TeamPerGame {
-  team: string;
-  fg: number;
+  teamId: number;
+  teamName: string;
+  gp: number;
+  wins: number;
+  losses: number;
+  winPct: number;
+  min: number;
+  fgm: number;
   fga: number;
   fgPct: number;
-  threePt: number;
-  threePtA: number;
-  threePtPct: number;
-  twoPt: number;
-  twoPtA: number;
-  twoPtPct: number;
-  ft: number;
+  fg3m: number;
+  fg3a: number;
+  fg3Pct: number;
+  ftm: number;
   fta: number;
   ftPct: number;
-  orb: number;
-  drb: number;
-  trb: number;
+  oreb: number;
+  dreb: number;
+  reb: number;
   ast: number;
+  tov: number;
   stl: number;
   blk: number;
-  tov: number;
+  blka: number;
   pf: number;
+  pfd: number;
   pts: number;
+  plusMinus: number;
 }
 
 export interface TeamAdvanced {
-  team: string;
-  wins: number;
-  losses: number;
-  mov: number;
+  teamId: number;
+  teamName: string;
+  gp: number;
   offRating: number;
   defRating: number;
   netRating: number;
-  pace: number;
-  srs: number;
-  tsPct: number;
+  astPct: number;
+  astTo: number;
+  astRatio: number;
+  orebPct: number;
+  drebPct: number;
+  rebPct: number;
+  tmTovPct: number;
   efgPct: number;
+  tsPct: number;
+  pace: number;
+  poss: number;
+  pie: number;
 }
 
-// 統合チームデータ
 export interface TeamData {
   info: TeamInfo;
   standing: TeamStanding;
@@ -71,12 +91,15 @@ export interface TeamInfo {
 // ===== 選手 =====
 
 export interface PlayerPerGame {
+  playerId: number;
   player: string;
-  age: number;
+  teamId: number;
   team: string;
-  pos: string;
+  age: number;
   gp: number;
-  gs: number;
+  wins: number;
+  losses: number;
+  winPct: number;
   mpg: number;
   fg: number;
   fga: number;
@@ -84,10 +107,6 @@ export interface PlayerPerGame {
   threePt: number;
   threePtA: number;
   threePtPct: number;
-  twoPt: number;
-  twoPtA: number;
-  twoPtPct: number;
-  efgPct: number;
   ft: number;
   fta: number;
   ftPct: number;
@@ -97,53 +116,54 @@ export interface PlayerPerGame {
   ast: number;
   stl: number;
   blk: number;
+  blka: number;
   tov: number;
   pf: number;
+  pfd: number;
   pts: number;
+  plusMinus: number;
+  dd2: number;
+  td3: number;
 }
 
 export interface PlayerAdvanced {
+  playerId: number;
   player: string;
-  age: number;
+  teamId: number;
   team: string;
-  pos: string;
+  age: number;
   gp: number;
   mp: number;
-  per: number;
-  tsPct: number;
-  efgPct: number;
-  usgPct: number;
-  ows: number;
-  dws: number;
-  ws: number;
-  wsPer48: number;
-  obpm: number;
-  dbpm: number;
-  bpm: number;
-  vorp: number;
-  orbPct: number;
-  drbPct: number;
-  trbPct: number;
+  offRating: number;
+  defRating: number;
+  netRating: number;
   astPct: number;
-  stlPct: number;
-  blkPct: number;
-  tovPct: number;
+  astTo: number;
+  astRatio: number;
+  orebPct: number;
+  drebPct: number;
+  rebPct: number;
+  tmTovPct: number;
+  efgPct: number;
+  tsPct: number;
+  usgPct: number;
+  pace: number;
+  pie: number;
+  poss: number;
 }
 
 export interface PlayerTotals {
+  playerId: number;
   player: string;
-  age: number;
+  teamId: number;
   team: string;
-  pos: string;
+  age: number;
   gp: number;
-  gs: number;
   mp: number;
   fg: number;
   fga: number;
   threePt: number;
   threePtA: number;
-  twoPt: number;
-  twoPtA: number;
   ft: number;
   fta: number;
   orb: number;
@@ -155,6 +175,7 @@ export interface PlayerTotals {
   tov: number;
   pf: number;
   pts: number;
+  plusMinus: number;
 }
 
 // ===== プレーオフ =====
@@ -164,25 +185,28 @@ export interface PlayoffSeries {
   team2: string;
   team1Wins: number;
   team2Wins: number;
-  winner: string;        // 空文字列 = 進行中
-  seriesStatus: string;  // "3-2" など
-  round: number;         // 1=1回戦, 2=2回戦, 3=カンファレンス決勝, 4=ファイナル
-  roundName: string;     // "First Round" | "Second Round" | "Conference Finals" | "Finals"
+  winner: string;
+  seriesStatus: string;
+  round: number;
+  roundName: string;
   firstGameDate: string;
   lastGameDate: string;
 }
 
 export interface PlayoffTeamStats {
+  teamId: number;
   team: string;
+  gp: number;
   pts: number;
-  trb: number;
+  reb: number;
   ast: number;
   stl: number;
   blk: number;
   tov: number;
   fgPct: number;
-  threePtPct: number;
+  fg3Pct: number;
   ftPct: number;
+  plusMinus: number;
 }
 
 export type PlayoffPlayerPerGame = PlayerPerGame;

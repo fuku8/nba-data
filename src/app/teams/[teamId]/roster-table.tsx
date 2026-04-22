@@ -35,7 +35,6 @@ export function TeamRosterTable({ rows }: { rows: TeamRosterRow[] }) {
         <TableHeader>
           <TableRow>
             <TableHead>Player</TableHead>
-            <TableHead>Pos</TableHead>
             <TableHead className="text-right">
               <SortableHeader
                 label="GP"
@@ -119,8 +118,8 @@ export function TeamRosterTable({ rows }: { rows: TeamRosterRow[] }) {
             </TableHead>
             <TableHead className="text-right">
               <SortableHeader
-                label="PER"
-                sortKey="per"
+                label="ORtg"
+                sortKey="offRating"
                 sortConfig={sortConfig}
                 onSort={handleSort}
                 className="justify-end"
@@ -128,8 +127,8 @@ export function TeamRosterTable({ rows }: { rows: TeamRosterRow[] }) {
             </TableHead>
             <TableHead className="text-right">
               <SortableHeader
-                label="WS"
-                sortKey="ws"
+                label="TS%"
+                sortKey="tsPct"
                 sortConfig={sortConfig}
                 onSort={handleSort}
                 className="justify-end"
@@ -139,7 +138,7 @@ export function TeamRosterTable({ rows }: { rows: TeamRosterRow[] }) {
         </TableHeader>
         <TableBody>
           {sortedRows.map((row) => (
-            <TableRow key={`${row.player}-${row.pos}`} className="hover:bg-accent/50">
+            <TableRow key={row.player} className="hover:bg-accent/50">
               <TableCell>
                 <Link
                   href={`/players/${encodeURIComponent(row.player)}`}
@@ -148,7 +147,6 @@ export function TeamRosterTable({ rows }: { rows: TeamRosterRow[] }) {
                   {row.player}
                 </Link>
               </TableCell>
-              <TableCell className="text-muted-foreground">{row.pos}</TableCell>
               <TableCell className="text-right font-mono">{row.gp}</TableCell>
               <TableCell className="text-right font-mono">{row.mpg.toFixed(1)}</TableCell>
               <TableCell className="text-right font-mono font-semibold">{row.pts.toFixed(1)}</TableCell>
@@ -163,10 +161,10 @@ export function TeamRosterTable({ rows }: { rows: TeamRosterRow[] }) {
                 {row.threePtPct != null ? `${(row.threePtPct * 100).toFixed(1)}%` : "-"}
               </TableCell>
               <TableCell className="text-right font-mono">
-                {row.per?.toFixed(1) ?? "-"}
+                {row.offRating?.toFixed(1) ?? "-"}
               </TableCell>
               <TableCell className="text-right font-mono">
-                {row.ws?.toFixed(1) ?? "-"}
+                {row.tsPct != null ? `${(row.tsPct * 100).toFixed(1)}%` : "-"}
               </TableCell>
             </TableRow>
           ))}

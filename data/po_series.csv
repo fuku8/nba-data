@@ -1,9 +1,9 @@
 team1,team2,team1_wins,team2_wins,first_game_date,last_game_date,round,round_name,winner,series_status
-Cleveland Cavaliers,Toronto Raptors,2,0,"Sat, Apr 18, 2026","Mon, Apr 20, 2026",1,First Round,,2-0
-Denver Nuggets,Minnesota Timberwolves,1,1,"Sat, Apr 18, 2026","Mon, Apr 20, 2026",1,First Round,,1-1
-Atlanta Hawks,New York Knicks,1,1,"Sat, Apr 18, 2026","Mon, Apr 20, 2026",1,First Round,,1-1
-Houston Rockets,Los Angeles Lakers,0,1,"Sat, Apr 18, 2026","Sat, Apr 18, 2026",1,First Round,,0-1
-Boston Celtics,Philadelphia 76ers,1,0,"Sun, Apr 19, 2026","Sun, Apr 19, 2026",1,First Round,,1-0
-Oklahoma City Thunder,Phoenix Suns,1,0,"Sun, Apr 19, 2026","Sun, Apr 19, 2026",1,First Round,,1-0
-Detroit Pistons,Orlando Magic,0,1,"Sun, Apr 19, 2026","Sun, Apr 19, 2026",1,First Round,,0-1
-Portland Trail Blazers,San Antonio Spurs,0,1,"Sun, Apr 19, 2026","Sun, Apr 19, 2026",1,First Round,,0-1
+ATL,NYK,1,1,2026-04-18,2026-04-20,1,First Round,,1-1
+CLE,TOR,2,0,2026-04-18,2026-04-20,1,First Round,,2-0
+DEN,MIN,1,1,2026-04-18,2026-04-20,1,First Round,,1-1
+HOU,LAL,0,1,2026-04-18,2026-04-18,1,First Round,,0-1
+DET,ORL,0,1,2026-04-19,2026-04-19,1,First Round,,0-1
+BOS,PHI,1,1,2026-04-19,2026-04-21,1,First Round,,1-1
+OKC,PHX,1,0,2026-04-19,2026-04-19,1,First Round,,1-0
+POR,SAS,1,1,2026-04-19,2026-04-21,1,First Round,,1-1

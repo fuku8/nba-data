@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { getTeamAbbr, getTeamColor } from "@/lib/constants/teams";
+import { getTeamColor } from "@/lib/constants/teams";
 import type { GameResult } from "@/lib/data/games";
 
 export function GamesClient({
@@ -25,7 +25,7 @@ export function GamesClient({
 
   const filtered = useMemo(() => {
     if (!selectedDate) return games.slice(-20).reverse();
-    return games.filter((g) => g.date === selectedDate);
+    return games.filter((g) => g.gameDate === selectedDate);
   }, [games, selectedDate]);
 
   return (
@@ -60,33 +60,33 @@ export function GamesClient({
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((game, i) => {
-            const homeWin = game.homePts > game.visitorPts;
-            const visitorAbbr = getTeamAbbr(game.visitor);
-            const homeAbbr = getTeamAbbr(game.home);
+            const homeWin = game.homePts > game.awayPts;
+            const awayAbbr = game.awayTeam;
+            const homeAbbr = game.homeTeam;
             return (
-              <Card key={`${game.date}-${i}`}>
+              <Card key={`${game.gameDate}-${i}`}>
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs text-muted-foreground">{game.date}</span>
+                    <span className="text-xs text-muted-foreground">{game.gameDate}</span>
                     <Badge variant="secondary" className="text-xs">Final</Badge>
                   </div>
                   <div className="space-y-2">
-                    {/* Visitor */}
+                    {/* Away */}
                     <div className={`flex items-center justify-between ${homeWin ? "opacity-60" : ""}`}>
                       <Link
-                        href={`/teams/${visitorAbbr}`}
+                        href={`/teams/${awayAbbr}`}
                         className="flex items-center gap-2 hover:underline"
                       >
                         <div
                           className="h-3 w-3 rounded-full"
-                          style={{ backgroundColor: getTeamColor(visitorAbbr) }}
+                          style={{ backgroundColor: getTeamColor(awayAbbr) }}
                         />
                         <span className={`font-medium ${!homeWin ? "font-semibold" : ""}`}>
-                          {game.visitor}
+                          {game.awayTeam}
                         </span>
                       </Link>
                       <span className={`font-mono text-lg ${!homeWin ? "font-bold" : ""}`}>
-                        {game.visitorPts}
+                        {game.awayPts}
                       </span>
                     </div>
                     {/* Home */}
@@ -100,7 +100,7 @@ export function GamesClient({
                           style={{ backgroundColor: getTeamColor(homeAbbr) }}
                         />
                         <span className={`font-medium ${homeWin ? "font-semibold" : ""}`}>
-                          {game.home}
+                          {game.homeTeam}
                         </span>
                         <span className="text-xs text-muted-foreground">HOME</span>
                       </Link>

@@ -48,7 +48,7 @@ export function PlayoffCompareClient({ players }: { players: PlayoffPlayerPerGam
   const fmt = (p: PlayoffPlayerPerGame, key: keyof PlayoffPlayerPerGame, pct?: boolean) => {
     const v = p[key] as number;
     if (pct) return (v * 100).toFixed(1) + "%";
-    if (key === "gp" || key === "gs") return String(Math.round(v));
+    if (key === "gp") return String(Math.round(v));
     return typeof v === "number" ? v.toFixed(1) : String(v);
   };
 

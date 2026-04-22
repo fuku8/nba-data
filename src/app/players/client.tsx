@@ -26,7 +26,6 @@ import { getTeamColor } from "@/lib/constants/teams";
 import type { PlayerPerGame, PlayerAdvanced, SortConfig } from "@/lib/types";
 
 const MIN_GAMES_OPTIONS = [0, 10, 20, 30, 40, 50];
-const POSITIONS = ["All", "PG", "SG", "SF", "PF", "C"];
 const PAGE_SIZE = 50;
 
 export function PlayersClient({
@@ -38,9 +37,8 @@ export function PlayersClient({
 }) {
   const [search, setSearch] = useState("");
   const [minGames, setMinGames] = useState(20);
-  const [posFilter, setPosFilter] = useState("All");
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "pts", direction: "desc" });
-  const [advSortConfig, setAdvSortConfig] = useState<SortConfig>({ key: "per", direction: "desc" });
+  const [advSortConfig, setAdvSortConfig] = useState<SortConfig>({ key: "offRating", direction: "desc" });
   const [page, setPage] = useState(0);
 
   const handleSort = (key: string) => {
@@ -65,11 +63,8 @@ export function PlayersClient({
       const q = search.toLowerCase();
       result = result.filter((p) => p.player.toLowerCase().includes(q));
     }
-    if (posFilter !== "All") {
-      result = result.filter((p) => p.pos.includes(posFilter));
-    }
     return result;
-  }, [perGame, search, minGames, posFilter]);
+  }, [perGame, search, minGames]);
 
   const sortedPerGame = useMemo(() => {
     return [...filteredPerGame].sort((a, b) => {
@@ -88,11 +83,8 @@ export function PlayersClient({
       const q = search.toLowerCase();
       result = result.filter((p) => p.player.toLowerCase().includes(q));
     }
-    if (posFilter !== "All") {
-      result = result.filter((p) => p.pos.includes(posFilter));
-    }
     return result;
-  }, [advanced, search, minGames, posFilter]);
+  }, [advanced, search, minGames]);
 
   const sortedAdvanced = useMemo(() => {
     return [...filteredAdvanced].sort((a, b) => {
@@ -128,16 +120,6 @@ export function PlayersClient({
             onChange={(e) => { setSearch(e.target.value); setPage(0); }}
             className="w-48"
           />
-          <Select value={posFilter} onValueChange={(v) => { setPosFilter(v ?? "All"); setPage(0); }}>
-            <SelectTrigger className="w-28">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {POSITIONS.map((p) => (
-                <SelectItem key={p} value={p}>{p === "All" ? "All Pos" : p}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
           <Select value={String(minGames)} onValueChange={(v) => { setMinGames(Number(v ?? "20")); setPage(0); }}>
             <SelectTrigger className="w-32">
               <SelectValue />
@@ -167,7 +149,6 @@ export function PlayersClient({
                       <TableHead className="w-8">#</TableHead>
                       <TableHead>Player</TableHead>
                       <TableHead>Team</TableHead>
-                      <TableHead>Pos</TableHead>
                       <TableHead className="text-right">
                         <SortableHeader label="GP" sortKey="gp" sortConfig={sortConfig} onSort={handleSort} className="justify-end" />
                       </TableHead>
@@ -215,7 +196,6 @@ export function PlayersClient({
                             {p.team}
                           </Link>
                         </TableCell>
-                        <TableCell className="text-muted-foreground">{p.pos}</TableCell>
                         <TableCell className="text-right font-mono">{p.gp}</TableCell>
                         <TableCell className="text-right font-mono">{p.mpg.toFixed(1)}</TableCell>
                         <TableCell className="text-right font-mono font-semibold">{p.pts.toFixed(1)}</TableCell>
@@ -249,7 +229,13 @@ export function PlayersClient({
                         <SortableHeader label="GP" sortKey="gp" sortConfig={advSortConfig} onSort={handleAdvSort} className="justify-end" />
                       </TableHead>
                       <TableHead className="text-right">
-                        <SortableHeader label="PER" sortKey="per" sortConfig={advSortConfig} onSort={handleAdvSort} className="justify-end" />
+                        <SortableHeader label="ORtg" sortKey="offRating" sortConfig={advSortConfig} onSort={handleAdvSort} className="justify-end" />
+                      </TableHead>
+                      <TableHead className="text-right">
+                        <SortableHeader label="DRtg" sortKey="defRating" sortConfig={advSortConfig} onSort={handleAdvSort} className="justify-end" />
+                      </TableHead>
+                      <TableHead className="text-right">
+                        <SortableHeader label="NRtg" sortKey="netRating" sortConfig={advSortConfig} onSort={handleAdvSort} className="justify-end" />
                       </TableHead>
                       <TableHead className="text-right">
                         <SortableHeader label="TS%" sortKey="tsPct" sortConfig={advSortConfig} onSort={handleAdvSort} className="justify-end" />
@@ -258,19 +244,13 @@ export function PlayersClient({
                         <SortableHeader label="USG%" sortKey="usgPct" sortConfig={advSortConfig} onSort={handleAdvSort} className="justify-end" />
                       </TableHead>
                       <TableHead className="text-right">
-                        <SortableHeader label="OWS" sortKey="ows" sortConfig={advSortConfig} onSort={handleAdvSort} className="justify-end" />
+                        <SortableHeader label="PIE" sortKey="pie" sortConfig={advSortConfig} onSort={handleAdvSort} className="justify-end" />
                       </TableHead>
                       <TableHead className="text-right">
-                        <SortableHeader label="DWS" sortKey="dws" sortConfig={advSortConfig} onSort={handleAdvSort} className="justify-end" />
+                        <SortableHeader label="AST%" sortKey="astPct" sortConfig={advSortConfig} onSort={handleAdvSort} className="justify-end" />
                       </TableHead>
                       <TableHead className="text-right">
-                        <SortableHeader label="WS" sortKey="ws" sortConfig={advSortConfig} onSort={handleAdvSort} className="justify-end" />
-                      </TableHead>
-                      <TableHead className="text-right">
-                        <SortableHeader label="BPM" sortKey="bpm" sortConfig={advSortConfig} onSort={handleAdvSort} className="justify-end" />
-                      </TableHead>
-                      <TableHead className="text-right">
-                        <SortableHeader label="VORP" sortKey="vorp" sortConfig={advSortConfig} onSort={handleAdvSort} className="justify-end" />
+                        <SortableHeader label="REB%" sortKey="rebPct" sortConfig={advSortConfig} onSort={handleAdvSort} className="justify-end" />
                       </TableHead>
                     </TableRow>
                   </TableHeader>
@@ -290,16 +270,16 @@ export function PlayersClient({
                           </Link>
                         </TableCell>
                         <TableCell className="text-right font-mono">{p.gp}</TableCell>
-                        <TableCell className="text-right font-mono font-semibold">{p.per.toFixed(1)}</TableCell>
-                        <TableCell className="text-right font-mono">{(p.tsPct * 100).toFixed(1)}</TableCell>
-                        <TableCell className="text-right font-mono">{p.usgPct.toFixed(1)}</TableCell>
-                        <TableCell className="text-right font-mono">{p.ows.toFixed(1)}</TableCell>
-                        <TableCell className="text-right font-mono">{p.dws.toFixed(1)}</TableCell>
-                        <TableCell className="text-right font-mono font-semibold">{p.ws.toFixed(1)}</TableCell>
-                        <TableCell className={`text-right font-mono ${p.bpm > 0 ? "text-green-400" : p.bpm < 0 ? "text-red-400" : ""}`}>
-                          {p.bpm > 0 ? "+" : ""}{p.bpm.toFixed(1)}
+                        <TableCell className="text-right font-mono font-semibold">{p.offRating.toFixed(1)}</TableCell>
+                        <TableCell className="text-right font-mono">{p.defRating.toFixed(1)}</TableCell>
+                        <TableCell className={`text-right font-mono ${p.netRating > 0 ? "text-green-400" : p.netRating < 0 ? "text-red-400" : ""}`}>
+                          {p.netRating > 0 ? "+" : ""}{p.netRating.toFixed(1)}
                         </TableCell>
-                        <TableCell className="text-right font-mono">{p.vorp.toFixed(1)}</TableCell>
+                        <TableCell className="text-right font-mono">{(p.tsPct * 100).toFixed(1)}%</TableCell>
+                        <TableCell className="text-right font-mono">{(p.usgPct * 100).toFixed(1)}%</TableCell>
+                        <TableCell className="text-right font-mono">{(p.pie * 100).toFixed(1)}%</TableCell>
+                        <TableCell className="text-right font-mono">{(p.astPct * 100).toFixed(1)}%</TableCell>
+                        <TableCell className="text-right font-mono">{(p.rebPct * 100).toFixed(1)}%</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

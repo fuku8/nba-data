@@ -10,12 +10,11 @@ export type TeamRosterSortKey =
   | "blk"
   | "fgPct"
   | "threePtPct"
-  | "per"
-  | "ws";
+  | "offRating"
+  | "tsPct";
 
 export interface TeamRosterRow {
   player: string;
-  pos: string;
   gp: number;
   mpg: number;
   pts: number;
@@ -25,8 +24,8 @@ export interface TeamRosterRow {
   blk: number;
   fgPct: number;
   threePtPct: number;
-  per: number | null;
-  ws: number | null;
+  offRating: number | null;
+  tsPct: number | null;
 }
 
 export const DEFAULT_TEAM_ROSTER_SORT: SortConfig = {

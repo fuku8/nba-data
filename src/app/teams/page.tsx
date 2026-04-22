@@ -1,5 +1,4 @@
 import { getStandings, getTeamAdvanced, getTeamPerGame } from "@/lib/data/teams";
-import { getTeamAbbr } from "@/lib/constants/teams";
 import { TeamsClient } from "./client";
 
 export const revalidate = 3600;
@@ -9,21 +8,21 @@ export default function TeamsPage() {
   const advanced = getTeamAdvanced();
   const perGame = getTeamPerGame();
 
-  const advMap = new Map(advanced.map((a) => [a.team, a]));
-  const pgMap = new Map(perGame.map((p) => [p.team, p]));
+  const advMap = new Map(advanced.map((a) => [a.teamName, a]));
+  const pgMap = new Map(perGame.map((p) => [p.teamName, p]));
 
   const teams = standings.map((s) => {
-    const adv = advMap.get(s.team);
-    const pg = pgMap.get(s.team);
+    const adv = advMap.get(s.teamName);
+    const pg = pgMap.get(s.teamName);
     return {
-      name: s.team,
-      abbr: getTeamAbbr(s.team),
+      name: s.teamName,
+      abbr: s.teamAbbr,
       conference: s.conference,
       wins: s.wins,
       losses: s.losses,
       winPct: s.winPct,
       pts: pg?.pts ?? 0,
-      reb: pg?.trb ?? 0,
+      reb: pg?.reb ?? 0,
       ast: pg?.ast ?? 0,
       offRating: adv?.offRating ?? 0,
       defRating: adv?.defRating ?? 0,

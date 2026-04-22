@@ -2,71 +2,73 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getTeamColor, getTeamAbbr } from "@/lib/constants/teams";
+import { getTeamColor } from "@/lib/constants/teams";
 import type { PlayoffSeries } from "@/lib/types";
+import type { PoGame } from "./page";
 
-interface Game {
-  Date: string;
-  Visitor: string;
-  VisitorPTS: string;
-  Home: string;
-  HomePTS: string;
-}
-
-function GameCard({ game }: { game: Game }) {
-  const vPts = parseInt(game.VisitorPTS);
-  const hPts = parseInt(game.HomePTS);
-  const homeWin = hPts > vPts;
-  const visitorAbbr = getTeamAbbr(game.Visitor);
-  const homeAbbr = getTeamAbbr(game.Home);
+function GameCard({ game }: { game: PoGame }) {
+  const router = useRouter();
+  const homeWin = game.homeWl === "W";
+  const inProgress = !game.homeWl;
 
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs text-muted-foreground">{game.Date}</span>
-          <Badge variant="secondary" className="text-xs">Final</Badge>
-        </div>
-        <div className="space-y-2">
-          <div className={`flex items-center justify-between ${homeWin ? "opacity-60" : ""}`}>
-            <Link href={`/playoffs/teams/${visitorAbbr}`} className="flex items-center gap-2 hover:underline">
-              <div className="h-3 w-3 rounded-full" style={{ backgroundColor: getTeamColor(visitorAbbr) }} />
-              <span className={`font-medium ${!homeWin ? "font-semibold" : ""}`}>{game.Visitor}</span>
-            </Link>
-            <span className={`font-mono text-lg ${!homeWin ? "font-bold" : ""}`}>{vPts}</span>
+    <div
+      role="link"
+      tabIndex={0}
+      onClick={() => router.push(`/playoffs/games/${game.gameId}`)}
+      onKeyDown={(e) => e.key === "Enter" && router.push(`/playoffs/games/${game.gameId}`)}
+      className="cursor-pointer"
+    >
+      <Card className="hover:bg-accent/50 transition-colors">
+        <CardContent className="pt-5 pb-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs text-muted-foreground">{game.gameDate}</span>
+            <Badge variant={inProgress ? "outline" : "secondary"} className="text-xs">
+              {inProgress ? "進行中" : "Final"}
+            </Badge>
           </div>
-          <div className={`flex items-center justify-between ${!homeWin ? "opacity-60" : ""}`}>
-            <Link href={`/playoffs/teams/${homeAbbr}`} className="flex items-center gap-2 hover:underline">
-              <div className="h-3 w-3 rounded-full" style={{ backgroundColor: getTeamColor(homeAbbr) }} />
-              <span className={`font-medium ${homeWin ? "font-semibold" : ""}`}>{game.Home}</span>
-              <span className="text-xs text-muted-foreground">HOME</span>
-            </Link>
-            <span className={`font-mono text-lg ${homeWin ? "font-bold" : ""}`}>{hPts}</span>
+          <div className="space-y-2">
+            <div className={`flex items-center justify-between ${!inProgress && homeWin ? "opacity-50" : ""}`}>
+              <Link
+                href={`/playoffs/teams/${game.awayTeam}`}
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-2 hover:underline"
+              >
+                <div className="h-3 w-3 rounded-full" style={{ backgroundColor: getTeamColor(game.awayTeam) }} />
+                <span className={`font-medium ${!inProgress && !homeWin ? "font-bold" : ""}`}>{game.awayTeam}</span>
+              </Link>
+              <span className={`font-mono text-lg ${!inProgress && !homeWin ? "font-bold" : ""}`}>{game.awayPts || "—"}</span>
+            </div>
+            <div className={`flex items-center justify-between ${!inProgress && !homeWin ? "opacity-50" : ""}`}>
+              <Link
+                href={`/playoffs/teams/${game.homeTeam}`}
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-2 hover:underline"
+              >
+                <div className="h-3 w-3 rounded-full" style={{ backgroundColor: getTeamColor(game.homeTeam) }} />
+                <span className={`font-medium ${!inProgress && homeWin ? "font-bold" : ""}`}>{game.homeTeam}</span>
+                <span className="text-xs text-muted-foreground">HOME</span>
+              </Link>
+              <span className={`font-mono text-lg ${!inProgress && homeWin ? "font-bold" : ""}`}>{game.homePts || "—"}</span>
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
-export function PlayoffGamesClient({ series, games }: { series: PlayoffSeries[]; games: Record<string, string>[] }) {
+export function PlayoffGamesClient({ series, games }: { series: PlayoffSeries[]; games: PoGame[] }) {
   const allDates = useMemo(() => {
-    const dates = [...new Set(games.map((g) => g.Date))].sort((a, b) => {
-      return new Date(a).getTime() - new Date(b).getTime();
-    });
-    return dates;
+    return [...new Set(games.map((g) => g.gameDate))].sort();
   }, [games]);
 
   const [selectedDate, setSelectedDate] = useState(allDates[allDates.length - 1] ?? "");
-
-  const dayGames = useMemo(
-    () => (games as unknown as Game[]).filter((g) => g.Date === selectedDate),
-    [games, selectedDate]
-  );
-
   const selectedIdx = allDates.indexOf(selectedDate);
+  const dayGames = useMemo(() => games.filter((g) => g.gameDate === selectedDate), [games, selectedDate]);
 
   return (
     <div className="space-y-4">
@@ -97,7 +99,7 @@ export function PlayoffGamesClient({ series, games }: { series: PlayoffSeries[];
         <p className="text-muted-foreground">この日の試合はありません</p>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {dayGames.map((g) => <GameCard key={`${g.Visitor}-${g.Home}-${g.Date}`} game={g} />)}
+          {dayGames.map((g) => <GameCard key={g.gameId} game={g} />)}
         </div>
       )}
 

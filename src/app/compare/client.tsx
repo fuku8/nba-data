@@ -197,11 +197,11 @@ export function CompareClient({
                       </td>
                     </tr>
                     {[
-                      { label: "PER", get: (name: string) => advMap.get(name)?.per.toFixed(1) ?? "-" },
+                      { label: "ORtg", get: (name: string) => advMap.get(name)?.offRating.toFixed(1) ?? "-" },
+                      { label: "DRtg", get: (name: string) => advMap.get(name)?.defRating.toFixed(1) ?? "-" },
+                      { label: "NRtg", get: (name: string) => { const v = advMap.get(name)?.netRating; return v !== undefined ? (v > 0 ? "+" : "") + v.toFixed(1) : "-"; } },
                       { label: "TS%", get: (name: string) => { const v = advMap.get(name)?.tsPct; return v ? (v * 100).toFixed(1) + "%" : "-"; } },
-                      { label: "WS", get: (name: string) => advMap.get(name)?.ws.toFixed(1) ?? "-" },
-                      { label: "BPM", get: (name: string) => { const v = advMap.get(name)?.bpm; return v !== undefined ? (v > 0 ? "+" : "") + v.toFixed(1) : "-"; } },
-                      { label: "VORP", get: (name: string) => advMap.get(name)?.vorp.toFixed(1) ?? "-" },
+                      { label: "PIE", get: (name: string) => { const v = advMap.get(name)?.pie; return v ? (v * 100).toFixed(1) + "%" : "-"; } },
                     ].map((row) => (
                       <tr key={row.label} className="border-b hover:bg-accent/30">
                         <td className="py-2 px-3 font-medium">{row.label}</td>

@@ -10,7 +10,6 @@ import {
 const rows: TeamRosterRow[] = [
   {
     player: "Alpha Guard",
-    pos: "PG",
     gp: 82,
     mpg: 34.5,
     pts: 24.1,
@@ -20,12 +19,11 @@ const rows: TeamRosterRow[] = [
     blk: 0.2,
     fgPct: 0.51,
     threePtPct: 0.39,
-    per: 22.4,
-    ws: 10.1,
+    offRating: 118.4,
+    tsPct: 0.62,
   },
   {
     player: "Bravo Wing",
-    pos: "SF",
     gp: 76,
     mpg: 31.2,
     pts: 18.6,
@@ -35,12 +33,11 @@ const rows: TeamRosterRow[] = [
     blk: 0.7,
     fgPct: 0.47,
     threePtPct: 0.41,
-    per: null,
-    ws: null,
+    offRating: null,
+    tsPct: null,
   },
   {
     player: "Charlie Big",
-    pos: "C",
     gp: 70,
     mpg: 29.8,
     pts: 16.9,
@@ -50,8 +47,8 @@ const rows: TeamRosterRow[] = [
     blk: 1.9,
     fgPct: 0.58,
     threePtPct: 0.0,
-    per: 19.3,
-    ws: 7.6,
+    offRating: 112.7,
+    tsPct: 0.71,
   },
 ];
 
@@ -72,7 +69,7 @@ test("sortTeamRosterRows sorts numeric fields ascending", () => {
 });
 
 test("sortTeamRosterRows places players with null advanced stats last when sorting descending", () => {
-  const sorted = sortTeamRosterRows(rows, { key: "per", direction: "desc" });
+  const sorted = sortTeamRosterRows(rows, { key: "offRating", direction: "desc" });
   assert.deepEqual(
     sorted.map((row) => row.player),
     ["Alpha Guard", "Charlie Big", "Bravo Wing"],
@@ -97,7 +94,7 @@ test("getNextRosterSortConfig flips direction for the active key", () => {
 
 test("getNextRosterSortConfig resets a new key to descending", () => {
   assert.deepEqual(
-    getNextRosterSortConfig({ key: "pts", direction: "asc" }, "ws"),
-    { key: "ws", direction: "desc" },
+    getNextRosterSortConfig({ key: "pts", direction: "asc" }, "tsPct"),
+    { key: "tsPct", direction: "desc" },
   );
 });

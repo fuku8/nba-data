@@ -51,8 +51,6 @@ export default async function PlayerDetailPage({
               {teamInfo?.name ?? pg.team}
             </Link>
             <span>·</span>
-            <span>{pg.pos}</span>
-            <span>·</span>
             <span>Age {pg.age}</span>
           </div>
         </div>
@@ -123,15 +121,15 @@ export default async function PlayerDetailPage({
           <CardContent>
             <div className="grid grid-cols-3 gap-4 sm:grid-cols-5 lg:grid-cols-9">
               {[
-                { label: "PER", value: adv.per.toFixed(1) },
+                { label: "ORtg", value: adv.offRating.toFixed(1) },
+                { label: "DRtg", value: adv.defRating.toFixed(1) },
+                { label: "NRtg", value: (adv.netRating > 0 ? "+" : "") + adv.netRating.toFixed(1) },
                 { label: "TS%", value: (adv.tsPct * 100).toFixed(1) + "%" },
-                { label: "USG%", value: adv.usgPct.toFixed(1) + "%" },
-                { label: "OWS", value: adv.ows.toFixed(1) },
-                { label: "DWS", value: adv.dws.toFixed(1) },
-                { label: "WS", value: adv.ws.toFixed(1) },
-                { label: "WS/48", value: adv.wsPer48.toFixed(3) },
-                { label: "BPM", value: (adv.bpm > 0 ? "+" : "") + adv.bpm.toFixed(1) },
-                { label: "VORP", value: adv.vorp.toFixed(1) },
+                { label: "eFG%", value: (adv.efgPct * 100).toFixed(1) + "%" },
+                { label: "USG%", value: (adv.usgPct * 100).toFixed(1) + "%" },
+                { label: "AST%", value: (adv.astPct * 100).toFixed(1) + "%" },
+                { label: "REB%", value: (adv.rebPct * 100).toFixed(1) + "%" },
+                { label: "PIE", value: (adv.pie * 100).toFixed(1) + "%" },
               ].map(({ label, value }) => (
                 <div key={label} className="text-center">
                   <div className="text-xs text-muted-foreground">{label}</div>

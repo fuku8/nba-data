@@ -1,75 +1,109 @@
 import { readCsvFile, csvToObjects, num } from "./csv-utils";
 import type { PlayerPerGame, PlayerAdvanced, PlayerTotals } from "@/lib/types";
 
+function mapPlayerPerGame(d: Record<string, string>): PlayerPerGame {
+  return {
+    playerId:    num(d["PLAYER_ID"]),
+    player:      d["PLAYER_NAME"] || "",
+    teamId:      num(d["TEAM_ID"]),
+    team:        d["TEAM_ABBREVIATION"] || "",
+    age:         num(d["AGE"]),
+    gp:          num(d["GP"]),
+    wins:        num(d["W"]),
+    losses:      num(d["L"]),
+    winPct:      num(d["W_PCT"]),
+    mpg:         num(d["MIN"]),
+    fg:          num(d["FGM"]),
+    fga:         num(d["FGA"]),
+    fgPct:       num(d["FG_PCT"]),
+    threePt:     num(d["FG3M"]),
+    threePtA:    num(d["FG3A"]),
+    threePtPct:  num(d["FG3_PCT"]),
+    ft:          num(d["FTM"]),
+    fta:         num(d["FTA"]),
+    ftPct:       num(d["FT_PCT"]),
+    orb:         num(d["OREB"]),
+    drb:         num(d["DREB"]),
+    trb:         num(d["REB"]),
+    ast:         num(d["AST"]),
+    stl:         num(d["STL"]),
+    blk:         num(d["BLK"]),
+    blka:        num(d["BLKA"]),
+    tov:         num(d["TOV"]),
+    pf:          num(d["PF"]),
+    pfd:         num(d["PFD"]),
+    pts:         num(d["PTS"]),
+    plusMinus:   num(d["PLUS_MINUS"]),
+    dd2:         num(d["DD2"]),
+    td3:         num(d["TD3"]),
+  };
+}
+
+function mapPlayerTotals(d: Record<string, string>): PlayerTotals {
+  return {
+    playerId:  num(d["PLAYER_ID"]),
+    player:    d["PLAYER_NAME"] || "",
+    teamId:    num(d["TEAM_ID"]),
+    team:      d["TEAM_ABBREVIATION"] || "",
+    age:       num(d["AGE"]),
+    gp:        num(d["GP"]),
+    mp:        num(d["MIN"]),
+    fg:        num(d["FGM"]),
+    fga:       num(d["FGA"]),
+    threePt:   num(d["FG3M"]),
+    threePtA:  num(d["FG3A"]),
+    ft:        num(d["FTM"]),
+    fta:       num(d["FTA"]),
+    orb:       num(d["OREB"]),
+    drb:       num(d["DREB"]),
+    trb:       num(d["REB"]),
+    ast:       num(d["AST"]),
+    stl:       num(d["STL"]),
+    blk:       num(d["BLK"]),
+    tov:       num(d["TOV"]),
+    pf:        num(d["PF"]),
+    pts:       num(d["PTS"]),
+    plusMinus: num(d["PLUS_MINUS"]),
+  };
+}
+
 export function getPlayerPerGame(): PlayerPerGame[] {
   const rows = readCsvFile("player_per_game.csv");
   const data = csvToObjects(rows);
   return data
-    .filter((d) => d["Player"] && d["Player"] !== "Player")
-    .map((d) => ({
-      player: d["Player"] || "",
-      age: num(d["Age"]),
-      team: d["Tm"] || d["Team"] || "",
-      pos: d["Pos"] || "",
-      gp: num(d["G"]),
-      gs: num(d["GS"]),
-      mpg: num(d["MP"]),
-      fg: num(d["FG"]),
-      fga: num(d["FGA"]),
-      fgPct: num(d["FG%"]),
-      threePt: num(d["3P"]),
-      threePtA: num(d["3PA"]),
-      threePtPct: num(d["3P%"]),
-      twoPt: num(d["2P"]),
-      twoPtA: num(d["2PA"]),
-      twoPtPct: num(d["2P%"]),
-      efgPct: num(d["eFG%"]),
-      ft: num(d["FT"]),
-      fta: num(d["FTA"]),
-      ftPct: num(d["FT%"]),
-      orb: num(d["ORB"]),
-      drb: num(d["DRB"]),
-      trb: num(d["TRB"]),
-      ast: num(d["AST"]),
-      stl: num(d["STL"]),
-      blk: num(d["BLK"]),
-      tov: num(d["TOV"]),
-      pf: num(d["PF"]),
-      pts: num(d["PTS"]),
-    }));
+    .filter((d) => d["PLAYER_NAME"])
+    .map(mapPlayerPerGame);
 }
 
 export function getPlayerAdvanced(): PlayerAdvanced[] {
   const rows = readCsvFile("player_advanced.csv");
   const data = csvToObjects(rows);
   return data
-    .filter((d) => d["Player"] && d["Player"] !== "Player")
+    .filter((d) => d["PLAYER_NAME"])
     .map((d) => ({
-      player: d["Player"] || "",
-      age: num(d["Age"]),
-      team: d["Tm"] || d["Team"] || "",
-      pos: d["Pos"] || "",
-      gp: num(d["G"]),
-      mp: num(d["MP"]),
-      per: num(d["PER"]),
-      tsPct: num(d["TS%"]),
-      efgPct: num(d["eFG%"]),
-      usgPct: num(d["USG%"]),
-      ows: num(d["OWS"]),
-      dws: num(d["DWS"]),
-      ws: num(d["WS"]),
-      wsPer48: num(d["WS/48"]),
-      obpm: num(d["OBPM"]),
-      dbpm: num(d["DBPM"]),
-      bpm: num(d["BPM"]),
-      vorp: num(d["VORP"]),
-      orbPct: num(d["ORB%"]),
-      drbPct: num(d["DRB%"]),
-      trbPct: num(d["TRB%"]),
-      astPct: num(d["AST%"]),
-      stlPct: num(d["STL%"]),
-      blkPct: num(d["BLK%"]),
-      tovPct: num(d["TOV%"]),
+      playerId:  num(d["PLAYER_ID"]),
+      player:    d["PLAYER_NAME"] || "",
+      teamId:    num(d["TEAM_ID"]),
+      team:      d["TEAM_ABBREVIATION"] || "",
+      age:       num(d["AGE"]),
+      gp:        num(d["GP"]),
+      mp:        num(d["MIN"]),
+      offRating: num(d["OFF_RATING"]),
+      defRating: num(d["DEF_RATING"]),
+      netRating: num(d["NET_RATING"]),
+      astPct:    num(d["AST_PCT"]),
+      astTo:     num(d["AST_TO"]),
+      astRatio:  num(d["AST_RATIO"]),
+      orebPct:   num(d["OREB_PCT"]),
+      drebPct:   num(d["DREB_PCT"]),
+      rebPct:    num(d["REB_PCT"]),
+      tmTovPct:  num(d["TM_TOV_PCT"]),
+      efgPct:    num(d["EFG_PCT"]),
+      tsPct:     num(d["TS_PCT"]),
+      usgPct:    num(d["USG_PCT"]),
+      pace:      num(d["PACE"]),
+      pie:       num(d["PIE"]),
+      poss:      num(d["POSS"]),
     }));
 }
 
@@ -77,33 +111,8 @@ export function getPlayerTotals(): PlayerTotals[] {
   const rows = readCsvFile("player_totals.csv");
   const data = csvToObjects(rows);
   return data
-    .filter((d) => d["Player"] && d["Player"] !== "Player")
-    .map((d) => ({
-      player: d["Player"] || "",
-      age: num(d["Age"]),
-      team: d["Tm"] || d["Team"] || "",
-      pos: d["Pos"] || "",
-      gp: num(d["G"]),
-      gs: num(d["GS"]),
-      mp: num(d["MP"]),
-      fg: num(d["FG"]),
-      fga: num(d["FGA"]),
-      threePt: num(d["3P"]),
-      threePtA: num(d["3PA"]),
-      twoPt: num(d["2P"]),
-      twoPtA: num(d["2PA"]),
-      ft: num(d["FT"]),
-      fta: num(d["FTA"]),
-      orb: num(d["ORB"]),
-      drb: num(d["DRB"]),
-      trb: num(d["TRB"]),
-      ast: num(d["AST"]),
-      stl: num(d["STL"]),
-      blk: num(d["BLK"]),
-      tov: num(d["TOV"]),
-      pf: num(d["PF"]),
-      pts: num(d["PTS"]),
-    }));
+    .filter((d) => d["PLAYER_NAME"])
+    .map(mapPlayerTotals);
 }
 
 export function searchPlayers(
@@ -113,3 +122,5 @@ export function searchPlayers(
   const q = query.toLowerCase();
   return players.filter((p) => p.player.toLowerCase().includes(q));
 }
+
+export { mapPlayerPerGame, mapPlayerTotals };

@@ -23,10 +23,10 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install pandas requests beautifulsoup4 lxml
+        run: pip install pandas requests nba_api
 
-      - name: Fetch data from Basketball Reference
-        run: python scripts/fetch-bref-data.py
+      - name: Fetch data from NBA.com
+        run: python scripts/fetch-nba-data.py
 
       - name: Check for changes
         id: changes

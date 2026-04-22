@@ -64,7 +64,7 @@ function RSHomePage() {
             <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Best Offense</CardTitle></CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{bestOff.offRating.toFixed(1)}</div>
-              <Link href={`/teams/${getTeamAbbr(bestOff.team)}`} className="text-sm text-muted-foreground hover:underline">{bestOff.team}</Link>
+              <Link href={`/teams/${getTeamAbbr(bestOff.teamName)}`} className="text-sm text-muted-foreground hover:underline">{bestOff.teamName}</Link>
             </CardContent>
           </Card>
         )}
@@ -73,7 +73,7 @@ function RSHomePage() {
             <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Best Defense</CardTitle></CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{bestDef.defRating.toFixed(1)}</div>
-              <Link href={`/teams/${getTeamAbbr(bestDef.team)}`} className="text-sm text-muted-foreground hover:underline">{bestDef.team}</Link>
+              <Link href={`/teams/${getTeamAbbr(bestDef.teamName)}`} className="text-sm text-muted-foreground hover:underline">{bestDef.teamName}</Link>
             </CardContent>
           </Card>
         )}
@@ -82,7 +82,7 @@ function RSHomePage() {
             <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Best Net Rating</CardTitle></CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{bestNet.netRating > 0 ? "+" : ""}{bestNet.netRating.toFixed(1)}</div>
-              <Link href={`/teams/${getTeamAbbr(bestNet.team)}`} className="text-sm text-muted-foreground hover:underline">{bestNet.team}</Link>
+              <Link href={`/teams/${getTeamAbbr(bestNet.teamName)}`} className="text-sm text-muted-foreground hover:underline">{bestNet.teamName}</Link>
             </CardContent>
           </Card>
         )}
@@ -112,13 +112,13 @@ function RSHomePage() {
               <CardContent>
                 <div className="space-y-1.5">
                   {teams.map((t, i) => {
-                    const abbr = getTeamAbbr(t.team);
+                    const abbr = t.teamAbbr;
                     return (
-                      <Link key={t.team} href={`/teams/${abbr}`} className="flex items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-accent transition-colors">
+                      <Link key={t.teamName} href={`/teams/${abbr}`} className="flex items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-accent transition-colors">
                         <div className="flex items-center gap-3">
                           <span className="w-5 text-center text-muted-foreground">{i + 1}</span>
                           <div className="h-3 w-3 rounded-full" style={{ backgroundColor: getTeamColor(abbr) }} />
-                          <span className="font-medium">{t.team}</span>
+                          <span className="font-medium">{t.teamName}</span>
                         </div>
                         <div className="flex items-center gap-4 font-mono text-xs">
                           <span>{t.wins}-{t.losses}</span>
