@@ -1,5 +1,3 @@
 pandas
 requests
-beautifulsoup4
-lxml
 nba_api

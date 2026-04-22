@@ -14,6 +14,7 @@ export type TeamRosterSortKey =
   | "tsPct";
 
 export interface TeamRosterRow {
+  playerId: number;
   player: string;
   gp: number;
   mpg: number;

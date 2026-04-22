@@ -23,7 +23,7 @@ function PlayerCard({ p }: { p: PlayoffPlayerPerGame }) {
       <CardContent className="pt-4 pb-4">
         <div className="flex items-start justify-between mb-3">
           <div>
-            <Link href={`/players/${encodeURIComponent(p.player)}`} className="font-semibold hover:underline text-base">
+            <Link href={`/players/${p.playerId}`} className="font-semibold hover:underline text-base">
               {p.player}
             </Link>
             <p className="text-xs text-muted-foreground mt-0.5">{p.gp}G</p>

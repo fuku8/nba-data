@@ -14,18 +14,18 @@ export default async function PlayerDetailPage({
   params: Promise<{ playerId: string }>;
 }) {
   const { playerId } = await params;
-  const playerName = decodeURIComponent(playerId);
+  const playerIdNum = parseInt(playerId, 10);
 
   const allPerGame = getPlayerPerGame();
   const allAdvanced = getPlayerAdvanced();
   const allPoPerGame = getPlayoffPlayerPerGame();
 
-  const pg = allPerGame.find((p) => p.player === playerName && p.team !== "TOT")
-    || allPerGame.find((p) => p.player === playerName);
-  const adv = allAdvanced.find((p) => p.player === playerName && p.team !== "TOT")
-    || allAdvanced.find((p) => p.player === playerName);
-  const poPg = allPoPerGame.find((p) => p.player === playerName && p.team !== "TOT")
-    || allPoPerGame.find((p) => p.player === playerName);
+  const pg = allPerGame.find((p) => p.playerId === playerIdNum && p.team !== "TOT")
+    || allPerGame.find((p) => p.playerId === playerIdNum);
+  const adv = allAdvanced.find((p) => p.playerId === playerIdNum && p.team !== "TOT")
+    || allAdvanced.find((p) => p.playerId === playerIdNum);
+  const poPg = allPoPerGame.find((p) => p.playerId === playerIdNum && p.team !== "TOT")
+    || allPoPerGame.find((p) => p.playerId === playerIdNum);
 
   if (!pg) notFound();
 

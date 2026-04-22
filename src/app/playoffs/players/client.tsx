@@ -79,7 +79,7 @@ export function PlayoffPlayersClient({ players }: { players: PlayoffPlayerPerGam
             {paginated.map((p) => (
               <TableRow key={`${p.player}-${p.team}`}>
                 <TableCell className="sticky left-0 bg-background font-medium">
-                  <Link href={`/players/${encodeURIComponent(p.player)}`} className="hover:underline">{p.player}</Link>
+                  <Link href={`/players/${p.playerId}`} className="hover:underline">{p.player}</Link>
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline" className="text-xs" style={{ borderColor: getTeamColor(p.team) }}>{p.team}</Badge>

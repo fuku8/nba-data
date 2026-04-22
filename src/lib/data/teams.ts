@@ -15,7 +15,7 @@ export function getStandings(): TeamStanding[] {
       wins:            num(d["WINS"]),
       losses:          num(d["LOSSES"]),
       winPct:          num(d["WIN_PCT"]),
-      conferenceGb:    d["CONFERENCE_GB"] || "—",
+      conferenceGb:    (d["CONFERENCE_GB"] && d["CONFERENCE_GB"] !== "0.0") ? d["CONFERENCE_GB"] : "—",
       playoffRank:     num(d["PLAYOFF_RANK"]),
       pointsPg:        num(d["POINTS_PG"]),
       oppPointsPg:     num(d["OPP_POINTS_PG"]),

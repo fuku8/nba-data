@@ -55,7 +55,7 @@ export function RosterClient({ players }: { players: PlayoffPlayerPerGame[] }) {
           {sorted.map((p) => (
             <tr key={`${p.player}-${p.team}`} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
               <td className="py-2 px-3 font-medium sticky left-0 bg-background">
-                <Link href={`/players/${encodeURIComponent(p.player)}`} className="hover:underline">{p.player}</Link>
+                <Link href={`/players/${p.playerId}`} className="hover:underline">{p.player}</Link>
               </td>
               {COLS.map((col) => {
                 const v = ((p as unknown) as Record<string, number>)[col.key] ?? 0;

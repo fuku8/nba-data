@@ -141,7 +141,7 @@ export function TeamRosterTable({ rows }: { rows: TeamRosterRow[] }) {
             <TableRow key={row.player} className="hover:bg-accent/50">
               <TableCell>
                 <Link
-                  href={`/players/${encodeURIComponent(row.player)}`}
+                  href={`/players/${row.playerId}`}
                   className="hover:underline font-medium"
                 >
                   {row.player}

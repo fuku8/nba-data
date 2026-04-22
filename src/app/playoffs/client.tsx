@@ -55,7 +55,7 @@ function StatLeaders({ players, label, getValue }: { players: PlayoffPlayerPerGa
           <div key={p.player} className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
               <span className="w-4 text-muted-foreground font-mono">{i + 1}</span>
-              <Link href={`/players/${encodeURIComponent(p.player)}`} className="hover:underline font-medium truncate max-w-[120px]">{p.player}</Link>
+              <Link href={`/players/${p.playerId}`} className="hover:underline font-medium truncate max-w-[120px]">{p.player}</Link>
               <Badge variant="outline" className="text-xs shrink-0" style={{ borderColor: getTeamColor(p.team) }}>{p.team}</Badge>
             </div>
             <span className="font-mono font-semibold">{getValue(p).toFixed(1)}</span>

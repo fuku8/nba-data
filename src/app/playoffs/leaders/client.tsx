@@ -9,6 +9,7 @@ import type { PlayoffPlayerPerGame } from "@/lib/types";
 const TOP_N = 10;
 
 interface LeaderEntry {
+  playerId: number;
   player: string;
   team: string;
   value: number;
@@ -23,10 +24,10 @@ function LeaderBoard({ title, entries }: { title: string; entries: LeaderEntry[]
       </CardHeader>
       <CardContent className="space-y-1.5">
         {entries.map((e, i) => (
-          <div key={`${e.player}-${i}`} className="flex items-center justify-between text-sm py-1">
+          <div key={`${e.playerId}-${i}`} className="flex items-center justify-between text-sm py-1">
             <div className="flex items-center gap-2">
               <span className="w-6 text-right text-muted-foreground font-mono">{i + 1}</span>
-              <Link href={`/players/${encodeURIComponent(e.player)}`} className="font-medium hover:underline truncate max-w-[130px]">
+              <Link href={`/players/${e.playerId}`} className="font-medium hover:underline truncate max-w-[130px]">
                 {e.player}
               </Link>
               <Badge variant="outline" className="text-xs shrink-0" style={{ borderColor: getTeamColor(e.team) }}>
@@ -53,7 +54,7 @@ function makeLeaders(
   return [...pool]
     .sort((a, b) => getValue(b) - getValue(a))
     .slice(0, TOP_N)
-    .map((p) => ({ player: p.player, team: p.team, value: getValue(p), format }));
+    .map((p) => ({ playerId: p.playerId, player: p.player, team: p.team, value: getValue(p), format }));
 }
 
 export function PlayoffLeadersClient({ players }: { players: PlayoffPlayerPerGame[] }) {

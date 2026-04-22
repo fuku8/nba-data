@@ -211,6 +211,7 @@ export interface PlayoffTeamStats {
 
 export type PlayoffPlayerPerGame = PlayerPerGame;
 export type PlayoffPlayerTotals = PlayerTotals;
+export type PlayoffPlayerAdvanced = PlayerAdvanced;
 
 // ===== ソート =====
 

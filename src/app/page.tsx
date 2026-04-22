@@ -10,7 +10,7 @@ import { PlayoffsTopClient } from "@/app/playoffs/client";
 
 export const revalidate = 3600;
 
-function LeaderCard({ title, players }: { title: string; players: { name: string; team: string; value: number }[] }) {
+function LeaderCard({ title, players }: { title: string; players: { playerId: number; name: string; team: string; value: number }[] }) {
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -21,7 +21,7 @@ function LeaderCard({ title, players }: { title: string; players: { name: string
           <div key={`${p.name}-${i}`} className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground w-4">{i + 1}</span>
-              <Link href={`/players/${encodeURIComponent(p.name)}`} className="font-medium hover:underline">{p.name}</Link>
+              <Link href={`/players/${p.playerId}`} className="font-medium hover:underline">{p.name}</Link>
               <Link href={`/teams/${p.team}`}>
                 <Badge variant="outline" className="text-xs hover:bg-accent transition-colors" style={{ borderColor: getTeamColor(p.team) }}>{p.team}</Badge>
               </Link>
@@ -40,9 +40,9 @@ function RSHomePage() {
   const players = getPlayerPerGame().filter((p) => p.gp >= 30 && p.team !== "TOT");
   const latestGameDate = getLatestGameDate();
 
-  const ptsLeaders = [...players].sort((a, b) => b.pts - a.pts).slice(0, 5).map((p) => ({ name: p.player, team: p.team, value: p.pts }));
-  const rebLeaders = [...players].sort((a, b) => b.trb - a.trb).slice(0, 5).map((p) => ({ name: p.player, team: p.team, value: p.trb }));
-  const astLeaders = [...players].sort((a, b) => b.ast - a.ast).slice(0, 5).map((p) => ({ name: p.player, team: p.team, value: p.ast }));
+  const ptsLeaders = [...players].sort((a, b) => b.pts - a.pts).slice(0, 5).map((p) => ({ playerId: p.playerId, name: p.player, team: p.team, value: p.pts }));
+  const rebLeaders = [...players].sort((a, b) => b.trb - a.trb).slice(0, 5).map((p) => ({ playerId: p.playerId, name: p.player, team: p.team, value: p.trb }));
+  const astLeaders = [...players].sort((a, b) => b.ast - a.ast).slice(0, 5).map((p) => ({ playerId: p.playerId, name: p.player, team: p.team, value: p.ast }));
 
   const eastTop = standings.filter((s) => s.conference === "East").sort((a, b) => b.winPct - a.winPct).slice(0, 8);
   const westTop = standings.filter((s) => s.conference === "West").sort((a, b) => b.winPct - a.winPct).slice(0, 8);

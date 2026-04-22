@@ -186,7 +186,7 @@ export function PlayersClient({
                       <TableRow key={`${p.player}-${p.team}`} className="hover:bg-accent/50">
                         <TableCell className="text-muted-foreground">{page * PAGE_SIZE + i + 1}</TableCell>
                         <TableCell>
-                          <Link href={`/players/${encodeURIComponent(p.player)}`} className="hover:underline font-medium">
+                          <Link href={`/players/${p.playerId}`} className="hover:underline font-medium">
                             {p.player}
                           </Link>
                         </TableCell>
@@ -259,7 +259,7 @@ export function PlayersClient({
                       <TableRow key={`${p.player}-${p.team}`} className="hover:bg-accent/50">
                         <TableCell className="text-muted-foreground">{page * PAGE_SIZE + i + 1}</TableCell>
                         <TableCell>
-                          <Link href={`/players/${encodeURIComponent(p.player)}`} className="hover:underline font-medium">
+                          <Link href={`/players/${p.playerId}`} className="hover:underline font-medium">
                             {p.player}
                           </Link>
                         </TableCell>

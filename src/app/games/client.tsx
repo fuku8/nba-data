@@ -34,7 +34,7 @@ export function GamesClient({
         <div>
           <h1 className="text-3xl font-bold tracking-tight">試合結果</h1>
           <p className="text-muted-foreground text-sm">
-            {games.length} 試合 · Basketball Reference · 日付は米国東部時間(ET)基準
+            {games.length} 試合 · NBA.com · 日付は米国東部時間(ET)基準
           </p>
         </div>
         <Select value={selectedDate} onValueChange={(v) => setSelectedDate(v ?? dates[0])}>

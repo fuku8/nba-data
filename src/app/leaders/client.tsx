@@ -11,6 +11,7 @@ import type { PlayerPerGame, PlayerAdvanced } from "@/lib/types";
 const TOP_N = 20;
 
 interface LeaderEntry {
+  playerId: number;
   player: string;
   team: string;
   value: number;
@@ -31,10 +32,10 @@ function LeaderBoard({
       </CardHeader>
       <CardContent className="space-y-1.5">
         {entries.map((e, i) => (
-          <div key={`${e.player}-${i}`} className="flex items-center justify-between text-sm py-1">
+          <div key={`${e.playerId}-${i}`} className="flex items-center justify-between text-sm py-1">
             <div className="flex items-center gap-2">
               <span className="w-6 text-right text-muted-foreground font-mono">{i + 1}</span>
-              <Link href={`/players/${encodeURIComponent(e.player)}`} className="font-medium hover:underline">
+              <Link href={`/players/${e.playerId}`} className="font-medium hover:underline">
                 {e.player}
               </Link>
               <Badge variant="outline" className="text-xs" style={{ borderColor: getTeamColor(e.team) }}>
@@ -55,7 +56,7 @@ function LeaderBoard({
   );
 }
 
-function makeLeaders<T extends { player: string; team: string }>(
+function makeLeaders<T extends { playerId: number; player: string; team: string }>(
   players: T[],
   getValue: (p: T) => number,
   format?: LeaderEntry["format"],
@@ -64,7 +65,7 @@ function makeLeaders<T extends { player: string; team: string }>(
   return [...players]
     .sort((a, b) => (desc ? getValue(b) - getValue(a) : getValue(a) - getValue(b)))
     .slice(0, TOP_N)
-    .map((p) => ({ player: p.player, team: p.team, value: getValue(p), format }));
+    .map((p) => ({ playerId: p.playerId, player: p.player, team: p.team, value: getValue(p), format }));
 }
 
 export function LeadersClient({

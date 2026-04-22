@@ -52,7 +52,7 @@ export function SearchClient({
             const adv = advMap.get(p.player);
             const teamInfo = getTeamInfo(p.team);
             return (
-              <Link key={`${p.player}-${p.team}`} href={`/players/${encodeURIComponent(p.player)}`}>
+              <Link key={`${p.player}-${p.team}`} href={`/players/${p.playerId}`}>
                 <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
                   <CardContent className="pt-6">
                     <div className="flex items-start justify-between mb-3">

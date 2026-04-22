@@ -9,6 +9,7 @@ import {
 
 const rows: TeamRosterRow[] = [
   {
+    playerId: 1001,
     player: "Alpha Guard",
     gp: 82,
     mpg: 34.5,
@@ -23,6 +24,7 @@ const rows: TeamRosterRow[] = [
     tsPct: 0.62,
   },
   {
+    playerId: 1002,
     player: "Bravo Wing",
     gp: 76,
     mpg: 31.2,
@@ -37,6 +39,7 @@ const rows: TeamRosterRow[] = [
     tsPct: null,
   },
   {
+    playerId: 1003,
     player: "Charlie Big",
     gp: 70,
     mpg: 29.8,

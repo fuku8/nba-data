@@ -75,36 +75,40 @@ export function getPlayerPerGame(): PlayerPerGame[] {
     .map(mapPlayerPerGame);
 }
 
+function mapPlayerAdvanced(d: Record<string, string>): PlayerAdvanced {
+  return {
+    playerId:  num(d["PLAYER_ID"]),
+    player:    d["PLAYER_NAME"] || "",
+    teamId:    num(d["TEAM_ID"]),
+    team:      d["TEAM_ABBREVIATION"] || "",
+    age:       num(d["AGE"]),
+    gp:        num(d["GP"]),
+    mp:        num(d["MIN"]),
+    offRating: num(d["OFF_RATING"]),
+    defRating: num(d["DEF_RATING"]),
+    netRating: num(d["NET_RATING"]),
+    astPct:    num(d["AST_PCT"]),
+    astTo:     num(d["AST_TO"]),
+    astRatio:  num(d["AST_RATIO"]),
+    orebPct:   num(d["OREB_PCT"]),
+    drebPct:   num(d["DREB_PCT"]),
+    rebPct:    num(d["REB_PCT"]),
+    tmTovPct:  num(d["TM_TOV_PCT"]),
+    efgPct:    num(d["EFG_PCT"]),
+    tsPct:     num(d["TS_PCT"]),
+    usgPct:    num(d["USG_PCT"]),
+    pace:      num(d["PACE"]),
+    pie:       num(d["PIE"]),
+    poss:      num(d["POSS"]),
+  };
+}
+
 export function getPlayerAdvanced(): PlayerAdvanced[] {
   const rows = readCsvFile("player_advanced.csv");
   const data = csvToObjects(rows);
   return data
     .filter((d) => d["PLAYER_NAME"])
-    .map((d) => ({
-      playerId:  num(d["PLAYER_ID"]),
-      player:    d["PLAYER_NAME"] || "",
-      teamId:    num(d["TEAM_ID"]),
-      team:      d["TEAM_ABBREVIATION"] || "",
-      age:       num(d["AGE"]),
-      gp:        num(d["GP"]),
-      mp:        num(d["MIN"]),
-      offRating: num(d["OFF_RATING"]),
-      defRating: num(d["DEF_RATING"]),
-      netRating: num(d["NET_RATING"]),
-      astPct:    num(d["AST_PCT"]),
-      astTo:     num(d["AST_TO"]),
-      astRatio:  num(d["AST_RATIO"]),
-      orebPct:   num(d["OREB_PCT"]),
-      drebPct:   num(d["DREB_PCT"]),
-      rebPct:    num(d["REB_PCT"]),
-      tmTovPct:  num(d["TM_TOV_PCT"]),
-      efgPct:    num(d["EFG_PCT"]),
-      tsPct:     num(d["TS_PCT"]),
-      usgPct:    num(d["USG_PCT"]),
-      pace:      num(d["PACE"]),
-      pie:       num(d["PIE"]),
-      poss:      num(d["POSS"]),
-    }));
+    .map(mapPlayerAdvanced);
 }
 
 export function getPlayerTotals(): PlayerTotals[] {
@@ -123,4 +127,4 @@ export function searchPlayers(
   return players.filter((p) => p.player.toLowerCase().includes(q));
 }
 
-export { mapPlayerPerGame, mapPlayerTotals };
+export { mapPlayerPerGame, mapPlayerTotals, mapPlayerAdvanced };

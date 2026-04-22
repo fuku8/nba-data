@@ -57,6 +57,7 @@ export default async function TeamDetailPage({
     const advancedStats = rosterAdvanced.get(player.player);
 
     return {
+      playerId: player.playerId,
       player: player.player,
       gp: player.gp,
       mpg: player.mpg,

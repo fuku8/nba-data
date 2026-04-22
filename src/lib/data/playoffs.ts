@@ -1,10 +1,11 @@
 import { readCsvFile, csvToObjects, num } from "./csv-utils";
-import { mapPlayerPerGame, mapPlayerTotals } from "./players";
+import { mapPlayerPerGame, mapPlayerTotals, mapPlayerAdvanced } from "./players";
 import type {
   PlayoffSeries,
   PlayoffTeamStats,
   PlayoffPlayerPerGame,
   PlayoffPlayerTotals,
+  PlayoffPlayerAdvanced,
 } from "@/lib/types";
 
 export function isPlayoffDataAvailable(): boolean {
@@ -32,29 +33,7 @@ export function getPlayoffSeries(): PlayoffSeries[] {
 }
 
 export function getPlayoffTeamStats(): PlayoffTeamStats[] {
-  const rows = readCsvFile("po_team_per_game.csv");
-  if (rows.length > 1) {
-    const data = csvToObjects(rows);
-    return data
-      .filter((d) => d["TEAM_NAME"])
-      .map((d) => ({
-        teamId:    num(d["TEAM_ID"]),
-        team:      d["TEAM_NAME"] || "",
-        gp:        num(d["GP"]),
-        pts:       num(d["PTS"]),
-        reb:       num(d["REB"]),
-        ast:       num(d["AST"]),
-        stl:       num(d["STL"]),
-        blk:       num(d["BLK"]),
-        tov:       num(d["TOV"]),
-        fgPct:     num(d["FG_PCT"]),
-        fg3Pct:    num(d["FG3_PCT"]),
-        ftPct:     num(d["FT_PCT"]),
-        plusMinus: num(d["PLUS_MINUS"]),
-      }));
-  }
-
-  // フォールバック: po_player_totals.csv から集計
+  // po_team_per_game.csv は現在未生成のため、po_player_totals.csv から集計
   const players = getPlayoffPlayerTotals();
   type Acc = { fg: number; fga: number; fg3: number; fg3a: number; ft: number; fta: number; pts: number; trb: number; ast: number; stl: number; blk: number; tov: number; maxGp: number; };
   const teamMap = new Map<string, Acc>();
@@ -105,4 +84,12 @@ export function getPlayoffPlayerTotals(): PlayoffPlayerTotals[] {
   return data
     .filter((d) => d["PLAYER_NAME"])
     .map(mapPlayerTotals);
+}
+
+export function getPlayoffPlayerAdvanced(): PlayoffPlayerAdvanced[] {
+  const rows = readCsvFile("po_player_advanced.csv");
+  const data = csvToObjects(rows);
+  return data
+    .filter((d) => d["PLAYER_NAME"])
+    .map(mapPlayerAdvanced);
 }

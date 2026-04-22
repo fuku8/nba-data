@@ -271,7 +271,7 @@ function PlayerTable({ players, tricode }: { players: PlayerStats[]; tricode: st
             return (
               <tr key={p.personId} className="border-b last:border-0 hover:bg-muted/20">
                 <td className="py-2 px-3 font-medium">
-                  <Link href={`/players/${encodeURIComponent(p.name)}`} className="hover:underline">
+                  <Link href={`/players/${p.personId}`} className="hover:underline">
                     {p.name}
                   </Link>
                 </td>
