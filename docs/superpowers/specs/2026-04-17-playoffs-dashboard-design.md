@@ -472,6 +472,34 @@ src/app/playoffs/games/[gameId]/page.tsx
 
 ---
 
+### Phase 5.1: 試合詳細ページのチームスタッツ統合（2026-04-22 完了）
+
+> 従来の `TeamStatsComparison`（左右比較の独立テーブル）を廃止し、
+> 各チームの `PlayerTable` 最上段に「チーム合計行」を追加して選手ボックススコアと同じテーブル内に統合する。
+
+**変更内容**
+- `TeamStatsComparison` コンポーネントを削除（ファイルから除去）
+- `PlayerTable` に `teamStats?: TeamStats` prop を追加
+- テーブル先頭に「チーム合計」行を挿入：
+  - 選手列: "チーム合計" ラベル（チームカラーのドット付き）
+  - MIN: 出場選手の合計分（選手ごとの `mm:ss` を合算して整数分で表示）
+  - PTS / REB / AST / STL / BLK / TOV: `teamStats` の値を使用
+  - FG / 3P / FT: 選手の made/attempted を合算し、`teamStats` の percentage を付記（例 `40/87 (46.0%)`）
+  - POS / +/-: チーム合計では意味を持たないため "—"
+- 選手行との視認性を確保するため、チーム合計行のみ `bg-primary/10 font-semibold` で背景色と太字を適用
+- セクション見出しを「選手スタッツ」→「チーム・選手スタッツ」に変更
+
+**変更ファイル**
+- `src/app/playoffs/games/[gameId]/page.tsx`
+
+**チェックリスト**
+- [x] `TeamStatsComparison` コンポーネントと呼び出しを削除
+- [x] `PlayerTable` にチーム合計行を追加・`teamStats` prop を新設
+- [x] 未使用になった `fmt` ヘルパーを削除
+- [x] 型チェック `npm run typecheck` クリア
+
+---
+
 ## 11. 既存ページへの統合（追加要件）
 
 ### 11-1. トップページ（`/`）のプレーオフ期間中切り替え

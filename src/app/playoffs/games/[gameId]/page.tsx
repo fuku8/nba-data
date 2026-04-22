@@ -98,11 +98,6 @@ function pct(v: number | null | undefined) {
   return (v * 100).toFixed(1) + "%";
 }
 
-function fmt(v: number | null | undefined, decimals = 0) {
-  if (v == null) return "—";
-  return decimals > 0 ? v.toFixed(decimals) : String(Math.round(v));
-}
-
 function ScoreHeader({ away, home }: { away: TeamScore; home: TeamScore }) {
   const awayWin = away.score > home.score;
   const homeWin = home.score > away.score;
@@ -193,53 +188,29 @@ function QuarterScores({ away, home }: { away: TeamScore; home: TeamScore }) {
   );
 }
 
-function TeamStatsComparison({ away, home, awayStats, homeStats }: { away: TeamScore; home: TeamScore; awayStats: TeamStats; homeStats: TeamStats }) {
-  const rows: { label: string; aVal: string; hVal: string; higherIsBetter?: boolean }[] = [
-    { label: "FG%",        aVal: pct(awayStats.fieldGoalsPercentage),    hVal: pct(homeStats.fieldGoalsPercentage),    higherIsBetter: true },
-    { label: "3P%",        aVal: pct(awayStats.threePointersPercentage), hVal: pct(homeStats.threePointersPercentage), higherIsBetter: true },
-    { label: "FT%",        aVal: pct(awayStats.freeThrowsPercentage),    hVal: pct(homeStats.freeThrowsPercentage),    higherIsBetter: true },
-    { label: "REB",        aVal: fmt(awayStats.reboundsTotal),           hVal: fmt(homeStats.reboundsTotal),           higherIsBetter: true },
-    { label: "AST",        aVal: fmt(awayStats.assists),                 hVal: fmt(homeStats.assists),                 higherIsBetter: true },
-    { label: "STL",        aVal: fmt(awayStats.steals),                  hVal: fmt(homeStats.steals),                  higherIsBetter: true },
-    { label: "BLK",        aVal: fmt(awayStats.blocks),                  hVal: fmt(homeStats.blocks),                  higherIsBetter: true },
-    { label: "TOV",        aVal: fmt(awayStats.turnovers),               hVal: fmt(homeStats.turnovers),               higherIsBetter: false },
-    { label: "ペイント得点", aVal: fmt(awayStats.pointsInThePaint),       hVal: fmt(homeStats.pointsInThePaint),        higherIsBetter: true },
-    { label: "速攻得点",    aVal: fmt(awayStats.pointsFastBreak),        hVal: fmt(homeStats.pointsFastBreak),         higherIsBetter: true },
-    { label: "ベンチ得点",  aVal: fmt(awayStats.benchPoints),            hVal: fmt(homeStats.benchPoints),             higherIsBetter: true },
-    { label: "最大リード",  aVal: fmt(awayStats.biggestLead),            hVal: fmt(homeStats.biggestLead),             higherIsBetter: true },
-  ];
-
-  return (
-    <div className="rounded-xl border bg-card overflow-x-auto">
-      <div className="flex items-center justify-between px-4 py-3 border-b">
-        <span className="font-semibold text-sm" style={{ color: getTeamColor(away.tricode) }}>{away.tricode}</span>
-        <span className="text-sm font-medium text-muted-foreground">チームスタッツ</span>
-        <span className="font-semibold text-sm" style={{ color: getTeamColor(home.tricode) }}>{home.tricode}</span>
-      </div>
-      <table className="w-full text-sm">
-        <tbody>
-          {rows.map((row) => {
-            const aNum = parseFloat(row.aVal);
-            const hNum = parseFloat(row.hVal);
-            const aWin = !isNaN(aNum) && !isNaN(hNum) && (row.higherIsBetter ? aNum > hNum : aNum < hNum);
-            const hWin = !isNaN(aNum) && !isNaN(hNum) && (row.higherIsBetter ? hNum > aNum : hNum < aNum);
-            return (
-              <tr key={row.label} className="border-b last:border-0">
-                <td className={`py-2.5 px-4 text-center font-mono w-24 ${aWin ? "font-bold" : "text-muted-foreground"}`}>{row.aVal}</td>
-                <td className="py-2.5 px-4 text-center text-muted-foreground text-xs">{row.label}</td>
-                <td className={`py-2.5 px-4 text-center font-mono w-24 ${hWin ? "font-bold" : "text-muted-foreground"}`}>{row.hVal}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  );
+function sumMinutes(players: PlayerStats[]): string {
+  let total = 0;
+  for (const p of players) {
+    if (!p.minutes) continue;
+    const parts = p.minutes.split(":");
+    const m = parseInt(parts[0] ?? "0", 10) || 0;
+    const s = parseInt(parts[1] ?? "0", 10) || 0;
+    total += m + s / 60;
+  }
+  return Math.round(total).toString();
 }
 
-function PlayerTable({ players, tricode }: { players: PlayerStats[]; tricode: string }) {
+function PlayerTable({ players, tricode, teamStats }: { players: PlayerStats[]; tricode: string; teamStats?: TeamStats }) {
   const active = players.filter((p) => p.minutes && p.minutes !== "");
   const sorted = [...active].sort((a, b) => b.points - a.points);
+
+  const teamFgm = active.reduce((s, p) => s + (p.fieldGoalsMade ?? 0), 0);
+  const teamFga = active.reduce((s, p) => s + (p.fieldGoalsAttempted ?? 0), 0);
+  const team3pm = active.reduce((s, p) => s + (p.threePointersMade ?? 0), 0);
+  const team3pa = active.reduce((s, p) => s + (p.threePointersAttempted ?? 0), 0);
+  const teamFtm = active.reduce((s, p) => s + (p.freeThrowsMade ?? 0), 0);
+  const teamFta = active.reduce((s, p) => s + (p.freeThrowsAttempted ?? 0), 0);
+  const totalMin = sumMinutes(active);
 
   return (
     <div className="rounded-xl border bg-card overflow-x-auto">
@@ -266,6 +237,28 @@ function PlayerTable({ players, tricode }: { players: PlayerStats[]; tricode: st
           </tr>
         </thead>
         <tbody>
+          {teamStats && (
+            <tr className="border-b bg-primary/10 font-semibold">
+              <td className="py-2.5 px-3" style={{ color: getTeamColor(tricode) }}>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: getTeamColor(tricode) }} />
+                  チーム合計
+                </span>
+              </td>
+              <td className="py-2.5 px-2 text-center text-muted-foreground">—</td>
+              <td className="py-2.5 px-2 text-center font-mono">{totalMin}</td>
+              <td className="py-2.5 px-2 text-center font-mono">{teamStats.points}</td>
+              <td className="py-2.5 px-2 text-center font-mono">{teamStats.reboundsTotal}</td>
+              <td className="py-2.5 px-2 text-center font-mono">{teamStats.assists}</td>
+              <td className="py-2.5 px-2 text-center font-mono">{teamStats.steals}</td>
+              <td className="py-2.5 px-2 text-center font-mono">{teamStats.blocks}</td>
+              <td className="py-2.5 px-2 text-center font-mono">{teamStats.turnovers}</td>
+              <td className="py-2.5 px-2 text-center font-mono">{teamFgm}/{teamFga} <span className="text-muted-foreground font-normal">({pct(teamStats.fieldGoalsPercentage)})</span></td>
+              <td className="py-2.5 px-2 text-center font-mono">{team3pm}/{team3pa} <span className="text-muted-foreground font-normal">({pct(teamStats.threePointersPercentage)})</span></td>
+              <td className="py-2.5 px-2 text-center font-mono">{teamFtm}/{teamFta} <span className="text-muted-foreground font-normal">({pct(teamStats.freeThrowsPercentage)})</span></td>
+              <td className="py-2.5 px-2 text-center text-muted-foreground">—</td>
+            </tr>
+          )}
           {sorted.map((p) => {
             const pm = p.plusMinusPoints ?? 0;
             return (
@@ -335,15 +328,11 @@ export default async function GameDetailPage({
 
       <QuarterScores away={away} home={home} />
 
-      {awayStats && homeStats && (
-        <TeamStatsComparison away={away} home={home} awayStats={awayStats} homeStats={homeStats} />
-      )}
-
       {box.players.length > 0 ? (
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold">選手スタッツ</h2>
-          <PlayerTable players={awayPlayers} tricode={away.tricode} />
-          <PlayerTable players={homePlayers} tricode={home.tricode} />
+          <h2 className="text-lg font-semibold">チーム・選手スタッツ</h2>
+          <PlayerTable players={awayPlayers} tricode={away.tricode} teamStats={awayStats} />
+          <PlayerTable players={homePlayers} tricode={home.tricode} teamStats={homeStats} />
         </div>
       ) : (
         <div className="rounded-xl border bg-card p-6 text-center text-muted-foreground text-sm">
