@@ -14,6 +14,12 @@
 1. GitHub Actions の定期実行を日本時間 14:00 と 21:00 の1日2回に変更した。
 2. NBA API の一部エンドポイントが GitHub runner から古い結果を返す場合に備えて、プレーオフ試合結果の補完処理と API リトライを追加した。
 
+2026-04-24 に、運用を以下へ再調整した。
+
+1. GitHub Actions の定期実行を日本時間 17:00 の1日1回に変更した。
+2. GitHub runner 上の長時間ハング回避のため、API timeout の既定値を 30 秒へ戻した。
+3. データ取得に失敗した場合は、そのまま workflow failure として終了する運用を継続する。
+
 ---
 
 ## 定期実行時刻
@@ -24,12 +30,9 @@ GitHub Actions の cron は UTC で評価される。
 
 | 日本時間 | UTC | cron | 用途 |
 |---|---:|---|---|
-| 14:00 JST | 05:00 UTC | `0 5 * * *` | 当日昼時点の更新確認 |
-| 21:00 JST | 12:00 UTC | `0 12 * * *` | 夜時点の更新確認 |
+| 17:00 JST | 08:00 UTC | `0 8 * * *` | その日の定時更新確認 |
 
-この2回実行は、14:00枠を早期更新、21:00枠を取りこぼし回収・最終確認ラインとして扱う。
-
-NBA API は基本的にリアルタイム更新される前提のため、試合があった日に14:00枠（GitHub Actions の混雑により実実行が遅れる場合を含む）で `Commit and push` が `skipped` になった場合は、21:00枠で回収できるか確認する。21:00枠でも `skipped` の場合は、stale response、取得対象外、スクリプト不具合などの可能性が高く、要調査とする。
+当面は 17:00 枠の 1 回運用とし、GitHub-hosted runner から `stats.nba.com` 取得が不安定な日でも長時間ハングさせず、取得できない場合は failure として明示的に検知する。
 
 対象ファイル:
 
@@ -38,6 +41,7 @@ NBA API は基本的にリアルタイム更新される前提のため、試合
 変更コミット:
 
 - `1d2614d Run data update twice daily JST`
+- `c077bb0 Add timing logs to NBA data fetch`
 
 ---
 
@@ -110,7 +114,7 @@ NBA API 呼び出しを `get_data_frames()` helper 経由に変更した。
 - 短時間のネットワーク失敗で即座にデータ更新全体が失敗しないようにする。
 - 最終的に失敗した場合は、その失敗を明示的に検出できるようにする。
 
-デフォルトは `API_RETRIES = 3`。
+デフォルトは `API_RETRIES = 3`、`API_TIMEOUT_SEC = 30`。
 
 ### 2. `ScoreboardV2` によるプレーオフ試合補完
 
@@ -186,13 +190,12 @@ OKC,PHX,2,0,2026-04-19,2026-04-22,1,First Round,,2-0
 
 `Commit and push` が `skipped` でも必ず異常とは限らない。ただし、NBA.com 上で明らかに新しい Final 試合がある場合は、stale response または取得失敗を疑う。
 
-### 14:00 / 21:00 枠の判断基準
+### 17:00 枠の判断基準
 
 | 状況 | 判断 |
 |---|---|
 | 試合なし + `Commit and push` が `skipped` | 正常 |
-| 試合あり + 14:00枠が `skipped` | 21:00枠で回収できるか確認 |
-| 試合あり + 21:00枠も `skipped` | 要調査 |
+| 試合あり + `Commit and push` が `skipped` | stale response、取得対象外、スクリプト不具合などとして要調査 |
 | `Fetch data from NBA.com` が failure | API timeout、仕様変更、スクリプト不具合などとして調査 |
 | `Commit and push` が failure | push権限、branch protection、rebase conflict などとして調査 |
 
@@ -251,3 +254,4 @@ README には以下のファイルが記載されているが、現在の `scrip
 |---|---|
 | `33c94a9` | NBA API stale response 対策、ScoreboardV2 補完、API リトライ、部分失敗時 exit、2026-04-22 PO 2試合のデータ更新 |
 | `1d2614d` | GitHub Actions の定期実行を JST 14:00 / 21:00 の1日2回に変更 |
+| `c077bb0` | 実行時間計測ログを追加し、timeout を 30 秒既定に戻す前提を整理 |

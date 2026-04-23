@@ -25,7 +25,7 @@ from urllib3.util.retry import Retry
 SEASON = "2025-26"
 SLEEP_SEC = 2
 API_RETRIES = int(os.environ.get("NBA_API_RETRIES", "3"))
-API_TIMEOUT_SEC = int(os.environ.get("NBA_API_TIMEOUT_SEC", "60"))
+API_TIMEOUT_SEC = int(os.environ.get("NBA_API_TIMEOUT_SEC", "30"))
 API_BACKOFF_SEC = int(os.environ.get("NBA_API_BACKOFF_SEC", "5"))
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
 BOXSCORE_DIR = os.path.join(DATA_DIR, "boxscores")
