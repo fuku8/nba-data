@@ -35,7 +35,6 @@ REQUEST_HEADERS = {
     "Referer": "https://www.nba.com/",
     "Sec-Fetch-Mode": "cors",
     "Sec-Fetch-Site": "same-site",
-    "Sec-Ch-Ua-Platform": '"macOS"',
 }
 
 TEAM_FULL_TO_ABBR: dict[str, str] = {
