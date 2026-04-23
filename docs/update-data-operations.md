@@ -223,6 +223,131 @@ find data/boxscores -maxdepth 1 -type f | sort | tail
 
 ---
 
+## 2026-04-24 の障害調査ログ
+
+### 発端
+
+2026-04-23 21:00 JST 枠の scheduled run で、`Fetch data from NBA.com` が failure になった。
+
+対象 run:
+
+| Run | Event | 結果 | 実行時間 | 内容 |
+|---:|---|---|---:|---|
+| `24837170964` | `schedule` | `failure` | 15m1s | `stats.nba.com` への各 API 呼び出しが `ReadTimeout (read timeout=30)` で連続失敗 |
+
+この run では以下が広く失敗した。
+
+- `standings`
+- `team_per_game`
+- `player_per_game`
+- `player_totals`
+- `player_advanced`
+- `games RS`
+- `po_player_per_game`
+- `po_player_totals`
+- `po_player_advanced`
+
+一方で、既存の `po_games.csv` から `po_series.csv` は再計算できていたため、サマリー上は `2/7 成功` となっていた。
+
+### 原因仮説
+
+この時点の見立ては以下。
+
+1. アプリコードの単純な構文・実装バグではなく、`GitHub-hosted runner -> stats.nba.com` の通信が不安定。
+2. 完全な `403` ブロックではなく、応答遅延や無応答により `ReadTimeout` になっている可能性が高い。
+3. 前日の `LeagueGameFinder` stale response 問題とは別系統で、runner 側のアクセス条件による制限・劣化の可能性がある。
+
+### 段階ごとの対応と結果
+
+#### Phase 1: 失敗ログの確認
+
+- user 共有ログから、`read timeout=30` が全エンドポイントで起きていることを確認
+- `nba_api` 実装を確認し、各 endpoint が既定 `timeout=30` を使っていることを確認
+
+結果:
+
+- 部分的な endpoint 不具合ではなく、API 通信全体の問題と判断
+
+#### Phase 2: timeout と session 設定の強化
+
+対応コミット:
+
+- `076005b Harden NBA API timeout handling`
+
+変更内容:
+
+- `API_TIMEOUT_SEC` の既定値を `60` に変更
+- `requests.Session` と request headers を明示設定
+- `games` 失敗時に古い `po_games.csv` を使って `po_series` が成功扱いにならないよう修正
+- workflow に `NBA_API_TIMEOUT_SEC=60` などの env を追加
+
+対象 run:
+
+| Run | Event | 結果 | 実行時間 | 内容 |
+|---:|---|---|---:|---|
+| `24860791364` | `workflow_dispatch` | `cancelled` | 21m37s | `Fetch data from NBA.com` が長時間 `in_progress` のまま進まず、旧コミット run のため user が cancel |
+
+結果:
+
+- `30秒で即 failure` から `長時間ハング寄り` へ挙動が変化
+- 安定取得できたとは言えず、改善は不十分
+
+#### Phase 3: 計測ログの追加
+
+対応コミット:
+
+- `c077bb0 Add timing logs to NBA data fetch`
+
+変更内容:
+
+- endpoint ごとに `attempt 開始 / 成功 / 失敗 / 経過秒数` を出力
+- step ごとに `開始 / 完了 / 総実行時間` を出力
+
+対象 run:
+
+| Run | Event | 結果 | 実行時間 | 内容 |
+|---:|---|---|---:|---|
+| `24861237037` | `workflow_dispatch` | `in_progress` | 24m13s 時点 | 計測ログ入り run。`Fetch data from NBA.com` が長時間継続中 |
+
+結果:
+
+- 計測ログは入ったが、run 完了前は GitHub CLI から step のログ本文を取得できない
+- `60秒 timeout` ではなお長時間停滞が発生
+
+#### Phase 4: 運用を簡素化して様子見
+
+対応コミット:
+
+- `574b4fb Revert timeout and simplify update schedule`
+
+変更内容:
+
+- API timeout の既定値を `30` 秒へ戻した
+- workflow env による `60` 秒上書きを削除
+- schedule を `17:00 JST` 1回に変更
+- 取得できない場合はそのまま failure で終了する方針を維持
+
+結果:
+
+- GitHub Actions を長時間ハングさせず、取れない日は明示的に failure として把握する方針に戻した
+
+### 現在の状態
+
+2026-04-24 時点の状態は以下。
+
+- 本命の取得問題は未解決
+- `GitHub-hosted runner` から `stats.nba.com` へのアクセスは不安定、または実質的に制限されている可能性が高い
+- そのため、当面は `17:00 JST` 1回実行、`timeout=30`、failure を明示的に出す運用で様子を見る
+- 次の判断材料は、次回 scheduled run の結果と、必要に応じて `24861237037` の完了後ログ
+
+### 次に確認すること
+
+1. 次回 `17:00 JST` の scheduled run が `success` か `failure` か
+2. `Fetch data from NBA.com` が短時間で失敗するのか、再び長時間停滞するのか
+3. `failure` の場合、どの endpoint で止まったか
+
+---
+
 ## 注意点
 
 ### `team_opponent.csv` と `player_shooting.csv`
@@ -254,4 +379,6 @@ README には以下のファイルが記載されているが、現在の `scrip
 |---|---|
 | `33c94a9` | NBA API stale response 対策、ScoreboardV2 補完、API リトライ、部分失敗時 exit、2026-04-22 PO 2試合のデータ更新 |
 | `1d2614d` | GitHub Actions の定期実行を JST 14:00 / 21:00 の1日2回に変更 |
-| `c077bb0` | 実行時間計測ログを追加し、timeout を 30 秒既定に戻す前提を整理 |
+| `076005b` | timeout を 60 秒へ延長、session/header を明示設定、`po_series` の成功判定を厳密化 |
+| `c077bb0` | 実行時間計測ログを追加 |
+| `574b4fb` | timeout を 30 秒既定に戻し、定期実行を JST 17:00 の1日1回に変更 |
