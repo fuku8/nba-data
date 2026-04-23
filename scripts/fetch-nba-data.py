@@ -52,6 +52,14 @@ TEAM_FULL_TO_ABBR: dict[str, str] = {
 }
 
 
+def now_label() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+
+def format_elapsed(seconds: float) -> str:
+    return f"{seconds:.1f}s"
+
+
 def sleep(label: str = ""):
     print(f"  {SLEEP_SEC}秒待機中...{f' ({label})' if label else ''}")
     time.sleep(SLEEP_SEC)
@@ -84,15 +92,30 @@ def make_endpoint(endpoint_cls, **kwargs):
 def get_data_frames(label: str, endpoint_factory, attempts: int = API_RETRIES):
     last_error = None
     for attempt in range(1, attempts + 1):
+        started_at = time.monotonic()
+        print(f"  → {label}: attempt {attempt}/{attempts} 開始 ({now_label()})")
         try:
-            return endpoint_factory().get_data_frames()
+            frames = endpoint_factory().get_data_frames()
+            elapsed = time.monotonic() - started_at
+            print(f"  ← {label}: attempt {attempt}/{attempts} 成功 ({format_elapsed(elapsed)})")
+            return frames
         except Exception as e:
             last_error = e
+            elapsed = time.monotonic() - started_at
+            print(f"  ! {label}: attempt {attempt}/{attempts} 失敗 ({format_elapsed(elapsed)}): {e}")
             if attempt == attempts:
                 break
-            print(f"  ! {label}: {e} / retry {attempt + 1}/{attempts}")
             time.sleep(API_BACKOFF_SEC * attempt)
     raise last_error
+
+
+def run_timed_step(label: str, func, *args, **kwargs):
+    started_at = time.monotonic()
+    print(f"  → step {label} 開始 ({now_label()})")
+    result = func(*args, **kwargs)
+    elapsed = time.monotonic() - started_at
+    print(f"  ← step {label} 完了 ({format_elapsed(elapsed)})")
+    return result
 
 
 # ─── 1. 順位表 ───────────────────────────────────────────────
@@ -609,39 +632,52 @@ def main():
     os.makedirs(DATA_DIR, exist_ok=True)
     configure_nba_api_session()
     results: dict[str, bool] = {}
+    started_at = time.monotonic()
 
     print("\n=== 1. 順位表 ===")
-    results["standings"] = fetch_standings()
+    results["standings"] = run_timed_step("standings", fetch_standings)
 
     print("\n=== 2. チームスタッツ ===")
     sleep("team_stats")
-    results["team_stats"] = fetch_team_stats()
+    results["team_stats"] = run_timed_step("team_stats", fetch_team_stats)
 
     print("\n=== 3. 選手スタッツ（RS） ===")
     sleep("player_stats_rs")
-    results["player_stats_rs"] = fetch_player_stats("Regular Season", "")
+    results["player_stats_rs"] = run_timed_step(
+        "player_stats_rs",
+        fetch_player_stats,
+        "Regular Season",
+        "",
+    )
 
     print("\n=== 4. 試合結果 ===")
     sleep("games")
-    games_ok, po_game_ids = fetch_games()
+    games_ok, po_game_ids = run_timed_step("games", fetch_games)
     results["games"] = games_ok
 
     print("\n=== 5. PO選手スタッツ ===")
     sleep("player_stats_po")
-    results["po_player_stats"] = fetch_player_stats("Playoffs", "po_")
+    results["po_player_stats"] = run_timed_step(
+        "po_player_stats",
+        fetch_player_stats,
+        "Playoffs",
+        "po_",
+    )
 
     print("\n=== 6. POシリーズ集計 ===")
-    results["po_series"] = compute_po_series(games_ok)
+    results["po_series"] = run_timed_step("po_series", compute_po_series, games_ok)
 
     print("\n=== 7. POボックススコア ===")
     sleep("boxscores")
-    results["boxscores"] = fetch_boxscores(po_game_ids)
+    results["boxscores"] = run_timed_step("boxscores", fetch_boxscores, po_game_ids)
 
     print("\n=== 結果サマリー ===")
     for k, v in results.items():
         print(f"  {'✓' if v else '✗'} {k}")
     ok = sum(1 for v in results.values() if v)
+    total_elapsed = time.monotonic() - started_at
     print(f"\n完了: {ok}/{len(results)} 成功")
+    print(f"総実行時間: {format_elapsed(total_elapsed)}")
     if ok != len(results):
         sys.exit(1)
 
