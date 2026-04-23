@@ -8,7 +8,7 @@
 - チーム順位表（カンファレンス別・Net Rating表示）
 - チーム詳細（ロスター・Per Gameスタッツ・Advanced）
 - 選手スタッツ一覧（Per Game / Advanced / Totals、ソート対応）
-- 選手個人ページ（詳細スタッツ・比較）
+- 選手個人ページ（詳細スタッツ・RS vs PO 比較・プロフィール: 身長/体重/生年月日/デビュー年）
 - 試合結果一覧（日付移動）
 - スタッツリーダーボード
 - 選手検索・選手比較（レーダーチャート）
@@ -31,7 +31,7 @@
 
 ## Data Pipeline
 
-1. GitHub Actions が毎日 `scripts/fetch-nba-data.py` を実行
+1. GitHub Actions が毎日 JST 16:00 に `scripts/fetch-nba-data.py` を実行
 2. NBA.com 公式 API（nba_api）からデータ取得
 3. `data/` ディレクトリに CSV / JSON として保存
 4. Vercel が ISR（1時間キャッシュ）でサーブ
@@ -55,6 +55,7 @@
 | `data/po_player_advanced.csv` | PO選手Advancedスタッツ | LeagueDashPlayerStats (Playoffs, Advanced) |
 | `data/po_games.csv` | PO試合結果 | LeagueGameFinder (Playoffs) |
 | `data/boxscores/{gameId}.json` | 試合ボックススコア（PO） | BoxScoreSummaryV3 + BoxScoreTraditionalV3 |
+| `data/player_profiles.csv` | 選手プロフィール（身長・体重・生年月日・デビュー年等） | CommonPlayerInfo（初回のみ手動取得） |
 
 ## Setup
 
@@ -66,9 +67,21 @@ npm run dev
 ### データ更新（ローカル）
 
 ```bash
-pip install -r requirements.txt
+pip install pandas requests nba_api
 python3 scripts/fetch-nba-data.py
 ```
+
+### 選手プロフィール取得（初回のみ）
+
+```bash
+# 一括取得（約10分）
+python3 scripts/fetch-player-profiles.py --batch 600
+
+# 進捗確認のみ
+python3 scripts/fetch-player-profiles.py --dry-run
+```
+
+取得済みデータはスキップされるため、途中で中断しても再実行で続きから取得できます。
 
 ## Deploy
 
