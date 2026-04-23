@@ -27,6 +27,10 @@ GitHub Actions の cron は UTC で評価される。
 | 14:00 JST | 05:00 UTC | `0 5 * * *` | 当日昼時点の更新確認 |
 | 21:00 JST | 12:00 UTC | `0 12 * * *` | 夜時点の更新確認 |
 
+この2回実行は、14:00枠を早期更新、21:00枠を取りこぼし回収・最終確認ラインとして扱う。
+
+NBA API は基本的にリアルタイム更新される前提のため、試合があった日に14:00枠（GitHub Actions の混雑により実実行が遅れる場合を含む）で `Commit and push` が `skipped` になった場合は、21:00枠で回収できるか確認する。21:00枠でも `skipped` の場合は、stale response、取得対象外、スクリプト不具合などの可能性が高く、要調査とする。
+
 対象ファイル:
 
 - `.github/workflows/update-data.yml`
@@ -182,6 +186,18 @@ OKC,PHX,2,0,2026-04-19,2026-04-22,1,First Round,,2-0
 
 `Commit and push` が `skipped` でも必ず異常とは限らない。ただし、NBA.com 上で明らかに新しい Final 試合がある場合は、stale response または取得失敗を疑う。
 
+### 14:00 / 21:00 枠の判断基準
+
+| 状況 | 判断 |
+|---|---|
+| 試合なし + `Commit and push` が `skipped` | 正常 |
+| 試合あり + 14:00枠が `skipped` | 21:00枠で回収できるか確認 |
+| 試合あり + 21:00枠も `skipped` | 要調査 |
+| `Fetch data from NBA.com` が failure | API timeout、仕様変更、スクリプト不具合などとして調査 |
+| `Commit and push` が failure | push権限、branch protection、rebase conflict などとして調査 |
+
+サイト表示だけでは Vercel / ISR キャッシュの影響で更新有無を判断しにくい。確認は GitHub Actions の最新 run、`Commit and push` step、GitHub 上の `data/` 差分または最新コミットを優先する。
+
 ### ローカル確認コマンド
 
 ```bash
@@ -235,4 +251,3 @@ README には以下のファイルが記載されているが、現在の `scrip
 |---|---|
 | `33c94a9` | NBA API stale response 対策、ScoreboardV2 補完、API リトライ、部分失敗時 exit、2026-04-22 PO 2試合のデータ更新 |
 | `1d2614d` | GitHub Actions の定期実行を JST 14:00 / 21:00 の1日2回に変更 |
-
