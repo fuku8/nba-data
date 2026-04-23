@@ -221,6 +221,26 @@ tail -5 data/po_games.csv
 find data/boxscores -maxdepth 1 -type f | sort | tail
 ```
 
+### Actions 失敗時の手動取得手順
+
+scheduled run が failure になった場合、以下の手順でローカルから手動取得する。
+
+```bash
+# 1. データ取得
+python3 scripts/fetch-nba-data.py
+
+# 2. 差分確認
+git status --short
+git diff --stat
+
+# 3. 差分がある場合のみコミット・push
+git add data/
+git commit -m "Update NBA data $(date +%Y-%m-%d)"
+git push origin main
+```
+
+差分がない場合（`git diff --cached --quiet` で変化なし）はそのまま終了でよい。
+
 ---
 
 ## 2026-04-24 の障害調査ログ
