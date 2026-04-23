@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getPlayerPerGame, getPlayerAdvanced } from "@/lib/data/players";
+import { getPlayerPerGame, getPlayerAdvanced, getPlayerProfile } from "@/lib/data/players";
 import { getPlayoffPlayerPerGame } from "@/lib/data/playoffs";
 import { getTeamColor, getTeamInfo } from "@/lib/constants/teams";
 
@@ -15,10 +15,12 @@ export default async function PlayerDetailPage({
 }) {
   const { playerId } = await params;
   const playerIdNum = parseInt(playerId, 10);
+  if (isNaN(playerIdNum)) notFound();
 
   const allPerGame = getPlayerPerGame();
   const allAdvanced = getPlayerAdvanced();
   const allPoPerGame = getPlayoffPlayerPerGame();
+  const profile = getPlayerProfile(playerIdNum);
 
   const pg = allPerGame.find((p) => p.playerId === playerIdNum && p.team !== "TOT")
     || allPerGame.find((p) => p.playerId === playerIdNum);
@@ -53,6 +55,25 @@ export default async function PlayerDetailPage({
             <span>·</span>
             <span>Age {pg.age}</span>
           </div>
+          {profile && (
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground flex-wrap">
+              {[
+                profile.jersey ? `#${profile.jersey}` : null,
+                profile.position ? profile.position.split("-")[0] : null,
+                profile.height ? profile.height : null,
+                profile.weight ? `${profile.weight} lbs` : null,
+                profile.birthdate ? profile.birthdate : null,
+                profile.fromYear > 0 ? `NBA ${profile.fromYear}年〜` : null,
+              ]
+                .filter(Boolean)
+                .map((item, idx, arr) => (
+                  <span key={item} className="flex items-center gap-1.5">
+                    {item}
+                    {idx < arr.length - 1 && <span>·</span>}
+                  </span>
+                ))}
+            </div>
+          )}
         </div>
       </div>
 

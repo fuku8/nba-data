@@ -1,5 +1,5 @@
 import { readCsvFile, csvToObjects, num } from "./csv-utils";
-import type { PlayerPerGame, PlayerAdvanced, PlayerTotals } from "@/lib/types";
+import type { PlayerPerGame, PlayerAdvanced, PlayerTotals, PlayerProfile } from "@/lib/types";
 
 function mapPlayerPerGame(d: Record<string, string>): PlayerPerGame {
   return {
@@ -127,4 +127,41 @@ export function searchPlayers(
   return players.filter((p) => p.player.toLowerCase().includes(q));
 }
 
+// playoffs.ts でプレーオフ統計の変換に再利用するため export
 export { mapPlayerPerGame, mapPlayerTotals, mapPlayerAdvanced };
+
+// ===== 選手プロフィール =====
+
+function mapPlayerProfile(d: Record<string, string>): PlayerProfile {
+  const birthdateRaw = d["BIRTHDATE"] || "";
+  const birthdate = birthdateRaw.includes("T")
+    ? birthdateRaw.split("T")[0]
+    : birthdateRaw;
+  return {
+    playerId:    num(d["PLAYER_ID"]),
+    playerName:  d["PLAYER_NAME"] || "",
+    birthdate,
+    height:      d["HEIGHT"] || "",
+    weight:      d["WEIGHT"] || "",
+    position:    d["POSITION"] || "",
+    jersey:      d["JERSEY"] || "",
+    country:     d["COUNTRY"] || "",
+    school:      d["SCHOOL"] || "",
+    fromYear:    num(d["FROM_YEAR"]),
+    draftYear:   d["DRAFT_YEAR"] || "",
+    draftRound:  d["DRAFT_ROUND"] || "",
+    draftNumber: d["DRAFT_NUMBER"] || "",
+  };
+}
+
+export function getAllPlayerProfiles(): PlayerProfile[] {
+  const rows = readCsvFile("player_profiles.csv");
+  const data = csvToObjects(rows);
+  return data
+    .filter((d) => d["PLAYER_NAME"])
+    .map(mapPlayerProfile);
+}
+
+export function getPlayerProfile(playerId: number): PlayerProfile | undefined {
+  return getAllPlayerProfiles().find((p) => p.playerId === playerId);
+}
