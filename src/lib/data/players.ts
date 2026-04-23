@@ -138,8 +138,8 @@ function mapPlayerProfile(d: Record<string, string>): PlayerProfile {
     ? birthdateRaw.split("T")[0]
     : birthdateRaw;
   return {
-    playerId:    num(d["PERSON_ID"]),
-    playerName:  d["DISPLAY_FIRST_LAST"] || "",
+    playerId:    num(d["PLAYER_ID"]),
+    playerName:  d["PLAYER_NAME"] || "",
     birthdate,
     height:      d["HEIGHT"] || "",
     weight:      d["WEIGHT"] || "",
@@ -158,7 +158,7 @@ export function getAllPlayerProfiles(): PlayerProfile[] {
   const rows = readCsvFile("player_profiles.csv");
   const data = csvToObjects(rows);
   return data
-    .filter((d) => d["DISPLAY_FIRST_LAST"])
+    .filter((d) => d["PLAYER_NAME"])
     .map(mapPlayerProfile);
 }
 
