@@ -8,6 +8,7 @@ import sys
 import time
 from datetime import datetime, timedelta, timezone
 import pandas as pd
+import requests
 from nba_api.stats.endpoints import (
     leaguestandingsv3,
     leaguedashteamstats,
@@ -17,12 +18,25 @@ from nba_api.stats.endpoints import (
     boxscoresummaryv3,
     boxscoretraditionalv3,
 )
+from nba_api.stats.library.http import NBAStatsHTTP, STATS_HEADERS
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 SEASON = "2025-26"
 SLEEP_SEC = 2
-API_RETRIES = 3
+API_RETRIES = int(os.environ.get("NBA_API_RETRIES", "3"))
+API_TIMEOUT_SEC = int(os.environ.get("NBA_API_TIMEOUT_SEC", "60"))
+API_BACKOFF_SEC = int(os.environ.get("NBA_API_BACKOFF_SEC", "5"))
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
 BOXSCORE_DIR = os.path.join(DATA_DIR, "boxscores")
+REQUEST_HEADERS = {
+    **STATS_HEADERS,
+    "Origin": "https://www.nba.com",
+    "Referer": "https://www.nba.com/",
+    "Sec-Fetch-Mode": "cors",
+    "Sec-Fetch-Site": "same-site",
+    "Sec-Ch-Ua-Platform": '"macOS"',
+}
 
 TEAM_FULL_TO_ABBR: dict[str, str] = {
     "Atlanta Hawks": "ATL", "Boston Celtics": "BOS", "Brooklyn Nets": "BKN",
@@ -43,6 +57,30 @@ def sleep(label: str = ""):
     time.sleep(SLEEP_SEC)
 
 
+def configure_nba_api_session() -> None:
+    session = requests.Session()
+    session.headers.update(REQUEST_HEADERS)
+    adapter = HTTPAdapter(
+        max_retries=Retry(
+            total=0,
+            connect=2,
+            read=0,
+            status=2,
+            backoff_factor=1,
+            allowed_methods=frozenset(["GET"]),
+            status_forcelist=(429, 500, 502, 503, 504),
+            respect_retry_after_header=True,
+        )
+    )
+    session.mount("https://", adapter)
+    session.mount("http://", adapter)
+    NBAStatsHTTP.set_session(session)
+
+
+def make_endpoint(endpoint_cls, **kwargs):
+    return endpoint_cls(headers=REQUEST_HEADERS, timeout=API_TIMEOUT_SEC, **kwargs)
+
+
 def get_data_frames(label: str, endpoint_factory, attempts: int = API_RETRIES):
     last_error = None
     for attempt in range(1, attempts + 1):
@@ -53,7 +91,7 @@ def get_data_frames(label: str, endpoint_factory, attempts: int = API_RETRIES):
             if attempt == attempts:
                 break
             print(f"  ! {label}: {e} / retry {attempt + 1}/{attempts}")
-            time.sleep(SLEEP_SEC * attempt)
+            time.sleep(API_BACKOFF_SEC * attempt)
     raise last_error
 
 
@@ -63,7 +101,7 @@ def fetch_standings() -> bool:
     try:
         df = get_data_frames(
             "standings",
-            lambda: leaguestandingsv3.LeagueStandingsV3(season=SEASON),
+            lambda: make_endpoint(leaguestandingsv3.LeagueStandingsV3, season=SEASON),
         )[0]
         full_name = df["TeamCity"] + " " + df["TeamName"]
         out = pd.DataFrame({
@@ -100,7 +138,8 @@ def fetch_team_stats() -> bool:
     try:
         base_df = get_data_frames(
             "team_per_game",
-            lambda: leaguedashteamstats.LeagueDashTeamStats(
+            lambda: make_endpoint(
+                leaguedashteamstats.LeagueDashTeamStats,
                 season=SEASON,
                 per_mode_detailed="PerGame",
                 measure_type_detailed_defense="Base",
@@ -121,7 +160,8 @@ def fetch_team_stats() -> bool:
 
         adv_df = get_data_frames(
             "team_advanced",
-            lambda: leaguedashteamstats.LeagueDashTeamStats(
+            lambda: make_endpoint(
+                leaguedashteamstats.LeagueDashTeamStats,
                 season=SEASON,
                 measure_type_detailed_defense="Advanced",
             ),
@@ -170,7 +210,8 @@ def fetch_player_stats(season_type: str = "Regular Season", prefix: str = "") ->
     try:
         pg_df = get_data_frames(
             f"{prefix}player_per_game",
-            lambda: leaguedashplayerstats.LeagueDashPlayerStats(
+            lambda: make_endpoint(
+                leaguedashplayerstats.LeagueDashPlayerStats,
                 per_mode_detailed="PerGame", **common
             ),
         )[0]
@@ -184,7 +225,8 @@ def fetch_player_stats(season_type: str = "Regular Season", prefix: str = "") ->
     try:
         tot_df = get_data_frames(
             f"{prefix}player_totals",
-            lambda: leaguedashplayerstats.LeagueDashPlayerStats(
+            lambda: make_endpoint(
+                leaguedashplayerstats.LeagueDashPlayerStats,
                 per_mode_detailed="Totals", **common
             ),
         )[0]
@@ -198,7 +240,8 @@ def fetch_player_stats(season_type: str = "Regular Season", prefix: str = "") ->
     try:
         adv_df = get_data_frames(
             f"{prefix}player_advanced",
-            lambda: leaguedashplayerstats.LeagueDashPlayerStats(
+            lambda: make_endpoint(
+                leaguedashplayerstats.LeagueDashPlayerStats,
                 measure_type_detailed_defense="Advanced", **common
             ),
         )[0]
@@ -253,7 +296,8 @@ def _fetch_recent_playoff_scoreboard_games(days: int = 5) -> pd.DataFrame:
         try:
             frames = get_data_frames(
                 f"scoreboard {date_arg}",
-                lambda date_arg=date_arg: scoreboardv2.ScoreboardV2(
+                lambda date_arg=date_arg: make_endpoint(
+                    scoreboardv2.ScoreboardV2,
                     game_date=date_arg,
                     league_id="00",
                 ),
@@ -309,7 +353,8 @@ def fetch_games() -> tuple[bool, list[str]]:
     try:
         rs_df = get_data_frames(
             "games RS",
-            lambda: leaguegamefinder.LeagueGameFinder(
+            lambda: make_endpoint(
+                leaguegamefinder.LeagueGameFinder,
                 season_nullable=SEASON,
                 season_type_nullable="Regular Season",
                 league_id_nullable="00",
@@ -327,7 +372,8 @@ def fetch_games() -> tuple[bool, list[str]]:
     try:
         po_df = get_data_frames(
             "games Playoffs",
-            lambda: leaguegamefinder.LeagueGameFinder(
+            lambda: make_endpoint(
+                leaguegamefinder.LeagueGameFinder,
                 season_nullable=SEASON,
                 season_type_nullable="Playoffs",
                 league_id_nullable="00",
@@ -358,8 +404,12 @@ def fetch_games() -> tuple[bool, list[str]]:
 
 # ─── 5. POシリーズ集計 ──────────────────────────────────────
 
-def compute_po_series() -> bool:
+def compute_po_series(po_games_ready: bool) -> bool:
     try:
+        if not po_games_ready:
+            print("  ✗ games が失敗したため、po_series は集計しません")
+            return False
+
         po_games_path = os.path.join(DATA_DIR, "po_games.csv")
         if not os.path.exists(po_games_path):
             print("  ✗ po_games.csv が存在しません")
@@ -442,7 +492,10 @@ def fetch_boxscores(po_game_ids: list[str]) -> bool:
         try:
             frames = get_data_frames(
                 f"boxscore summary {game_id}",
-                lambda game_id=game_id: boxscoresummaryv3.BoxScoreSummaryV3(game_id=game_id),
+                lambda game_id=game_id: make_endpoint(
+                    boxscoresummaryv3.BoxScoreSummaryV3,
+                    game_id=game_id,
+                ),
             )
             game_info   = frames[0].iloc[0].to_dict() if len(frames[0]) > 0 else {}
             line_scores = frames[4]   # period1Score〜period4Score per team
@@ -492,7 +545,10 @@ def fetch_boxscores(po_game_ids: list[str]) -> bool:
             try:
                 trad_frames = get_data_frames(
                     f"boxscore traditional {game_id}",
-                    lambda game_id=game_id: boxscoretraditionalv3.BoxScoreTraditionalV3(game_id=game_id),
+                    lambda game_id=game_id: make_endpoint(
+                        boxscoretraditionalv3.BoxScoreTraditionalV3,
+                        game_id=game_id,
+                    ),
                 )
                 player_df = trad_frames[0]
                 player_df = player_df[player_df["minutes"].notna() & (player_df["minutes"] != "")]
@@ -551,6 +607,7 @@ def fetch_boxscores(po_game_ids: list[str]) -> bool:
 
 def main():
     os.makedirs(DATA_DIR, exist_ok=True)
+    configure_nba_api_session()
     results: dict[str, bool] = {}
 
     print("\n=== 1. 順位表 ===")
@@ -574,7 +631,7 @@ def main():
     results["po_player_stats"] = fetch_player_stats("Playoffs", "po_")
 
     print("\n=== 6. POシリーズ集計 ===")
-    results["po_series"] = compute_po_series()
+    results["po_series"] = compute_po_series(games_ok)
 
     print("\n=== 7. POボックススコア ===")
     sleep("boxscores")
