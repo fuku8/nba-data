@@ -127,11 +127,10 @@ export function searchPlayers(
   return players.filter((p) => p.player.toLowerCase().includes(q));
 }
 
+// playoffs.ts でプレーオフ統計の変換に再利用するため export
 export { mapPlayerPerGame, mapPlayerTotals, mapPlayerAdvanced };
 
 // ===== 選手プロフィール =====
-
-let _playerProfilesCache: PlayerProfile[] | null = null;
 
 function mapPlayerProfile(d: Record<string, string>): PlayerProfile {
   const birthdateRaw = d["BIRTHDATE"] || "";
@@ -156,13 +155,11 @@ function mapPlayerProfile(d: Record<string, string>): PlayerProfile {
 }
 
 export function getAllPlayerProfiles(): PlayerProfile[] {
-  if (_playerProfilesCache !== null) return _playerProfilesCache;
   const rows = readCsvFile("player_profiles.csv");
   const data = csvToObjects(rows);
-  _playerProfilesCache = data
-    .filter((d) => d["DISPLAY_FIRST_LAST"] || d["PERSON_ID"])
+  return data
+    .filter((d) => d["DISPLAY_FIRST_LAST"])
     .map(mapPlayerProfile);
-  return _playerProfilesCache;
 }
 
 export function getPlayerProfile(playerId: number): PlayerProfile | undefined {

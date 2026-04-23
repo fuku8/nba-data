@@ -226,9 +226,9 @@ export interface PlayerProfile {
   country: string;
   school: string;
   fromYear: number;       // NBAデビュー年
-  draftYear: string;
-  draftRound: string;
-  draftNumber: string;
+  draftYear: string;    // undrafted = ""
+  draftRound: string;   // undrafted = ""
+  draftNumber: string;  // undrafted = ""
 }
 
 // ===== ソート =====
