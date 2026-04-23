@@ -8,6 +8,18 @@ import { getTeamColor, getTeamInfo } from "@/lib/constants/teams";
 
 export const revalidate = 3600;
 
+function fmtHeight(h: string): string {
+  const [ft, inch] = h.split("-").map(Number);
+  if (isNaN(ft) || isNaN(inch)) return h;
+  return `${Math.round((ft * 12 + inch) * 2.54)} cm`;
+}
+
+function fmtWeight(w: string): string {
+  const lbs = parseFloat(w);
+  if (isNaN(lbs)) return w;
+  return `${Math.round(lbs * 0.453592)} kg`;
+}
+
 export default async function PlayerDetailPage({
   params,
 }: {
@@ -60,8 +72,8 @@ export default async function PlayerDetailPage({
               {[
                 profile.jersey ? `#${profile.jersey}` : null,
                 profile.position ? profile.position.split("-")[0] : null,
-                profile.height ? profile.height : null,
-                profile.weight ? `${profile.weight} lbs` : null,
+                profile.height ? fmtHeight(profile.height) : null,
+                profile.weight ? fmtWeight(profile.weight) : null,
                 profile.birthdate ? profile.birthdate : null,
                 profile.fromYear > 0 ? `NBA ${profile.fromYear}年〜` : null,
               ]
