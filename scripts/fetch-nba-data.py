@@ -4,19 +4,23 @@ Basketball Reference スクレイピングの完全代替。
 """
 import os
 import json
+import sys
 import time
+from datetime import datetime, timedelta, timezone
 import pandas as pd
 from nba_api.stats.endpoints import (
     leaguestandingsv3,
     leaguedashteamstats,
     leaguedashplayerstats,
     leaguegamefinder,
+    scoreboardv2,
     boxscoresummaryv3,
     boxscoretraditionalv3,
 )
 
 SEASON = "2025-26"
 SLEEP_SEC = 2
+API_RETRIES = 3
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
 BOXSCORE_DIR = os.path.join(DATA_DIR, "boxscores")
 
@@ -39,11 +43,28 @@ def sleep(label: str = ""):
     time.sleep(SLEEP_SEC)
 
 
+def get_data_frames(label: str, endpoint_factory, attempts: int = API_RETRIES):
+    last_error = None
+    for attempt in range(1, attempts + 1):
+        try:
+            return endpoint_factory().get_data_frames()
+        except Exception as e:
+            last_error = e
+            if attempt == attempts:
+                break
+            print(f"  ! {label}: {e} / retry {attempt + 1}/{attempts}")
+            time.sleep(SLEEP_SEC * attempt)
+    raise last_error
+
+
 # ─── 1. 順位表 ───────────────────────────────────────────────
 
 def fetch_standings() -> bool:
     try:
-        df = leaguestandingsv3.LeagueStandingsV3(season=SEASON).get_data_frames()[0]
+        df = get_data_frames(
+            "standings",
+            lambda: leaguestandingsv3.LeagueStandingsV3(season=SEASON),
+        )[0]
         full_name = df["TeamCity"] + " " + df["TeamName"]
         out = pd.DataFrame({
             "TEAM_ID":         df["TeamID"],
@@ -77,11 +98,14 @@ def fetch_standings() -> bool:
 
 def fetch_team_stats() -> bool:
     try:
-        base_df = leaguedashteamstats.LeagueDashTeamStats(
-            season=SEASON,
-            per_mode_detailed="PerGame",
-            measure_type_detailed_defense="Base",
-        ).get_data_frames()[0]
+        base_df = get_data_frames(
+            "team_per_game",
+            lambda: leaguedashteamstats.LeagueDashTeamStats(
+                season=SEASON,
+                per_mode_detailed="PerGame",
+                measure_type_detailed_defense="Base",
+            ),
+        )[0]
 
         keep_base = [
             "TEAM_ID", "TEAM_NAME", "GP", "W", "L", "W_PCT", "MIN",
@@ -95,10 +119,13 @@ def fetch_team_stats() -> bool:
 
         sleep("team_advanced")
 
-        adv_df = leaguedashteamstats.LeagueDashTeamStats(
-            season=SEASON,
-            measure_type_detailed_defense="Advanced",
-        ).get_data_frames()[0]
+        adv_df = get_data_frames(
+            "team_advanced",
+            lambda: leaguedashteamstats.LeagueDashTeamStats(
+                season=SEASON,
+                measure_type_detailed_defense="Advanced",
+            ),
+        )[0]
 
         keep_adv = [
             "TEAM_ID", "TEAM_NAME", "GP",
@@ -141,9 +168,12 @@ def fetch_player_stats(season_type: str = "Regular Season", prefix: str = "") ->
     common = dict(season=SEASON, season_type_all_star=season_type)
     ok = True
     try:
-        pg_df = leaguedashplayerstats.LeagueDashPlayerStats(
-            per_mode_detailed="PerGame", **common
-        ).get_data_frames()[0]
+        pg_df = get_data_frames(
+            f"{prefix}player_per_game",
+            lambda: leaguedashplayerstats.LeagueDashPlayerStats(
+                per_mode_detailed="PerGame", **common
+            ),
+        )[0]
         fname = f"{prefix}player_per_game.csv"
         pg_df[PLAYER_PG_COLS].to_csv(os.path.join(DATA_DIR, fname), index=False)
         print(f"  ✓ {fname}: {len(pg_df)} 選手")
@@ -152,9 +182,12 @@ def fetch_player_stats(season_type: str = "Regular Season", prefix: str = "") ->
 
     sleep("player_totals")
     try:
-        tot_df = leaguedashplayerstats.LeagueDashPlayerStats(
-            per_mode_detailed="Totals", **common
-        ).get_data_frames()[0]
+        tot_df = get_data_frames(
+            f"{prefix}player_totals",
+            lambda: leaguedashplayerstats.LeagueDashPlayerStats(
+                per_mode_detailed="Totals", **common
+            ),
+        )[0]
         fname = f"{prefix}player_totals.csv"
         tot_df[PLAYER_PG_COLS].to_csv(os.path.join(DATA_DIR, fname), index=False)
         print(f"  ✓ {fname}: {len(tot_df)} 選手")
@@ -163,9 +196,12 @@ def fetch_player_stats(season_type: str = "Regular Season", prefix: str = "") ->
 
     sleep("player_advanced")
     try:
-        adv_df = leaguedashplayerstats.LeagueDashPlayerStats(
-            measure_type_detailed_defense="Advanced", **common
-        ).get_data_frames()[0]
+        adv_df = get_data_frames(
+            f"{prefix}player_advanced",
+            lambda: leaguedashplayerstats.LeagueDashPlayerStats(
+                measure_type_detailed_defense="Advanced", **common
+            ),
+        )[0]
         fname = f"{prefix}player_advanced.csv"
         adv_df[PLAYER_ADV_COLS].to_csv(os.path.join(DATA_DIR, fname), index=False)
         print(f"  ✓ {fname}: {len(adv_df)} 選手")
@@ -206,15 +242,79 @@ def _deduplicate_games(df: pd.DataFrame) -> pd.DataFrame:
     return result
 
 
+def _fetch_recent_playoff_scoreboard_games(days: int = 5) -> pd.DataFrame:
+    """LeagueGameFinder の反映遅延を補うため、直近の Final PO 試合を ScoreboardV2 から取得する。"""
+    games: list[dict] = []
+    today = datetime.now(timezone.utc).date()
+
+    for offset in range(days):
+        target_date = today - timedelta(days=offset)
+        date_arg = target_date.strftime("%m/%d/%Y")
+        try:
+            frames = get_data_frames(
+                f"scoreboard {date_arg}",
+                lambda date_arg=date_arg: scoreboardv2.ScoreboardV2(
+                    game_date=date_arg,
+                    league_id="00",
+                ),
+                attempts=2,
+            )
+            game_header = frames[0]
+            line_score = frames[1]
+        except Exception as e:
+            print(f"  ! scoreboard {date_arg}: {e}")
+            continue
+
+        if game_header.empty or line_score.empty:
+            continue
+
+        for _, game in game_header.iterrows():
+            game_id = str(game.get("GAME_ID", ""))
+            if not game_id.startswith("004") or int(game.get("GAME_STATUS_ID", 0)) != 3:
+                continue
+
+            game_lines = line_score[line_score["GAME_ID"].astype(str) == game_id]
+            home = game_lines[game_lines["TEAM_ID"] == game.get("HOME_TEAM_ID")]
+            away = game_lines[game_lines["TEAM_ID"] == game.get("VISITOR_TEAM_ID")]
+            if home.empty or away.empty:
+                continue
+
+            h = home.iloc[0]
+            a = away.iloc[0]
+            home_pts = int(h["PTS"])
+            away_pts = int(a["PTS"])
+            games.append({
+                "GAME_ID": game_id,
+                "GAME_DATE": str(game.get("GAME_DATE_EST", target_date.isoformat())).split("T")[0],
+                "HOME_TEAM": h["TEAM_ABBREVIATION"],
+                "AWAY_TEAM": a["TEAM_ABBREVIATION"],
+                "HOME_PTS": home_pts,
+                "AWAY_PTS": away_pts,
+                "HOME_WL": "W" if home_pts > away_pts else "L",
+                "HOME_FG_PCT": h["FG_PCT"],
+                "HOME_FG3_PCT": h["FG3_PCT"],
+                "AWAY_FG_PCT": a["FG_PCT"],
+                "AWAY_FG3_PCT": a["FG3_PCT"],
+            })
+
+    result = pd.DataFrame(games)
+    if not result.empty:
+        result = result.sort_values(["GAME_DATE", "GAME_ID"]).reset_index(drop=True)
+    return result
+
+
 def fetch_games() -> tuple[bool, list[str]]:
     """RS試合 → games.csv。PO試合 → po_games.csv。POのgameIdリストを返す"""
     po_game_ids: list[str] = []
     try:
-        rs_df = leaguegamefinder.LeagueGameFinder(
-            season_nullable=SEASON,
-            season_type_nullable="Regular Season",
-            league_id_nullable="00",
-        ).get_data_frames()[0]
+        rs_df = get_data_frames(
+            "games RS",
+            lambda: leaguegamefinder.LeagueGameFinder(
+                season_nullable=SEASON,
+                season_type_nullable="Regular Season",
+                league_id_nullable="00",
+            ),
+        )[0]
         rs_games = _deduplicate_games(rs_df)
         rs_games.to_csv(os.path.join(DATA_DIR, "games.csv"), index=False)
         print(f"  ✓ games.csv: {len(rs_games)} 試合")
@@ -225,14 +325,29 @@ def fetch_games() -> tuple[bool, list[str]]:
 
     sleep("playoff_games")
     try:
-        po_df = leaguegamefinder.LeagueGameFinder(
-            season_nullable=SEASON,
-            season_type_nullable="Playoffs",
-            league_id_nullable="00",
-        ).get_data_frames()[0]
+        po_df = get_data_frames(
+            "games Playoffs",
+            lambda: leaguegamefinder.LeagueGameFinder(
+                season_nullable=SEASON,
+                season_type_nullable="Playoffs",
+                league_id_nullable="00",
+            ),
+        )[0]
         if not po_df.empty:
-            po_game_ids = po_df["GAME_ID"].unique().tolist()
             po_games = _deduplicate_games(po_df)
+            scoreboard_games = _fetch_recent_playoff_scoreboard_games()
+            if not scoreboard_games.empty:
+                before = len(po_games)
+                po_games = pd.concat([po_games, scoreboard_games], ignore_index=True)
+                po_games = (
+                    po_games
+                    .drop_duplicates(subset=["GAME_ID"], keep="last")
+                    .sort_values(["GAME_DATE", "GAME_ID"])
+                    .reset_index(drop=True)
+                )
+                added = len(po_games) - before
+                print(f"  ✓ scoreboard 補完: {len(scoreboard_games)} 試合確認, {added} 試合追加")
+            po_game_ids = po_games["GAME_ID"].astype(str).unique().tolist()
             po_games.to_csv(os.path.join(DATA_DIR, "po_games.csv"), index=False)
             print(f"  ✓ po_games.csv: {len(po_games)} 試合, {len(po_game_ids)} gameId")
     except Exception as e:
@@ -325,7 +440,10 @@ def fetch_boxscores(po_game_ids: list[str]) -> bool:
 
         sleep(f"boxscore {game_id}")
         try:
-            frames = boxscoresummaryv3.BoxScoreSummaryV3(game_id=game_id).get_data_frames()
+            frames = get_data_frames(
+                f"boxscore summary {game_id}",
+                lambda game_id=game_id: boxscoresummaryv3.BoxScoreSummaryV3(game_id=game_id),
+            )
             game_info   = frames[0].iloc[0].to_dict() if len(frames[0]) > 0 else {}
             line_scores = frames[4]   # period1Score〜period4Score per team
             team_stats  = frames[7]   # points, reboundsTotal, etc.
@@ -372,7 +490,10 @@ def fetch_boxscores(po_game_ids: list[str]) -> bool:
             # 選手スタッツ (BoxScoreTraditionalV3)
             players = []
             try:
-                trad_frames = boxscoretraditionalv3.BoxScoreTraditionalV3(game_id=game_id).get_data_frames()
+                trad_frames = get_data_frames(
+                    f"boxscore traditional {game_id}",
+                    lambda game_id=game_id: boxscoretraditionalv3.BoxScoreTraditionalV3(game_id=game_id),
+                )
                 player_df = trad_frames[0]
                 player_df = player_df[player_df["minutes"].notna() & (player_df["minutes"] != "")]
                 for _, p in player_df.iterrows():
@@ -464,6 +585,8 @@ def main():
         print(f"  {'✓' if v else '✗'} {k}")
     ok = sum(1 for v in results.values() if v)
     print(f"\n完了: {ok}/{len(results)} 成功")
+    if ok != len(results):
+        sys.exit(1)
 
 
 if __name__ == "__main__":
