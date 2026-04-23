@@ -14,6 +14,8 @@ PROFILES_CSV = os.path.join(DATA_DIR, "player_profiles.csv")
 PER_GAME_CSV = os.path.join(DATA_DIR, "player_per_game.csv")
 PO_PER_GAME_CSV = os.path.join(DATA_DIR, "po_player_per_game.csv")
 
+RATE_LIMIT_SLEEP_SEC = 1
+
 COLUMNS = [
     "PLAYER_ID", "PLAYER_NAME", "BIRTHDATE", "HEIGHT", "WEIGHT", "POSITION",
     "JERSEY", "COUNTRY", "SCHOOL", "FROM_YEAR", "DRAFT_YEAR", "DRAFT_ROUND", "DRAFT_NUMBER",
@@ -40,49 +42,52 @@ def load_target_ids() -> list[int]:
 
 def fetch_profile(player_id: int) -> dict | None:
     """CommonPlayerInfo で1選手分のプロフィールを取得して dict を返す。失敗時は None。"""
-    row = commonplayerinfo.CommonPlayerInfo(player_id=player_id).get_data_frames()[0].iloc[0]
-
-    def val(field: str, default="") -> str:
-        v = row.get(field, default)
-        if pd.isna(v) or v == "" or v is None:
-            return default
-        return str(v).strip()
-
-    draft_year = val("DRAFT_YEAR")
-    draft_round = val("DRAFT_ROUND")
-    draft_number = val("DRAFT_NUMBER")
-
-    # 未ドラフトの場合は空文字
-    if draft_year == "Undrafted":
-        draft_year = draft_round = draft_number = ""
-
-    from_year_raw = val("FROM_YEAR")
     try:
-        from_year = int(float(from_year_raw)) if from_year_raw else ""
-    except (ValueError, TypeError):
-        from_year = from_year_raw
+        row = commonplayerinfo.CommonPlayerInfo(player_id=player_id).get_data_frames()[0].iloc[0]
 
-    return {
-        "PLAYER_ID":    int(row["PERSON_ID"]),
-        "PLAYER_NAME":  val("DISPLAY_FIRST_LAST"),
-        "BIRTHDATE":    val("BIRTHDATE"),
-        "HEIGHT":       val("HEIGHT"),
-        "WEIGHT":       val("WEIGHT"),
-        "POSITION":     val("POSITION"),
-        "JERSEY":       val("JERSEY"),
-        "COUNTRY":      val("COUNTRY"),
-        "SCHOOL":       val("SCHOOL"),
-        "FROM_YEAR":    from_year,
-        "DRAFT_YEAR":   draft_year,
-        "DRAFT_ROUND":  draft_round,
-        "DRAFT_NUMBER": draft_number,
-    }
+        def val(field: str, default: str = "") -> str:
+            v = row.get(field, default)
+            if v is None or (isinstance(v, float) and pd.isna(v)) or v == "":
+                return default
+            return str(v).strip()
+
+        draft_year = val("DRAFT_YEAR")
+        draft_round = val("DRAFT_ROUND")
+        draft_number = val("DRAFT_NUMBER")
+
+        # 未ドラフトの場合は空文字
+        if draft_year == "Undrafted":
+            draft_year = draft_round = draft_number = ""
+
+        from_year_raw = val("FROM_YEAR")
+        try:
+            from_year: int | str = int(float(from_year_raw)) if from_year_raw else ""
+        except (ValueError, TypeError):
+            from_year = from_year_raw
+
+        return {
+            "PLAYER_ID":    int(row["PERSON_ID"]),
+            "PLAYER_NAME":  val("DISPLAY_FIRST_LAST"),
+            "BIRTHDATE":    val("BIRTHDATE"),
+            "HEIGHT":       val("HEIGHT"),
+            "WEIGHT":       val("WEIGHT"),
+            "POSITION":     val("POSITION"),
+            "JERSEY":       val("JERSEY"),
+            "COUNTRY":      val("COUNTRY"),
+            "SCHOOL":       val("SCHOOL"),
+            "FROM_YEAR":    from_year,
+            "DRAFT_YEAR":   draft_year,
+            "DRAFT_ROUND":  draft_round,
+            "DRAFT_NUMBER": draft_number,
+        }
+    except Exception:
+        return None
 
 
 def append_profiles(records: list[dict]) -> None:
     """プロフィールレコードを player_profiles.csv に追記する。"""
     df_new = pd.DataFrame(records, columns=COLUMNS)
-    write_header = not os.path.exists(PROFILES_CSV)
+    write_header = not os.path.exists(PROFILES_CSV) or os.path.getsize(PROFILES_CSV) == 0
     df_new.to_csv(PROFILES_CSV, mode="a", header=write_header, index=False)
 
 
@@ -133,13 +138,13 @@ def main() -> None:
             print(f"  [{i}/{len(batch_ids)}] {label} ... ✗ エラー: {e}")
             fail_count += 1
 
-        time.sleep(1)
+        time.sleep(RATE_LIMIT_SLEEP_SEC)
 
     if records:
         append_profiles(records)
 
     new_fetched = already + success_count
-    remaining = total - new_fetched
+    remaining = max(0, len(pending_ids) - success_count)
 
     print("\n=== 完了 ===")
     print(f"今回取得: {success_count} 件成功, {fail_count} 件失敗")
