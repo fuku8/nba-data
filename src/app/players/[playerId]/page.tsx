@@ -15,6 +15,7 @@ export default async function PlayerDetailPage({
 }) {
   const { playerId } = await params;
   const playerIdNum = parseInt(playerId, 10);
+  if (isNaN(playerIdNum)) notFound();
 
   const allPerGame = getPlayerPerGame();
   const allAdvanced = getPlayerAdvanced();
@@ -62,11 +63,11 @@ export default async function PlayerDetailPage({
                 profile.height ? profile.height : null,
                 profile.weight ? `${profile.weight} lbs` : null,
                 profile.birthdate ? profile.birthdate : null,
-                profile.fromYear ? `NBA ${profile.fromYear}年〜` : null,
+                profile.fromYear > 0 ? `NBA ${profile.fromYear}年〜` : null,
               ]
                 .filter(Boolean)
                 .map((item, idx, arr) => (
-                  <span key={idx} className="flex items-center gap-1.5">
+                  <span key={item} className="flex items-center gap-1.5">
                     {item}
                     {idx < arr.length - 1 && <span>·</span>}
                   </span>
