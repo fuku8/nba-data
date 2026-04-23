@@ -1,5 +1,5 @@
 import { readCsvFile, csvToObjects, num } from "./csv-utils";
-import type { PlayerPerGame, PlayerAdvanced, PlayerTotals } from "@/lib/types";
+import type { PlayerPerGame, PlayerAdvanced, PlayerTotals, PlayerProfile } from "@/lib/types";
 
 function mapPlayerPerGame(d: Record<string, string>): PlayerPerGame {
   return {
@@ -128,3 +128,43 @@ export function searchPlayers(
 }
 
 export { mapPlayerPerGame, mapPlayerTotals, mapPlayerAdvanced };
+
+// ===== 選手プロフィール =====
+
+let _playerProfilesCache: PlayerProfile[] | null = null;
+
+function mapPlayerProfile(d: Record<string, string>): PlayerProfile {
+  const birthdateRaw = d["BIRTHDATE"] || "";
+  const birthdate = birthdateRaw.includes("T")
+    ? birthdateRaw.split("T")[0]
+    : birthdateRaw;
+  return {
+    playerId:    num(d["PERSON_ID"]),
+    playerName:  d["DISPLAY_FIRST_LAST"] || "",
+    birthdate,
+    height:      d["HEIGHT"] || "",
+    weight:      d["WEIGHT"] || "",
+    position:    d["POSITION"] || "",
+    jersey:      d["JERSEY"] || "",
+    country:     d["COUNTRY"] || "",
+    school:      d["SCHOOL"] || "",
+    fromYear:    num(d["FROM_YEAR"]),
+    draftYear:   d["DRAFT_YEAR"] || "",
+    draftRound:  d["DRAFT_ROUND"] || "",
+    draftNumber: d["DRAFT_NUMBER"] || "",
+  };
+}
+
+export function getAllPlayerProfiles(): PlayerProfile[] {
+  if (_playerProfilesCache !== null) return _playerProfilesCache;
+  const rows = readCsvFile("player_profiles.csv");
+  const data = csvToObjects(rows);
+  _playerProfilesCache = data
+    .filter((d) => d["DISPLAY_FIRST_LAST"] || d["PERSON_ID"])
+    .map(mapPlayerProfile);
+  return _playerProfilesCache;
+}
+
+export function getPlayerProfile(playerId: number): PlayerProfile | undefined {
+  return getAllPlayerProfiles().find((p) => p.playerId === playerId);
+}

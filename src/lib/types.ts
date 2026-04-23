@@ -213,6 +213,24 @@ export type PlayoffPlayerPerGame = PlayerPerGame;
 export type PlayoffPlayerTotals = PlayerTotals;
 export type PlayoffPlayerAdvanced = PlayerAdvanced;
 
+// ===== 選手プロフィール =====
+
+export interface PlayerProfile {
+  playerId: number;
+  playerName: string;
+  birthdate: string;      // "1997-07-17" (YYYY-MM-DD)
+  height: string;         // "6-7"
+  weight: string;         // "240"
+  position: string;       // "Forward-Guard"
+  jersey: string;         // "8"
+  country: string;
+  school: string;
+  fromYear: number;       // NBAデビュー年
+  draftYear: string;
+  draftRound: string;
+  draftNumber: string;
+}
+
 // ===== ソート =====
 
 export type SortDirection = "asc" | "desc";
