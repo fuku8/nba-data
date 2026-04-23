@@ -134,6 +134,9 @@ def main() -> None:
                 records.append(profile)
                 success_count += 1
                 print(f"  [{i}/{len(batch_ids)}] {label} ... ✓")
+            else:
+                print(f"  [{i}/{len(batch_ids)}] {label} ... ✗ 取得失敗")
+                fail_count += 1
         except Exception as e:
             print(f"  [{i}/{len(batch_ids)}] {label} ... ✗ エラー: {e}")
             fail_count += 1
