@@ -31,14 +31,14 @@
 
 ## Data Pipeline
 
-1. GitHub Actions が毎日 JST 17:00 に `scripts/fetch-nba-data.py` を実行
+1. ローカル macOS の launchd が毎日 JST 16:00 に `scripts/local-update.sh` を実行
 2. NBA.com 公式 API（nba_api）からデータ取得
-3. `data/` ディレクトリに CSV / JSON として保存
+3. `data/` ディレクトリに CSV / JSON として保存・push
 4. Vercel が ISR（1時間キャッシュ）でサーブ
 
-> **注意**: `stats.nba.com` は GitHub-hosted runner からのアクセスをブロックする場合があります。
-> Actions が failure になった場合はローカルで `python3 scripts/fetch-nba-data.py` を実行して push してください。
-> 無料で利用できる代替 API は現時点で 2025-26 シーズンに対応していないため、有料プランへの移行が必要になる場合があります。
+> **注意**: `stats.nba.com` は GitHub-hosted runner（クラウド IP）からのアクセスをブロックするため、GitHub Actions でのデータ取得は廃止。
+> ローカル launchd（`~/Library/LaunchAgents/com.nba-data.update.plist`）で運用。
+> 手動実行: `launchctl start com.nba-data.update` / ログ: `logs/update.log`
 
 ### データファイル
 
@@ -89,4 +89,4 @@ python3 scripts/fetch-player-profiles.py --dry-run
 
 ## Deploy
 
-Vercel にリポジトリを接続するだけで自動デプロイされます。データは GitHub Actions が毎日自動更新します（`.github/workflows/update-data.yml`）。
+Vercel にリポジトリを接続するだけで自動デプロイされます。データはローカル launchd が毎日 JST 16:00 に自動更新します（`scripts/local-update.sh`）。
