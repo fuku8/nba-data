@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getPlayerPerGame, getPlayerAdvanced, getPlayerProfile } from "@/lib/data/players";
-import { getPlayoffPlayerPerGame } from "@/lib/data/playoffs";
+import { getPlayoffPlayerPerGame, getPlayoffPlayerAdvanced } from "@/lib/data/playoffs";
 import { getTeamColor, getTeamInfo } from "@/lib/constants/teams";
 
 export const revalidate = 3600;
@@ -32,6 +32,7 @@ export default async function PlayerDetailPage({
   const allPerGame = getPlayerPerGame();
   const allAdvanced = getPlayerAdvanced();
   const allPoPerGame = getPlayoffPlayerPerGame();
+  const allPoAdvanced = getPlayoffPlayerAdvanced();
   const profile = getPlayerProfile(playerIdNum);
 
   const pg = allPerGame.find((p) => p.playerId === playerIdNum && p.team !== "TOT")
@@ -40,6 +41,8 @@ export default async function PlayerDetailPage({
     || allAdvanced.find((p) => p.playerId === playerIdNum);
   const poPg = allPoPerGame.find((p) => p.playerId === playerIdNum && p.team !== "TOT")
     || allPoPerGame.find((p) => p.playerId === playerIdNum);
+  const poAdv = allPoAdvanced.find((p) => p.playerId === playerIdNum && p.team !== "TOT")
+    || allPoAdvanced.find((p) => p.playerId === playerIdNum);
 
   if (!pg) notFound();
 
@@ -146,30 +149,58 @@ export default async function PlayerDetailPage({
       </Card>
 
       {/* Advanced Stats */}
-      {adv && (
+      {(adv || poAdv) && (
         <Card>
           <CardHeader>
             <CardTitle>Advanced Stats</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-4 sm:grid-cols-5 lg:grid-cols-9">
-              {[
-                { label: "ORtg", value: adv.offRating.toFixed(1) },
-                { label: "DRtg", value: adv.defRating.toFixed(1) },
-                { label: "NRtg", value: (adv.netRating > 0 ? "+" : "") + adv.netRating.toFixed(1) },
-                { label: "TS%", value: (adv.tsPct * 100).toFixed(1) + "%" },
-                { label: "eFG%", value: (adv.efgPct * 100).toFixed(1) + "%" },
-                { label: "USG%", value: (adv.usgPct * 100).toFixed(1) + "%" },
-                { label: "AST%", value: (adv.astPct * 100).toFixed(1) + "%" },
-                { label: "REB%", value: (adv.rebPct * 100).toFixed(1) + "%" },
-                { label: "PIE", value: (adv.pie * 100).toFixed(1) + "%" },
-              ].map(({ label, value }) => (
-                <div key={label} className="text-center">
-                  <div className="text-xs text-muted-foreground">{label}</div>
-                  <div className="text-lg font-mono font-semibold">{value}</div>
+          <CardContent className="space-y-4">
+            {poAdv && (
+              <div>
+                <div className="text-xs font-medium text-orange-400 mb-2">Playoffs</div>
+                <div className="grid grid-cols-3 gap-4 sm:grid-cols-5 lg:grid-cols-9">
+                  {[
+                    { label: "ORtg", value: poAdv.offRating.toFixed(1) },
+                    { label: "DRtg", value: poAdv.defRating.toFixed(1) },
+                    { label: "NRtg", value: (poAdv.netRating > 0 ? "+" : "") + poAdv.netRating.toFixed(1) },
+                    { label: "TS%", value: (poAdv.tsPct * 100).toFixed(1) + "%" },
+                    { label: "eFG%", value: (poAdv.efgPct * 100).toFixed(1) + "%" },
+                    { label: "USG%", value: (poAdv.usgPct * 100).toFixed(1) + "%" },
+                    { label: "AST%", value: (poAdv.astPct * 100).toFixed(1) + "%" },
+                    { label: "REB%", value: (poAdv.rebPct * 100).toFixed(1) + "%" },
+                    { label: "PIE", value: (poAdv.pie * 100).toFixed(1) + "%" },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="text-center">
+                      <div className="text-xs text-muted-foreground">{label}</div>
+                      <div className="text-lg font-mono font-semibold">{value}</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
+            {adv && (
+              <div>
+                {poAdv && <div className="text-xs font-medium text-muted-foreground mb-2">Regular Season</div>}
+                <div className="grid grid-cols-3 gap-4 sm:grid-cols-5 lg:grid-cols-9">
+                  {[
+                    { label: "ORtg", value: adv.offRating.toFixed(1) },
+                    { label: "DRtg", value: adv.defRating.toFixed(1) },
+                    { label: "NRtg", value: (adv.netRating > 0 ? "+" : "") + adv.netRating.toFixed(1) },
+                    { label: "TS%", value: (adv.tsPct * 100).toFixed(1) + "%" },
+                    { label: "eFG%", value: (adv.efgPct * 100).toFixed(1) + "%" },
+                    { label: "USG%", value: (adv.usgPct * 100).toFixed(1) + "%" },
+                    { label: "AST%", value: (adv.astPct * 100).toFixed(1) + "%" },
+                    { label: "REB%", value: (adv.rebPct * 100).toFixed(1) + "%" },
+                    { label: "PIE", value: (adv.pie * 100).toFixed(1) + "%" },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="text-center">
+                      <div className="text-xs text-muted-foreground">{label}</div>
+                      <div className="text-lg font-mono font-semibold">{value}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

@@ -127,6 +127,24 @@ export function TeamRosterTable({ rows }: { rows: TeamRosterRow[] }) {
             </TableHead>
             <TableHead className="text-right">
               <SortableHeader
+                label="DRtg"
+                sortKey="defRating"
+                sortConfig={sortConfig}
+                onSort={handleSort}
+                className="justify-end"
+              />
+            </TableHead>
+            <TableHead className="text-right">
+              <SortableHeader
+                label="NRtg"
+                sortKey="netRating"
+                sortConfig={sortConfig}
+                onSort={handleSort}
+                className="justify-end"
+              />
+            </TableHead>
+            <TableHead className="text-right">
+              <SortableHeader
                 label="TS%"
                 sortKey="tsPct"
                 sortConfig={sortConfig}
@@ -162,6 +180,14 @@ export function TeamRosterTable({ rows }: { rows: TeamRosterRow[] }) {
               </TableCell>
               <TableCell className="text-right font-mono">
                 {row.offRating?.toFixed(1) ?? "-"}
+              </TableCell>
+              <TableCell className="text-right font-mono">
+                {row.defRating?.toFixed(1) ?? "-"}
+              </TableCell>
+              <TableCell className="text-right font-mono">
+                {row.netRating != null
+                  ? `${row.netRating > 0 ? "+" : ""}${row.netRating.toFixed(1)}`
+                  : "-"}
               </TableCell>
               <TableCell className="text-right font-mono">
                 {row.tsPct != null ? `${(row.tsPct * 100).toFixed(1)}%` : "-"}

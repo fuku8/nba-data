@@ -5,7 +5,13 @@ import Link from "next/link";
 import { SortableHeader } from "@/components/sortable-header";
 import type { PlayoffPlayerPerGame, SortConfig } from "@/lib/types";
 
-const COLS: { key: string; label: string; pct?: boolean; int?: boolean }[] = [
+export interface RosterPlayerRow extends PlayoffPlayerPerGame {
+  offRating: number | null;
+  defRating: number | null;
+  netRating: number | null;
+}
+
+const COLS: { key: string; label: string; pct?: boolean; int?: boolean; sign?: boolean }[] = [
   { key: "gp", label: "G", int: true },
   { key: "pts", label: "PTS" },
   { key: "trb", label: "REB" },
@@ -17,9 +23,12 @@ const COLS: { key: string; label: string; pct?: boolean; int?: boolean }[] = [
   { key: "threePtPct", label: "3P%", pct: true },
   { key: "ftPct", label: "FT%", pct: true },
   { key: "mpg", label: "MIN" },
+  { key: "offRating", label: "ORtg" },
+  { key: "defRating", label: "DRtg" },
+  { key: "netRating", label: "NRtg", sign: true },
 ];
 
-export function RosterClient({ players }: { players: PlayoffPlayerPerGame[] }) {
+export function RosterClient({ players }: { players: RosterPlayerRow[] }) {
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "pts", direction: "desc" });
 
   const handleSort = (key: string) => {
@@ -35,8 +44,13 @@ export function RosterClient({ players }: { players: PlayoffPlayerPerGame[] }) {
     return sortConfig.direction === "desc" ? bv - av : av - bv;
   });
 
-  const fmt = (v: number, pct?: boolean, int?: boolean) =>
-    pct ? (v * 100).toFixed(1) + "%" : int ? String(Math.round(v)) : v.toFixed(1);
+  const fmt = (v: number | null, pct?: boolean, int?: boolean, sign?: boolean) => {
+    if (v == null) return "-";
+    if (pct) return (v * 100).toFixed(1) + "%";
+    if (int) return String(Math.round(v));
+    if (sign) return (v > 0 ? "+" : "") + v.toFixed(1);
+    return v.toFixed(1);
+  };
 
   return (
     <div className="rounded-md border overflow-x-auto">
@@ -58,9 +72,9 @@ export function RosterClient({ players }: { players: PlayoffPlayerPerGame[] }) {
                 <Link href={`/players/${p.playerId}`} className="hover:underline">{p.player}</Link>
               </td>
               {COLS.map((col) => {
-                const v = ((p as unknown) as Record<string, number>)[col.key] ?? 0;
+                const v = ((p as unknown) as Record<string, number | null>)[col.key] ?? null;
                 return (
-                  <td key={col.key} className="py-2 px-2 text-right font-mono text-xs">{fmt(v, col.pct, col.int)}</td>
+                  <td key={col.key} className="py-2 px-2 text-right font-mono text-xs">{fmt(v, col.pct, col.int, col.sign)}</td>
                 );
               })}
             </tr>

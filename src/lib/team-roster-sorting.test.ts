@@ -21,6 +21,8 @@ const rows: TeamRosterRow[] = [
     fgPct: 0.51,
     threePtPct: 0.39,
     offRating: 118.4,
+    defRating: 108.2,
+    netRating: 10.2,
     tsPct: 0.62,
   },
   {
@@ -36,6 +38,8 @@ const rows: TeamRosterRow[] = [
     fgPct: 0.47,
     threePtPct: 0.41,
     offRating: null,
+    defRating: null,
+    netRating: null,
     tsPct: null,
   },
   {
@@ -51,6 +55,8 @@ const rows: TeamRosterRow[] = [
     fgPct: 0.58,
     threePtPct: 0.0,
     offRating: 112.7,
+    defRating: 115.1,
+    netRating: -2.4,
     tsPct: 0.71,
   },
 ];

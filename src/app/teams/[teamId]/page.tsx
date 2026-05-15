@@ -69,6 +69,8 @@ export default async function TeamDetailPage({
       fgPct: player.fgPct,
       threePtPct: player.threePtPct,
       offRating: advancedStats?.offRating ?? null,
+      defRating: advancedStats?.defRating ?? null,
+      netRating: advancedStats?.netRating ?? null,
       tsPct: advancedStats?.tsPct ?? null,
     };
   });

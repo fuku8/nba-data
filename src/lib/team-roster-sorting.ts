@@ -11,6 +11,8 @@ export type TeamRosterSortKey =
   | "fgPct"
   | "threePtPct"
   | "offRating"
+  | "defRating"
+  | "netRating"
   | "tsPct";
 
 export interface TeamRosterRow {
@@ -26,6 +28,8 @@ export interface TeamRosterRow {
   fgPct: number;
   threePtPct: number;
   offRating: number | null;
+  defRating: number | null;
+  netRating: number | null;
   tsPct: number | null;
 }
 

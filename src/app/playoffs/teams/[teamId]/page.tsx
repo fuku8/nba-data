@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { NBA_TEAMS, getTeamAbbr, getTeamColor } from "@/lib/constants/teams";
-import { getPlayoffSeries, getPlayoffPlayerPerGame, getPlayoffTeamStats, isPlayoffDataAvailable } from "@/lib/data/playoffs";
+import { getPlayoffSeries, getPlayoffPlayerPerGame, getPlayoffPlayerAdvanced, getPlayoffTeamStats, isPlayoffDataAvailable } from "@/lib/data/playoffs";
 import { RosterClient } from "./roster-client";
 
 export const revalidate = 3600;
@@ -35,7 +35,21 @@ export default async function PlayoffTeamPage({
   const allTeamStats = getPlayoffTeamStats();
   const teamStats = allTeamStats.find((t) => t.team === abbr);
 
-  const poPlayers = getPlayoffPlayerPerGame().filter((p) => p.team === abbr && p.team !== "TOT");
+  const poPlayersRaw = getPlayoffPlayerPerGame().filter((p) => p.team === abbr && p.team !== "TOT");
+  const poAdvancedMap = new Map(
+    getPlayoffPlayerAdvanced()
+      .filter((p) => p.team === abbr && p.team !== "TOT")
+      .map((p) => [p.playerId, p])
+  );
+  const poPlayers = poPlayersRaw.map((p) => {
+    const adv = poAdvancedMap.get(p.playerId);
+    return {
+      ...p,
+      offRating: adv?.offRating ?? null,
+      defRating: adv?.defRating ?? null,
+      netRating: adv?.netRating ?? null,
+    };
+  });
 
   return (
     <div className="space-y-6">
