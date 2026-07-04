@@ -68,6 +68,17 @@ export function getPoDataTimestamp(): string {
   }
 }
 
+// データCSVのmtimeスタンプ。モジュールレベルキャッシュの無効化判定に使う（ローカルでCSV差し替え時の再起動不要化）
+export function dataStamp(fnames: string[]): string {
+  return fnames.map((f) => {
+    try {
+      return fs.statSync(path.join(DATA_DIR, f)).mtimeMs;
+    } catch {
+      return 0;
+    }
+  }).join("|");
+}
+
 export function getLatestGameDate(): string {
   try {
     const filepath = path.join(DATA_DIR, "games.csv");

@@ -1,4 +1,4 @@
-import { readCsvFile, csvToObjects, num } from "./csv-utils";
+import { readCsvFile, csvToObjects, num, dataStamp } from "./csv-utils";
 import { getTeamAbbr } from "@/lib/constants/teams";
 import { getPlayerTotals } from "./players";
 import type { TeamStanding, TeamPerGame, TeamAdvanced, PlayerTotals } from "@/lib/types";
@@ -108,11 +108,13 @@ export function gini(values: number[]): number {
 
 export const GINI_MIN_MP = 200;
 
-let cached: { team: string; gini: number; players: PlayerTotals[] }[] | null = null;
+// プロセス生存中キャッシュ。CSVのmtimeで無効化するのでローカルでCSV差し替えても再起動不要
+let cached: { stamp: string; value: { team: string; gini: number; players: PlayerTotals[] }[] } | null = null;
 
 // チーム別・得点分布Giniのリーグ内ランキング（Gini降順）。MIN200未満・TOTは除外
 export function getTeamPointsGini(): { team: string; gini: number; players: PlayerTotals[] }[] {
-  if (cached) return cached;
+  const stamp = dataStamp(["player_totals.csv"]);
+  if (cached && cached.stamp === stamp) return cached.value;
 
   const totals = getPlayerTotals().filter((p) => p.mp >= GINI_MIN_MP && p.team !== "TOT");
   const teamPlayers = new Map<string, PlayerTotals[]>();
@@ -121,7 +123,7 @@ export function getTeamPointsGini(): { team: string; gini: number; players: Play
     teamPlayers.get(p.team)!.push(p);
   }
 
-  cached = [...teamPlayers.entries()]
+  const value = [...teamPlayers.entries()]
     .map(([team, players]) => ({
       team,
       gini: gini(players.map((p) => p.pts)),
@@ -129,5 +131,6 @@ export function getTeamPointsGini(): { team: string; gini: number; players: Play
     }))
     .sort((a, b) => b.gini - a.gini);
 
-  return cached;
+  cached = { stamp, value };
+  return value;
 }

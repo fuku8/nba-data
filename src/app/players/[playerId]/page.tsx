@@ -12,7 +12,7 @@ import { ShotChart } from "@/components/shot-chart";
 import { getPlayerShots, type Shot } from "@/lib/data/shots";
 import { getPlayerHustle, getPlayoffPlayerHustle, getPlayerSpeed, getPlayoffPlayerSpeed, getPlayerPossessions, getPlayoffPlayerPossessions, type PlayerHustle, type PlayerSpeed, type PlayerPossessions } from "@/lib/data/tracking";
 import { MetricLink } from "@/components/metric-link";
-import { getPlayerTypes, getPoSwing, type TypeBadge, type PoSwing } from "@/lib/data/player-types";
+import { getPlayerTypes, getPoSwing, MIN_GP, PO_MIN_GP, type TypeBadge, type PoSwing } from "@/lib/data/player-types";
 
 export const revalidate = 3600;
 
@@ -67,6 +67,12 @@ function VisualGroup({
   // 縁の下の力持ち度 = ハッスル6部門パーセンタイルの単純平均
   const hustleScore = hustleItems ? hustleItems.reduce((a, r) => a + r.pct, 0) / hustleItems.length : null;
   if (!pctRows && !radarItems && !hasWaffle && !hasShots && !hustleItems && !motion) return null;
+  // 表示丸め後の値でラベルを判定（表示と分類が矛盾しないように）。±2.0ptちょうどは平常（誤差扱い）
+  // `|| 0` で丸め後の -0 を +0 に正規化（"-0.0pt" 表示を防ぐ）
+  const swingPt = swing ? Math.round(swing.delta * 1000) / 10 || 0 : 0;
+  const swingDir = swingPt > 2 ? 1 : swingPt < -2 ? -1 : 0; // ±2.0ptちょうどは平常（誤差扱い）
+  const swingLabel = swingDir > 0 ? "昇温" : swingDir < 0 ? "降温" : "平常";
+  const swingCls = swingDir > 0 ? "text-emerald-400 border-emerald-400/40" : swingDir < 0 ? "text-rose-400 border-rose-400/40" : "text-muted-foreground";
   return (
     <section className="space-y-4">
       <h2 className={`text-lg font-semibold ${accent ? "text-orange-400" : ""}`}>{title}</h2>
@@ -80,25 +86,20 @@ function VisualGroup({
           )}
           <div className="flex flex-wrap items-center gap-2">
           {badges?.map((b) => (
-            <span key={b.type} className="inline-flex items-baseline gap-2 rounded-full border bg-secondary/60 px-4 py-1.5 text-base font-bold">
-              {b.type}
+            <span
+              key={b.type}
+              className={`inline-flex items-baseline gap-2 rounded-full border bg-secondary/60 px-4 py-1.5 text-base ${b.fallback ? "opacity-60" : "font-bold"}`}
+            >
+              {b.type}{b.fallback ? " (参考)" : ""}
               <span className="font-mono text-sm font-semibold text-muted-foreground">{(b.score * 100).toFixed(1)}</span>
             </span>
           ))}
           {swing && (
             <>
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${
-                  swing.delta >= 0.02
-                    ? "text-emerald-400 border-emerald-400/40"
-                    : swing.delta <= -0.02
-                      ? "text-rose-400 border-rose-400/40"
-                      : "text-muted-foreground"
-                }`}
-              >
-                2026 PO {swing.delta >= 0.02 ? "昇温" : swing.delta <= -0.02 ? "降温" : "平常"}
+              <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${swingCls}`}>
+                2026 PO {swingLabel}
                 <span className="font-mono font-semibold">
-                  {swing.delta > 0 ? "+" : ""}{(swing.delta * 100).toFixed(1)}pt
+                  {swingPt > 0 ? "+" : ""}{swingPt.toFixed(1)}pt
                 </span>
               </span>
               <MetricLink anchor="po-swing" />
@@ -244,9 +245,7 @@ export default async function PlayerDetailPage({
   const fmtPct = (v: number | undefined | null) => (v != null && v !== 0) ? (v * 100).toFixed(1) + "%" : "-";
 
   // リーグ内パーセンタイル（母集団: 1選手1行。トレード選手はTOT行=フルシーズンを採用）
-  // GP下限はRS=20/82試合、PO=4試合（1シリーズ弱）で母集団を回転選手に絞る
-  const MIN_GP = 20;
-  const PO_MIN_GP = 4;
+  // GP下限はRS=20/82試合、PO=4試合（1シリーズ弱）で母集団を回転選手に絞る（player-types.tsと共通）
   const poEligible = poPg != null && poPg.gp >= PO_MIN_GP;
   type PgRow = typeof allPerGame[number];
   type AdvRow = typeof allAdvanced[number];
