@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { getStandings, getTeamAdvanced, getTeamPerGame } from "@/lib/data/teams";
 import { getPlayerPerGame, getPlayerAdvanced } from "@/lib/data/players";
+import { getTeamMargins } from "@/lib/data/games";
+import { SeasonHeartbeat } from "@/components/season-heartbeat";
 import { NBA_TEAMS, getTeamAbbr } from "@/lib/constants/teams";
 import { TeamRosterTable } from "./roster-table";
 
@@ -48,6 +50,7 @@ export default async function TeamDetailPage({
   const adv = advanced.find((a) => getTeamAbbr(a.teamName) === abbr);
   const pg = perGame.find((p) => getTeamAbbr(p.teamName) === abbr);
 
+  const margins = getTeamMargins(abbr);
   const roster = allPlayers.filter((p) => p.team === abbr && p.gp >= 1);
   const rosterAdvanced = new Map(
     allAdvanced.filter((p) => p.team === abbr).map((p) => [p.player, p])
@@ -130,6 +133,19 @@ export default async function TeamDetailPage({
           sub="Player Impact Estimate"
         />
       </div>
+
+      {/* シーズン心電図 */}
+      {margins.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Season Heartbeat</CardTitle>
+            <p className="text-xs text-muted-foreground">全{margins.length}試合の点差 · 上=勝ち / 下=負け · バーにホバーで詳細</p>
+          </CardHeader>
+          <CardContent>
+            <SeasonHeartbeat games={margins} />
+          </CardContent>
+        </Card>
+      )}
 
       {/* チームスタッツ */}
       {pg && (

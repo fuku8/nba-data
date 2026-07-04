@@ -506,9 +506,14 @@ def fetch_boxscores(po_game_ids: list[str]) -> bool:
 
     for game_id in po_game_ids:
         out_path = os.path.join(BOXSCORE_DIR, f"{game_id}.json")
-        if os.path.exists(out_path):  # 差分取得
-            success += 1
-            continue
+        if os.path.exists(out_path):  # 差分取得（Final=3のみスキップ、試合中に保存されたものは再取得）
+            try:
+                with open(out_path) as f:
+                    if json.load(f).get("gameStatus") == 3:
+                        success += 1
+                        continue
+            except Exception:
+                pass  # 壊れたファイルは再取得
 
         sleep(f"boxscore {game_id}")
         try:

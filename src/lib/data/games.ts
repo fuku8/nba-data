@@ -58,6 +58,26 @@ export function getGameDates(): string[] {
   return dates.reverse();
 }
 
+export interface TeamGameMargin {
+  gameDate: string;
+  opponent: string;
+  margin: number; // 自チーム得点 − 相手得点
+}
+
+// シーズン心電図用: 指定チームの全試合の点差系列（日付順）
+export function getTeamMargins(abbr: string): TeamGameMargin[] {
+  return getGames()
+    .filter((g) => g.homeTeam === abbr || g.awayTeam === abbr)
+    .map((g) => {
+      const isHome = g.homeTeam === abbr;
+      return {
+        gameDate: g.gameDate,
+        opponent: isHome ? g.awayTeam : g.homeTeam,
+        margin: isHome ? g.homePts - g.awayPts : g.awayPts - g.homePts,
+      };
+    });
+}
+
 export function getLatestGameDate(): string {
   const filepath = path.join(process.cwd(), "data", "games.csv");
   if (!fs.existsSync(filepath)) return "不明";

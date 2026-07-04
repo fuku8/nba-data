@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { getPlayerPerGame, getPlayerAdvanced, getPlayerProfile } from "@/lib/data/players";
 import { getPlayoffPlayerPerGame, getPlayoffPlayerAdvanced } from "@/lib/data/playoffs";
 import { getTeamColor, getTeamInfo } from "@/lib/constants/teams";
+import { PercentileBars, percentileOf, type PercentileRow } from "@/components/percentile-bars";
 
 export const revalidate = 3600;
 
@@ -49,6 +50,36 @@ export default async function PlayerDetailPage({
   const teamInfo = getTeamInfo(pg.team);
 
   const fmtPct = (v: number | undefined | null) => (v != null && v !== 0) ? (v * 100).toFixed(1) + "%" : "-";
+
+  // リーグ内パーセンタイル（母集団: GP20以上・1選手1行。トレード選手はTOT行=フルシーズンを採用）
+  const MIN_GP = 20;
+  const dedupe = <T extends { playerId: number; team: string; gp: number }>(all: T[]) => {
+    const byId = new Map<number, T>();
+    for (const p of all) {
+      if (p.team === "TOT" || !byId.has(p.playerId)) byId.set(p.playerId, p);
+    }
+    return [...byId.values()].filter((p) => p.gp >= MIN_GP);
+  };
+  const pgPool = dedupe(allPerGame);
+  const advPool = dedupe(allAdvanced);
+  const pgFull = allPerGame.find((p) => p.playerId === playerIdNum && p.team === "TOT") ?? pg;
+  const advFull = allAdvanced.find((p) => p.playerId === playerIdNum && p.team === "TOT") ?? adv;
+  const pctRows: PercentileRow[] | null = pgFull.gp >= MIN_GP
+    ? [
+        { label: "得点", display: pgFull.pts.toFixed(1), pct: percentileOf(pgPool.map((p) => p.pts), pgFull.pts) },
+        { label: "リバウンド", display: pgFull.trb.toFixed(1), pct: percentileOf(pgPool.map((p) => p.trb), pgFull.trb) },
+        { label: "アシスト", display: pgFull.ast.toFixed(1), pct: percentileOf(pgPool.map((p) => p.ast), pgFull.ast) },
+        { label: "スティール", display: pgFull.stl.toFixed(1), pct: percentileOf(pgPool.map((p) => p.stl), pgFull.stl) },
+        { label: "ブロック", display: pgFull.blk.toFixed(1), pct: percentileOf(pgPool.map((p) => p.blk), pgFull.blk) },
+        ...(advFull
+          ? [
+              { label: "TS%", display: (advFull.tsPct * 100).toFixed(1), pct: percentileOf(advPool.map((p) => p.tsPct), advFull.tsPct) },
+              { label: "PIE", display: (advFull.pie * 100).toFixed(1), pct: percentileOf(advPool.map((p) => p.pie), advFull.pie) },
+            ]
+          : []),
+        { label: "TOV(少なさ)", display: pgFull.tov.toFixed(1), pct: 1 - percentileOf(pgPool.map((p) => p.tov), pgFull.tov) },
+      ]
+    : null;
 
   return (
     <div className="space-y-6">
@@ -147,6 +178,19 @@ export default async function PlayerDetailPage({
           </div>
         </CardContent>
       </Card>
+
+      {/* League Percentile */}
+      {pctRows && (
+        <Card>
+          <CardHeader>
+            <CardTitle>League Percentile</CardTitle>
+            <p className="text-xs text-muted-foreground">レギュラーシーズン · GP{MIN_GP}以上の選手内での位置（100が最上位）</p>
+          </CardHeader>
+          <CardContent>
+            <PercentileBars rows={pctRows} />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Advanced Stats */}
       {(adv || poAdv) && (

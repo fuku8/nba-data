@@ -9,10 +9,20 @@ import { getTeamColor } from "@/lib/constants/teams";
 import type { PlayoffSeries } from "@/lib/types";
 import type { PoGame } from "./page";
 
+// 熱戦指数(leadChanges + timesTied − 点差)を🔥の数に変換
+function dramaFlames(drama: number | null): string {
+  if (drama == null) return "";
+  if (drama >= 20) return "🔥🔥🔥";
+  if (drama >= 10) return "🔥🔥";
+  if (drama >= 4) return "🔥";
+  return "";
+}
+
 function GameCard({ game }: { game: PoGame }) {
   const router = useRouter();
   const homeWin = game.homeWl === "W";
   const inProgress = !game.homeWl;
+  const flames = dramaFlames(game.drama);
 
   return (
     <div
@@ -26,9 +36,16 @@ function GameCard({ game }: { game: PoGame }) {
         <CardContent className="pt-5 pb-4">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs text-muted-foreground">{game.gameDate}</span>
-            <Badge variant={inProgress ? "outline" : "secondary"} className="text-xs">
-              {inProgress ? "進行中" : "Final"}
-            </Badge>
+            <div className="flex items-center gap-1.5">
+              {flames && (
+                <span className="text-xs" title={`熱戦指数 ${game.drama}（リード交代+同点−点差）`}>
+                  {flames}
+                </span>
+              )}
+              <Badge variant={inProgress ? "outline" : "secondary"} className="text-xs">
+                {inProgress ? "進行中" : "Final"}
+              </Badge>
+            </div>
           </div>
           <div className="space-y-2">
             <div className={`flex items-center justify-between ${!inProgress && homeWin ? "opacity-50" : ""}`}>
