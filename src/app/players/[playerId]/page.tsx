@@ -6,6 +6,8 @@ import { getPlayerPerGame, getPlayerAdvanced, getPlayerProfile } from "@/lib/dat
 import { getPlayoffPlayerPerGame, getPlayoffPlayerAdvanced } from "@/lib/data/playoffs";
 import { getTeamColor, getTeamInfo } from "@/lib/constants/teams";
 import { PercentileBars, percentileOf, type PercentileRow } from "@/components/percentile-bars";
+import { VersatilityRadar, versatilityScore } from "@/components/versatility-radar";
+import { ScoringWaffle } from "@/components/scoring-waffle";
 
 export const revalidate = 3600;
 
@@ -92,6 +94,14 @@ export default async function PlayerDetailPage({
   const poPctRows = poPg && poPg.gp >= PO_MIN_GP
     ? buildPctRows(poPg, poAdv, dedupe(allPoPerGame, PO_MIN_GP), dedupe(allPoAdvanced, PO_MIN_GP))
     : null;
+
+  // レーダー: League Percentile（RS）の5部門値を再利用
+  const radarItems = pctRows?.slice(0, 5).map((r) => ({ label: r.label, pct: r.pct })) ?? null;
+  const vScore = radarItems ? versatilityScore(radarItems.map((r) => r.pct)) : null;
+  // 得点構成: 3P/2P/FT由来の得点（per game）
+  const pts3 = pg.threePt * 3;
+  const pts2 = (pg.fg - pg.threePt) * 2;
+  const ptsFt = pg.ft;
 
   return (
     <div className="space-y-6">
@@ -214,6 +224,32 @@ export default async function PlayerDetailPage({
           </CardContent>
         </Card>
       )}
+
+      {/* オールラウンド度 & 得点構成 */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {radarItems && vScore != null && (
+          <Card>
+            <CardHeader>
+              <CardTitle>オールラウンド度 {(vScore * 100).toFixed(1)}</CardTitle>
+              <p className="text-xs text-muted-foreground">5部門パーセンタイルの平均×均等さ（レギュラーシーズン）</p>
+            </CardHeader>
+            <CardContent className="flex justify-center">
+              <VersatilityRadar items={radarItems} />
+            </CardContent>
+          </Card>
+        )}
+        {pts3 + pts2 + ptsFt > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>得点の作り方</CardTitle>
+              <p className="text-xs text-muted-foreground">平均{pg.pts.toFixed(1)}点の内訳（1マス=1%）</p>
+            </CardHeader>
+            <CardContent>
+              <ScoringWaffle pts3={pts3} pts2={pts2} ptsFt={ptsFt} />
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       {/* Advanced Stats */}
       {(adv || poAdv) && (
