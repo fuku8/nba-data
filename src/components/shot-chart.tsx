@@ -5,8 +5,9 @@ import type { Shot } from "@/lib/data/shots";
 
 const W = 500; // LOC_X -250..250
 const H = 470; // ベースライン(y=-47.5)からハーフコートライン付近まで
+const MAX_Y = 422.5; // チャート描画範囲の上限（これを超えるバックコートのヒーブは描画対象外）
 const sx = (x: number) => x + 250;
-const sy = (y: number) => 422.5 - y;
+const sy = (y: number) => MAX_Y - y;
 
 // 3Pアークとコーナー直線の接点: x=±220, y=sqrt(237.5²-220²)≈89.5
 const ARC_Y = Math.sqrt(237.5 ** 2 - 220 ** 2);
@@ -33,21 +34,23 @@ function CourtLines() {
 }
 
 export function ShotChart({ shots }: { shots: Shot[] }) {
-  // バックコートからのヒーブはチャート外なので除外
-  const visible = shots.filter(([, y]) => y <= 422.5);
-  if (visible.length === 0) return null;
-  const made = visible.filter(([, , m]) => m === 1);
-  const missed = visible.filter(([, , m]) => m !== 1);
-  const pct = (made.length / visible.length) * 100;
+  if (shots.length === 0) return null;
+  // 凡例の成功/失敗/FG%は全試投（バックコートのヒーブ含む）で集計する
+  const made = shots.filter(([, , m]) => m === 1);
+  const missed = shots.filter(([, , m]) => m !== 1);
+  const pct = (made.length / shots.length) * 100;
+  // 描画はチャート内（バックコートのヒーブを除く）のみ
+  const drawnMade = made.filter(([, y]) => y <= MAX_Y);
+  const drawnMissed = missed.filter(([, y]) => y <= MAX_Y);
 
   return (
     <div className="space-y-2">
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[440px]" role="img" aria-label="ショットチャート">
         <CourtLines />
-        {missed.map(([x, y], i) => (
+        {drawnMissed.map(([x, y], i) => (
           <circle key={`m${i}`} cx={sx(x)} cy={sy(y)} r={3.2} fill="#64748b" fillOpacity={0.4} />
         ))}
-        {made.map(([x, y], i) => (
+        {drawnMade.map(([x, y], i) => (
           <circle key={`o${i}`} cx={sx(x)} cy={sy(y)} r={3.2} fill="#10b981" fillOpacity={0.65} />
         ))}
       </svg>
@@ -60,7 +63,7 @@ export function ShotChart({ shots }: { shots: Shot[] }) {
           <span className="h-2.5 w-2.5 rounded-full inline-block bg-slate-500 opacity-60" />
           失敗 {missed.length}
         </span>
-        <span>FG {pct.toFixed(1)}%（{visible.length}本）</span>
+        <span>FG {pct.toFixed(1)}%（{shots.length}本）</span>
       </div>
     </div>
   );

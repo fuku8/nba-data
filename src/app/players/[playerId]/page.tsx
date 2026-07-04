@@ -49,10 +49,10 @@ function VisualGroup({
   pts2: number;
   ptsFt: number;
   ptsAvg: number;
-  shots: Shot[] | null;
+  shots: Shot[];
 }) {
   const hasWaffle = pts3 + pts2 + ptsFt > 0;
-  const hasShots = shots != null && shots.length > 0;
+  const hasShots = shots.length > 0;
   if (!pctRows && !radarItems && !hasWaffle && !hasShots) return null;
   return (
     <section className="space-y-4">
@@ -77,7 +77,7 @@ function VisualGroup({
                 <p className="text-xs text-muted-foreground">全試投の位置（緑=成功 / 灰=失敗）</p>
               </CardHeader>
               <CardContent className="flex justify-center">
-                <ShotChart shots={shots!} />
+                <ShotChart shots={shots} />
               </CardContent>
             </Card>
           )}
@@ -143,6 +143,7 @@ export default async function PlayerDetailPage({
   // GP下限はRS=20/82試合、PO=4試合（1シリーズ弱）で母集団を回転選手に絞る
   const MIN_GP = 20;
   const PO_MIN_GP = 4;
+  const poEligible = poPg != null && poPg.gp >= PO_MIN_GP;
   type PgRow = typeof allPerGame[number];
   type AdvRow = typeof allAdvanced[number];
   const dedupe = <T extends { playerId: number; team: string; gp: number }>(all: T[], minGp: number) => {
@@ -178,7 +179,7 @@ export default async function PlayerDetailPage({
   const pctRows = pgFull.gp >= MIN_GP
     ? buildPctRows(pgFull, advFull, dedupe(allPerGame, MIN_GP), dedupe(allAdvanced, MIN_GP))
     : null;
-  const poPctRows = poPg && poPg.gp >= PO_MIN_GP
+  const poPctRows = poEligible
     ? buildPctRows(poPg, poAdv, dedupe(allPoPerGame, PO_MIN_GP), dedupe(allPoAdvanced, PO_MIN_GP))
     : null;
 
@@ -200,7 +201,7 @@ export default async function PlayerDetailPage({
   const pts2 = t ? ((t.fg - t.threePt) * 2) / t.gp : (pg.fg - pg.threePt) * 2;
   const ptsFt = t ? t.ft / t.gp : pg.ft;
   // PO版ワッフル（パーセンタイルと同じGP4以上を条件に。少試合のノイズ表示を防ぐ）
-  const allPoTotals = poPg && poPg.gp >= PO_MIN_GP ? getPlayoffPlayerTotals() : [];
+  const allPoTotals = poEligible ? getPlayoffPlayerTotals() : [];
   const poT = allPoTotals.find((p) => p.playerId === playerIdNum && p.team !== "TOT")
     ?? allPoTotals.find((p) => p.playerId === playerIdNum);
   const poPts3 = poT ? (poT.threePt * 3) / poT.gp : 0;
@@ -208,8 +209,8 @@ export default async function PlayerDetailPage({
   const poPtsFt = poT ? poT.ft / poT.gp : 0;
   // ショットチャート（Phase 3・ローカル一括取得したdata/shots/があるときのみ表示）
   const shots = getPlayerShots(playerIdNum);
-  const rsShots = shots?.rs ?? null;
-  const poShots = poPg && poPg.gp >= PO_MIN_GP ? shots?.po ?? null : null;
+  const rsShots = shots?.rs ?? [];
+  const poShots = poEligible ? shots?.po ?? [] : [];
 
   return (
     <div className="space-y-6">

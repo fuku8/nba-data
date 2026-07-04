@@ -44,6 +44,14 @@ def fetch_team_shots(team_id: int, season_type: str):
     return frames[0]
 
 
+def write_shots(shots: dict[int, dict[str, list]]):
+    for pid, d in shots.items():
+        with open(os.path.join(SHOTS_DIR, f"{pid}.json"), "w") as f:
+            json.dump(d, f, separators=(",", ":"))
+    total = sum(len(d["rs"]) + len(d["po"]) for d in shots.values())
+    print(f"✓ {len(shots)}選手 / 合計{total}ショットを {SHOTS_DIR} に保存")
+
+
 def main():
     fetcher.configure_nba_api_session()
     os.makedirs(SHOTS_DIR, exist_ok=True)
@@ -52,19 +60,21 @@ def main():
     jobs += [(tid, "Playoffs", "po") for tid in team_ids("po_player_per_game.csv")]
 
     shots: dict[int, dict[str, list]] = defaultdict(lambda: {"rs": [], "po": []})
-    for tid, stype, key in jobs:
-        fetcher.sleep(f"shots {stype} {tid}")
-        df = fetch_team_shots(tid, stype)
-        for pid, x, y, made in df[["PLAYER_ID", "LOC_X", "LOC_Y", "SHOT_MADE_FLAG"]].values.tolist():
-            shots[int(pid)][key].append([int(x), int(y), int(made)])
-        print(f"  ✓ {stype} team {tid}: {len(df)}本")
+    try:
+        for tid, stype, key in jobs:
+            fetcher.sleep(f"shots {stype} {tid}")
+            df = fetch_team_shots(tid, stype)
+            for pid, x, y, made in df[["PLAYER_ID", "LOC_X", "LOC_Y", "SHOT_MADE_FLAG"]].values.tolist():
+                shots[int(pid)][key].append([int(x), int(y), int(made)])
+            print(f"  ✓ {stype} team {tid}: {len(df)}本")
+    except Exception:
+        # ponytail: 途中失敗時もここまでの取得分は保存する。再開（resume）機能はないので
+        # 「PARTIAL」を確認したら jobs を最初からやり直すこと
+        print("✗ 取得中にエラー発生。ここまでの分を PARTIAL 保存して中断します（最初からやり直してください）")
+        write_shots(shots)
+        raise
 
-    for pid, d in shots.items():
-        with open(os.path.join(SHOTS_DIR, f"{pid}.json"), "w") as f:
-            json.dump(d, f, separators=(",", ":"))
-
-    total = sum(len(d["rs"]) + len(d["po"]) for d in shots.values())
-    print(f"✓ {len(shots)}選手 / 合計{total}ショットを {SHOTS_DIR} に保存")
+    write_shots(shots)
 
 
 if __name__ == "__main__":
