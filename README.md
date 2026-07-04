@@ -6,12 +6,17 @@
 
 ### レギュラーシーズン
 - チーム順位表（カンファレンス別・Net Rating表示）
-- チーム詳細（ロスター・Per Gameスタッツ・Advanced）
+- チーム詳細（ロスター・Per Gameスタッツ・Advanced・Season Heartbeat・ワンマン度Gini・ボール支配タッチシェア）
 - 選手スタッツ一覧（Per Game / Advanced / Totals、ソート対応）
 - 選手個人ページ（詳細スタッツ・RS vs PO 比較・プロフィール: 身長/体重/生年月日/デビュー年）
+  - League Percentile（リーグ内パーセンタイル）・オールラウンド度レーダー・得点の作り方（ワッフル）
+  - ショットチャート・縁の下の力持ち度（ハッスルレーダー）・運動量（走行距離/タッチ/保持時間）
+  - プレイヤータイプ（7タイプ判定＋評価点）・2026 PO 昇温/降温
 - 試合結果一覧（日付移動）
-- スタッツリーダーボード
+- スタッツリーダーボード（USG% × TS% 四象限マップ）
 - 選手検索・選手比較（レーダーチャート）
+- プレイヤータイプ別リーダーボード（`/types`）
+- 指標解説ページ（`/metrics`）
 
 ### プレーオフ（`/playoffs/*`）
 - トップ（シリーズ状況 + リーダー）
@@ -60,6 +65,10 @@
 | `data/po_games.csv` | PO試合結果 | LeagueGameFinder (Playoffs) |
 | `data/boxscores/{gameId}.json` | 試合ボックススコア（PO） | BoxScoreSummaryV3 + BoxScoreTraditionalV3 |
 | `data/player_profiles.csv` | 選手プロフィール（身長・体重・生年月日・デビュー年等） | CommonPlayerInfo（初回のみ手動取得） |
+| `data/player_hustle.csv` / `po_player_hustle.csv` | ハッスルスタッツ（RS/PO） | LeagueHustleStatsPlayer |
+| `data/player_speed.csv` / `po_player_speed.csv` | 走行距離・平均速度（RS/PO） | LeagueDashPtStats (SpeedDistance) |
+| `data/player_possessions.csv` / `po_player_possessions.csv` | タッチ数・ボール保持時間（RS/PO） | LeagueDashPtStats (Possessions) |
+| `data/shots/{playerId}.json` | 選手別ショット座標（RS/PO） | ShotChartDetail（初回のみ手動取得） |
 
 ## Setup
 
@@ -86,6 +95,13 @@ python3 scripts/fetch-player-profiles.py --dry-run
 ```
 
 取得済みデータはスキップされるため、途中で中断しても再実行で続きから取得できます。
+
+### ハッスル・トラッキング / ショットチャート取得（手動ローカル実行）
+
+```bash
+python3 scripts/fetch-hustle-tracking.py   # ハッスル・走行距離・タッチ数（RS/PO）
+python3 scripts/fetch-shotcharts.py        # 選手別ショット座標（RS/PO、初回のみ）
+```
 
 ## Deploy
 
