@@ -11,6 +11,7 @@ import {
   Medal,
   LayoutDashboard,
   BookOpen,
+  Shapes,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +22,7 @@ const rsNavItems = [
   { href: "/leaders", label: "リーダーズ", icon: Medal },
   { href: "/compare", label: "検索", icon: Search },
   { href: "/games", label: "試合", icon: Calendar },
+  { href: "/types", label: "タイプ", icon: Shapes },
   { href: "/metrics", label: "指標解説", icon: BookOpen },
 ];
 
@@ -31,6 +33,7 @@ const poNavItems = [
   { href: "/playoffs/leaders", label: "リーダーズ", icon: Medal },
   { href: "/playoffs/compare", label: "検索", icon: Search },
   { href: "/playoffs/games", label: "試合", icon: Calendar },
+  { href: "/types", label: "タイプ", icon: Shapes },
   { href: "/metrics", label: "指標解説", icon: BookOpen },
 ];
 

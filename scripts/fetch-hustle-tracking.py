@@ -2,10 +2,11 @@
 """ハッスル・トラッキング取得（ローカル実行専用・feel-viz Phase 4）
 
 4回のAPI呼び出しで以下を生成する:
-- data/player_hustle.csv     (RS・per game)
-- data/po_player_hustle.csv  (PO・per game)
-- data/player_speed.csv      (RS・Totals: 走行距離・平均速度)
-- data/player_possessions.csv(RS・per game: タッチ・保持時間)
+- data/player_hustle.csv        (RS・per game)
+- data/po_player_hustle.csv     (PO・per game)
+- data/player_speed.csv         (RS・Totals: 走行距離・平均速度)
+- data/player_possessions.csv   (RS・per game: タッチ・保持時間)
+- data/po_player_possessions.csv(PO・per game: 同上。選手タイプ判定用)
 
 nba_api は GitHub Actions からブロックされるため、手動ローカル実行が前提。
 """
@@ -49,19 +50,21 @@ def main():
         )[0]
         save(df, HUSTLE_COLS, fname)
 
-    for measure, per_mode, cols, fname in [
-        ("SpeedDistance", "Totals", SPEED_COLS, "player_speed.csv"),
-        ("Possessions", "PerGame", POSS_COLS, "player_possessions.csv"),
+    for measure, per_mode, stype, cols, fname in [
+        ("SpeedDistance", "Totals", "Regular Season", SPEED_COLS, "player_speed.csv"),
+        ("Possessions", "PerGame", "Regular Season", POSS_COLS, "player_possessions.csv"),
+        ("Possessions", "PerGame", "Playoffs", POSS_COLS, "po_player_possessions.csv"),
     ]:
-        fetcher.sleep(f"tracking {measure}")
+        fetcher.sleep(f"tracking {measure} {stype}")
         df = fetcher.get_data_frames(
-            f"tracking {measure}",
-            lambda measure=measure, per_mode=per_mode: fetcher.make_endpoint(
+            f"tracking {measure} {stype}",
+            lambda measure=measure, per_mode=per_mode, stype=stype: fetcher.make_endpoint(
                 leaguedashptstats.LeagueDashPtStats,
                 season=fetcher.SEASON,
                 pt_measure_type=measure,
                 player_or_team="Player",
                 per_mode_simple=per_mode,
+                season_type_all_star=stype,
             ),
         )[0]
         save(df, cols, fname)

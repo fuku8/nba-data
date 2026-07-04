@@ -12,6 +12,7 @@ import { ShotChart } from "@/components/shot-chart";
 import { getPlayerShots, type Shot } from "@/lib/data/shots";
 import { getPlayerHustle, getPlayoffPlayerHustle, getPlayerSpeed, getPlayerPossessions, type PlayerHustle } from "@/lib/data/tracking";
 import { MetricLink } from "@/components/metric-link";
+import { getPlayerTypes, getPoSwing, type TypeBadge, type PoSwing } from "@/lib/data/player-types";
 
 export const revalidate = 3600;
 
@@ -42,6 +43,8 @@ function VisualGroup({
   shots,
   hustleItems,
   motion,
+  badges,
+  swing,
 }: {
   title: string;
   accent?: boolean;
@@ -56,6 +59,8 @@ function VisualGroup({
   shots: Shot[];
   hustleItems: { label: string; pct: number }[] | null;
   motion: { distKm: number; marathons: number; speedKmh: number; touches: number; timeOfPoss: number } | null;
+  badges: TypeBadge[] | null;
+  swing: PoSwing | null;
 }) {
   const hasWaffle = pts3 + pts2 + ptsFt > 0;
   const hasShots = shots.length > 0;
@@ -65,6 +70,36 @@ function VisualGroup({
   return (
     <section className="space-y-4">
       <h2 className={`text-lg font-semibold ${accent ? "text-orange-400" : ""}`}>{title}</h2>
+      {((badges && badges.length > 0) || swing) && (
+        <div className="flex flex-wrap items-center gap-2">
+          {badges?.map((b) => (
+            <span key={b.type} className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium">
+              {b.type}
+              <span className="font-mono font-semibold">{(b.score * 100).toFixed(1)}</span>
+            </span>
+          ))}
+          {badges && badges.length > 0 && <MetricLink anchor="player-type" />}
+          {swing && (
+            <>
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${
+                  swing.delta >= 0.02
+                    ? "text-emerald-400 border-emerald-400/40"
+                    : swing.delta <= -0.02
+                      ? "text-rose-400 border-rose-400/40"
+                      : "text-muted-foreground"
+                }`}
+              >
+                2026 PO {swing.delta >= 0.02 ? "昇温" : swing.delta <= -0.02 ? "降温" : "平常"}
+                <span className="font-mono font-semibold">
+                  {swing.delta > 0 ? "+" : ""}{(swing.delta * 100).toFixed(1)}pt
+                </span>
+              </span>
+              <MetricLink anchor="po-swing" />
+            </>
+          )}
+        </div>
+      )}
       {pctRows && (
         <Card>
           <CardHeader>
@@ -268,6 +303,11 @@ export default async function PlayerDetailPage({
   const poPts3 = poT ? (poT.threePt * 3) / poT.gp : 0;
   const poPts2 = poT ? ((poT.fg - poT.threePt) * 2) / poT.gp : 0;
   const poPtsFt = poT ? poT.ft / poT.gp : 0;
+  // 選手タイプ＋PO昇温（Phase 5）
+  const rsBadges = getPlayerTypes("rs").get(playerIdNum)?.badges ?? null;
+  const poBadges = poEligible ? getPlayerTypes("po").get(playerIdNum)?.badges ?? null : null;
+  const poSwing = getPoSwing().get(playerIdNum) ?? null;
+
   // ショットチャート（Phase 3・ローカル一括取得したdata/shots/があるときのみ表示）
   const shots = getPlayerShots(playerIdNum);
   const rsShots = shots?.rs ?? [];
@@ -422,6 +462,8 @@ export default async function PlayerDetailPage({
         shots={poShots}
         hustleItems={poHustleItems}
         motion={null}
+        badges={poBadges}
+        swing={poSwing}
       />
 
       {/* Regular Season ビジュアル */}
@@ -438,6 +480,8 @@ export default async function PlayerDetailPage({
         shots={rsShots}
         hustleItems={hustleItems}
         motion={motion}
+        badges={rsBadges}
+        swing={null}
       />
 
       {/* Advanced Stats */}
