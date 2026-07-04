@@ -9,8 +9,8 @@ export default function LeadersPage() {
   const perGame = getPlayerPerGame().filter((p) => p.gp >= 30 && p.team !== "TOT");
   const advanced = getPlayerAdvanced().filter((p) => p.gp >= 30 && p.team !== "TOT");
 
-  const dots = getPlayerAdvanced()
-    .filter((p) => p.gp >= 40 && p.mp >= 25 && p.team !== "TOT")
+  const dots = advanced
+    .filter((p) => p.gp >= 40 && p.mp >= 25)
     .map((p) => ({ name: p.player, team: p.team, usg: p.usgPct, ts: p.tsPct }));
 
   return (

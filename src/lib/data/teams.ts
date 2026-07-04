@@ -1,6 +1,7 @@
 import { readCsvFile, csvToObjects, num } from "./csv-utils";
 import { getTeamAbbr } from "@/lib/constants/teams";
-import type { TeamStanding, TeamPerGame, TeamAdvanced } from "@/lib/types";
+import { getPlayerTotals } from "./players";
+import type { TeamStanding, TeamPerGame, TeamAdvanced, PlayerTotals } from "@/lib/types";
 
 export function getStandings(): TeamStanding[] {
   const rows = readCsvFile("standings.csv");
@@ -90,4 +91,43 @@ export function getTeamAdvanced(): TeamAdvanced[] {
       poss:      num(d["POSS"]),
       pie:       num(d["PIE"]),
     }));
+}
+
+// ワンマン度: チーム内得点分布のGini係数
+export function gini(values: number[]): number {
+  const xs = [...values].sort((a, b) => a - b);
+  const n = xs.length;
+  const sum = xs.reduce((a, b) => a + b, 0);
+  if (n === 0 || sum === 0) return 0;
+  let acc = 0;
+  xs.forEach((x, i) => {
+    acc += (2 * (i + 1) - n - 1) * x;
+  });
+  return acc / (n * sum);
+}
+
+export const GINI_MIN_MP = 200;
+
+let cached: { team: string; gini: number; players: PlayerTotals[] }[] | null = null;
+
+// チーム別・得点分布Giniのリーグ内ランキング（Gini降順）。MIN200未満・TOTは除外
+export function getTeamPointsGini(): { team: string; gini: number; players: PlayerTotals[] }[] {
+  if (cached) return cached;
+
+  const totals = getPlayerTotals().filter((p) => p.mp >= GINI_MIN_MP && p.team !== "TOT");
+  const teamPlayers = new Map<string, PlayerTotals[]>();
+  for (const p of totals) {
+    if (!teamPlayers.has(p.team)) teamPlayers.set(p.team, []);
+    teamPlayers.get(p.team)!.push(p);
+  }
+
+  cached = [...teamPlayers.entries()]
+    .map(([team, players]) => ({
+      team,
+      gini: gini(players.map((p) => p.pts)),
+      players: [...players].sort((a, b) => b.pts - a.pts),
+    }))
+    .sort((a, b) => b.gini - a.gini);
+
+  return cached;
 }

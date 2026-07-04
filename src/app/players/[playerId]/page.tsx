@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getPlayerPerGame, getPlayerAdvanced, getPlayerProfile } from "@/lib/data/players";
+import { getPlayerPerGame, getPlayerAdvanced, getPlayerProfile, getPlayerTotals } from "@/lib/data/players";
 import { getPlayoffPlayerPerGame, getPlayoffPlayerAdvanced } from "@/lib/data/playoffs";
 import { getTeamColor, getTeamInfo } from "@/lib/constants/teams";
 import { PercentileBars, percentileOf, type PercentileRow } from "@/components/percentile-bars";
@@ -66,6 +66,7 @@ export default async function PlayerDetailPage({
     }
     return [...byId.values()].filter((p) => p.gp >= minGp);
   };
+  const RADAR_LABELS = ["得点", "リバウンド", "アシスト", "スティール", "ブロック"];
   const buildPctRows = (
     pgRow: PgRow,
     advRow: AdvRow | undefined,
@@ -95,13 +96,18 @@ export default async function PlayerDetailPage({
     ? buildPctRows(poPg, poAdv, dedupe(allPoPerGame, PO_MIN_GP), dedupe(allPoAdvanced, PO_MIN_GP))
     : null;
 
-  // レーダー: League Percentile（RS）の5部門値を再利用
-  const radarItems = pctRows?.slice(0, 5).map((r) => ({ label: r.label, pct: r.pct })) ?? null;
+  // レーダー: League Percentile（RS）の5部門値をラベルで明示的に抽出（行順への位置依存を避ける）
+  const radarItemsRaw = pctRows?.filter((r) => RADAR_LABELS.includes(r.label)) ?? null;
+  const radarItems = radarItemsRaw && radarItemsRaw.length === RADAR_LABELS.length ? radarItemsRaw : null;
   const vScore = radarItems ? versatilityScore(radarItems.map((r) => r.pct)) : null;
-  // 得点構成: 3P/2P/FT由来の得点（per game）
-  const pts3 = pg.threePt * 3;
-  const pts2 = (pg.fg - pg.threePt) * 2;
-  const ptsFt = pg.ft;
+  // 得点構成: 3P/2P/FT由来の得点（per game）。整数の生値（totals）から算出し丸め誤差を避ける
+  // FG3M*3 + (FGM-FG3M)*2 + FTM = PTS が厳密に成立する
+  const allTotals = getPlayerTotals();
+  const t = allTotals.find((p) => p.playerId === playerIdNum && p.team !== "TOT")
+    ?? allTotals.find((p) => p.playerId === playerIdNum);
+  const pts3 = t ? (t.threePt * 3) / t.gp : pg.threePt * 3;
+  const pts2 = t ? ((t.fg - t.threePt) * 2) / t.gp : (pg.fg - pg.threePt) * 2;
+  const ptsFt = t ? t.ft / t.gp : pg.ft;
 
   return (
     <div className="space-y-6">

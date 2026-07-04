@@ -3,11 +3,11 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { getStandings, getTeamAdvanced, getTeamPerGame } from "@/lib/data/teams";
+import { getStandings, getTeamAdvanced, getTeamPerGame, getTeamPointsGini, GINI_MIN_MP } from "@/lib/data/teams";
 import { getPlayerPerGame, getPlayerAdvanced, getPlayerTotals } from "@/lib/data/players";
 import { getTeamMargins } from "@/lib/data/games";
 import { SeasonHeartbeat } from "@/components/season-heartbeat";
-import { LorenzCurve, gini } from "@/components/lorenz-curve";
+import { LorenzCurve } from "@/components/lorenz-curve";
 import { NBA_TEAMS, getTeamAbbr } from "@/lib/constants/teams";
 import { TeamRosterTable } from "./roster-table";
 
@@ -54,21 +54,15 @@ export default async function TeamDetailPage({
   const margins = getTeamMargins(abbr);
 
   // ワンマン度: チーム内得点分布のGini係数（MIN200以上でゴミ時間出場を除外）とリーグ内順位
-  const MIN_MP = 200;
-  const totals = getPlayerTotals().filter((p) => p.mp >= MIN_MP && p.team !== "TOT");
-  const teamPts = new Map<string, number[]>();
-  for (const p of totals) {
-    if (!teamPts.has(p.team)) teamPts.set(p.team, []);
-    teamPts.get(p.team)!.push(p.pts);
-  }
-  const giniByTeam = [...teamPts.entries()]
-    .map(([team, pts]) => ({ team, gini: gini(pts) }))
-    .sort((a, b) => b.gini - a.gini);
+  const giniByTeam = getTeamPointsGini();
   const teamGini = giniByTeam.find((g) => g.team === abbr);
   const giniRank = teamGini ? giniByTeam.indexOf(teamGini) + 1 : null;
-  const teamScorers = totals.filter((p) => p.team === abbr).sort((a, b) => b.pts - a.pts);
-  const topShare = teamScorers.length > 0
-    ? teamScorers[0].pts / teamScorers.reduce((a, p) => a + p.pts, 0)
+  const teamScorers = teamGini?.players ?? [];
+  const teamTotalPts = getPlayerTotals()
+    .filter((p) => p.team === abbr)
+    .reduce((a, p) => a + p.pts, 0);
+  const topShare = teamScorers.length > 0 && teamTotalPts > 0
+    ? teamScorers[0].pts / teamTotalPts
     : 0;
 
   const roster = allPlayers.filter((p) => p.team === abbr && p.gp >= 1);
@@ -173,8 +167,9 @@ export default async function TeamDetailPage({
           <CardHeader>
             <CardTitle>ワンマン度 {teamGini.gini.toFixed(3)}</CardTitle>
             <p className="text-xs text-muted-foreground">
-              得点分布の偏り（Gini係数・MIN{MIN_MP}以上） · リーグ{giniRank}位に偏重 · 最多得点者
+              得点分布の偏り（Gini係数・MIN{GINI_MIN_MP}以上） · リーグ{giniRank}位に偏重 · 最多得点者
               {teamScorers[0].player}がチーム得点の{(topShare * 100).toFixed(1)}%
+              · トレード選手はシーズン通算を現所属に計上
             </p>
           </CardHeader>
           <CardContent className="flex justify-center">

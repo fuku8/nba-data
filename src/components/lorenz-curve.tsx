@@ -1,18 +1,6 @@
 // ワンマン度: チーム内得点分布のGini係数とローレンツ曲線
 // サーバーコンポーネント・純SVG
 
-export function gini(values: number[]): number {
-  const xs = [...values].sort((a, b) => a - b);
-  const n = xs.length;
-  const sum = xs.reduce((a, b) => a + b, 0);
-  if (n === 0 || sum === 0) return 0;
-  let acc = 0;
-  xs.forEach((x, i) => {
-    acc += (2 * (i + 1) - n - 1) * x;
-  });
-  return acc / (n * sum);
-}
-
 const W = 200;
 const H = 200;
 const PAD = 10;
@@ -36,7 +24,7 @@ export function LorenzCurve({ values }: { values: number[] }) {
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[240px]" role="img" aria-label="チーム内得点分布のローレンツ曲線">
       {/* 完全均等線と曲線の間が「偏り」 */}
-      <path d={`${path}L${sx(1)},${sy(0)}Z`} fill="#f97316" fillOpacity={0.15} />
+      <path d={`${path}Z`} fill="#f97316" fillOpacity={0.15} />
       <line x1={sx(0)} y1={sy(0)} x2={sx(1)} y2={sy(1)} stroke="currentColor" strokeOpacity={0.35} strokeDasharray="4 3" />
       <path d={path} fill="none" stroke="#f97316" strokeWidth={2} />
       <text x={sx(0.5)} y={H - 1} textAnchor="middle" fontSize={9} fill="currentColor" fillOpacity={0.6}>

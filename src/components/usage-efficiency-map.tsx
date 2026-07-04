@@ -18,7 +18,10 @@ export function UsageEfficiencyMap({ dots, labelCount = 8 }: { dots: UsageDot[];
   if (dots.length === 0) return null;
   const usgs = dots.map((d) => d.usg).sort((a, b) => a - b);
   const tss = dots.map((d) => d.ts).sort((a, b) => a - b);
-  const med = (xs: number[]) => xs[Math.floor(xs.length / 2)];
+  const med = (xs: number[]) => {
+    const n = xs.length;
+    return n % 2 ? xs[(n - 1) / 2] : (xs[n / 2 - 1] + xs[n / 2]) / 2;
+  };
   const usgMed = med(usgs);
   const tsMed = med(tss);
   const pad = 0.01;
@@ -54,11 +57,16 @@ export function UsageEfficiencyMap({ dots, labelCount = 8 }: { dots: UsageDot[];
             <circle cx={sx(d.usg)} cy={sy(d.ts)} r={4} fill={getTeamColor(d.team)} fillOpacity={0.85}>
               <title>{`${d.name} (${d.team})  USG ${(d.usg * 100).toFixed(1)}% / TS ${(d.ts * 100).toFixed(1)}%`}</title>
             </circle>
-            {labeled.has(d.name) && (
-              <text x={sx(d.usg) + 6} y={sy(d.ts) - 5} fontSize={10} fill="currentColor" fillOpacity={0.85}>
-                {d.name}
-              </text>
-            )}
+            {labeled.has(d.name) &&
+              (sx(d.usg) > (PAD.l + (W - PAD.r)) / 2 ? (
+                <text x={sx(d.usg) - 6} y={sy(d.ts) - 5} textAnchor="end" fontSize={10} fill="currentColor" fillOpacity={0.85}>
+                  {d.name}
+                </text>
+              ) : (
+                <text x={sx(d.usg) + 6} y={sy(d.ts) - 5} fontSize={10} fill="currentColor" fillOpacity={0.85}>
+                  {d.name}
+                </text>
+              ))}
           </g>
         ))}
         <text x={(PAD.l + W - PAD.r) / 2} y={H - 8} textAnchor="middle" fontSize={11} fill="currentColor" fillOpacity={0.6}>
