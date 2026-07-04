@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """ハッスル・トラッキング取得（ローカル実行専用・feel-viz Phase 4）
 
-4回のAPI呼び出しで以下を生成する:
+6回のAPI呼び出しで以下を生成する:
 - data/player_hustle.csv        (RS・per game)
 - data/po_player_hustle.csv     (PO・per game)
 - data/player_speed.csv         (RS・Totals: 走行距離・平均速度)
+- data/po_player_speed.csv      (PO・Totals: 同上)
 - data/player_possessions.csv   (RS・per game: タッチ・保持時間)
 - data/po_player_possessions.csv(PO・per game: 同上。選手タイプ判定用)
 
@@ -52,6 +53,7 @@ def main():
 
     for measure, per_mode, stype, cols, fname in [
         ("SpeedDistance", "Totals", "Regular Season", SPEED_COLS, "player_speed.csv"),
+        ("SpeedDistance", "Totals", "Playoffs", SPEED_COLS, "po_player_speed.csv"),
         ("Possessions", "PerGame", "Regular Season", POSS_COLS, "player_possessions.csv"),
         ("Possessions", "PerGame", "Playoffs", POSS_COLS, "po_player_possessions.csv"),
     ]:

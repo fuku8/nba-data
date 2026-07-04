@@ -10,7 +10,7 @@ import { VersatilityRadar, versatilityScore } from "@/components/versatility-rad
 import { ScoringWaffle } from "@/components/scoring-waffle";
 import { ShotChart } from "@/components/shot-chart";
 import { getPlayerShots, type Shot } from "@/lib/data/shots";
-import { getPlayerHustle, getPlayoffPlayerHustle, getPlayerSpeed, getPlayerPossessions, type PlayerHustle } from "@/lib/data/tracking";
+import { getPlayerHustle, getPlayoffPlayerHustle, getPlayerSpeed, getPlayoffPlayerSpeed, getPlayerPossessions, getPlayoffPlayerPossessions, type PlayerHustle, type PlayerSpeed, type PlayerPossessions } from "@/lib/data/tracking";
 import { MetricLink } from "@/components/metric-link";
 import { getPlayerTypes, getPoSwing, type TypeBadge, type PoSwing } from "@/lib/data/player-types";
 
@@ -58,7 +58,7 @@ function VisualGroup({
   ptsAvg: number;
   shots: Shot[];
   hustleItems: { label: string; pct: number }[] | null;
-  motion: { distKm: number; marathons: number; speedKmh: number; touches: number; timeOfPoss: number } | null;
+  motion: { distKm: number; distKmPerGame: number; marathons: number; speedKmh: number; touches: number; timeOfPoss: number; score: number } | null;
   badges: TypeBadge[] | null;
   swing: PoSwing | null;
 }) {
@@ -71,14 +71,20 @@ function VisualGroup({
     <section className="space-y-4">
       <h2 className={`text-lg font-semibold ${accent ? "text-orange-400" : ""}`}>{title}</h2>
       {((badges && badges.length > 0) || swing) && (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="space-y-2">
+          {badges && badges.length > 0 && (
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-medium text-muted-foreground">プレイヤータイプ</h3>
+              <MetricLink anchor="player-type" />
+            </div>
+          )}
+          <div className="flex flex-wrap items-center gap-2">
           {badges?.map((b) => (
-            <span key={b.type} className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium">
+            <span key={b.type} className="inline-flex items-baseline gap-2 rounded-full border bg-secondary/60 px-4 py-1.5 text-base font-bold">
               {b.type}
-              <span className="font-mono font-semibold">{(b.score * 100).toFixed(1)}</span>
+              <span className="font-mono text-sm font-semibold text-muted-foreground">{(b.score * 100).toFixed(1)}</span>
             </span>
           ))}
-          {badges && badges.length > 0 && <MetricLink anchor="player-type" />}
           {swing && (
             <>
               <span
@@ -98,6 +104,7 @@ function VisualGroup({
               <MetricLink anchor="po-swing" />
             </>
           )}
+          </div>
         </div>
       )}
       {pctRows && (
@@ -176,15 +183,16 @@ function VisualGroup({
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-2">
-                  <CardTitle>運動量</CardTitle>
+                  <CardTitle>運動量 {(motion.score * 100).toFixed(1)}</CardTitle>
                   <MetricLink anchor="motion" />
                 </div>
-                <p className="text-xs text-muted-foreground">トラッキング計測（レギュラーシーズン）</p>
+                <p className="text-xs text-muted-foreground">走行距離/試合と平均速度のパーセンタイル平均（トラッキング計測）</p>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-4">
                   {[
-                    { label: "シーズン走行距離", value: `${motion.distKm.toFixed(1)} km`, sub: `フルマラソン${motion.marathons.toFixed(1)}本分` },
+                    { label: "走行距離/試合", value: `${motion.distKmPerGame.toFixed(2)} km`, sub: "1試合あたりの移動距離" },
+                    { label: "合計走行距離", value: `${motion.distKm.toFixed(1)} km`, sub: `フルマラソン${motion.marathons.toFixed(1)}本分` },
                     { label: "平均速度", value: `${motion.speedKmh.toFixed(1)} km/h`, sub: "コート上の移動速度" },
                     { label: "タッチ", value: `${motion.touches.toFixed(1)} 回/試合`, sub: "ボールに触れた回数" },
                     { label: "保持時間", value: `${motion.timeOfPoss.toFixed(1)} 分/試合`, sub: "ボールを持っていた時間" },
@@ -334,20 +342,30 @@ export default async function PlayerDetailPage({
   const hustleItems = buildHustle(getPlayerHustle(), MIN_GP);
   const poHustleItems = poEligible ? buildHustle(getPlayoffPlayerHustle(), PO_MIN_GP) : null;
 
-  // 運動量（Phase 4・RSのみ）
+  // 運動量（Phase 4・RS/PO）。スコアは走行距離/試合と平均速度のパーセンタイル平均
   const MILE_KM = 1.609344;
   const MARATHON_KM = 42.195;
-  const speed = getPlayerSpeed().find((p) => p.playerId === playerIdNum);
-  const poss = getPlayerPossessions().find((p) => p.playerId === playerIdNum);
-  const motion = speed && poss && speed.distMiles > 0 && speed.gp >= MIN_GP
-    ? {
-        distKm: speed.distMiles * MILE_KM,
-        marathons: (speed.distMiles * MILE_KM) / MARATHON_KM,
-        speedKmh: speed.avgSpeed * MILE_KM,
-        touches: poss.touches,
-        timeOfPoss: poss.timeOfPoss,
-      }
-    : null;
+  const buildMotion = (speedAll: PlayerSpeed[], possAll: PlayerPossessions[], minGp: number) => {
+    const speed = speedAll.find((p) => p.playerId === playerIdNum);
+    const poss = possAll.find((p) => p.playerId === playerIdNum);
+    if (!speed || !poss || speed.distMiles <= 0 || speed.gp < minGp) return null;
+    const pool = speedAll.filter((p) => p.gp >= minGp && p.distMiles > 0);
+    const distPerGame = (p: PlayerSpeed) => p.distMiles / p.gp;
+    const score =
+      (percentileOf(pool.map(distPerGame), distPerGame(speed)) +
+        percentileOf(pool.map((p) => p.avgSpeed), speed.avgSpeed)) / 2;
+    return {
+      distKm: speed.distMiles * MILE_KM,
+      distKmPerGame: distPerGame(speed) * MILE_KM,
+      marathons: (speed.distMiles * MILE_KM) / MARATHON_KM,
+      speedKmh: speed.avgSpeed * MILE_KM,
+      touches: poss.touches,
+      timeOfPoss: poss.timeOfPoss,
+      score,
+    };
+  };
+  const motion = buildMotion(getPlayerSpeed(), getPlayerPossessions(), MIN_GP);
+  const poMotion = poEligible ? buildMotion(getPlayoffPlayerSpeed(), getPlayoffPlayerPossessions(), PO_MIN_GP) : null;
 
   return (
     <div className="space-y-6">
@@ -461,7 +479,7 @@ export default async function PlayerDetailPage({
         ptsAvg={poPg?.pts ?? 0}
         shots={poShots}
         hustleItems={poHustleItems}
-        motion={null}
+        motion={poMotion}
         badges={poBadges}
         swing={poSwing}
       />

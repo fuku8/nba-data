@@ -51,14 +51,21 @@ export interface PlayerSpeed {
   avgSpeed: number;
 }
 
+function mapSpeed(d: Record<string, string>): PlayerSpeed {
+  return {
+    playerId:  num(d["PLAYER_ID"]),
+    gp:        num(d["GP"]),
+    distMiles: num(d["DIST_MILES"]),
+    avgSpeed:  num(d["AVG_SPEED"]),
+  };
+}
+
 export function getPlayerSpeed(): PlayerSpeed[] {
-  return loadRows("player_speed.csv")
-    .map((d) => ({
-      playerId:  num(d["PLAYER_ID"]),
-      gp:        num(d["GP"]),
-      distMiles: num(d["DIST_MILES"]),
-      avgSpeed:  num(d["AVG_SPEED"]),
-    }));
+  return loadRows("player_speed.csv").map(mapSpeed);
+}
+
+export function getPlayoffPlayerSpeed(): PlayerSpeed[] {
+  return loadRows("po_player_speed.csv").map(mapSpeed);
 }
 
 // タッチ数・ボール保持時間（per game・保持時間は分）
@@ -71,14 +78,21 @@ export interface PlayerPossessions {
   timeOfPoss: number;
 }
 
+function mapPossessions(d: Record<string, string>): PlayerPossessions {
+  return {
+    playerId:   num(d["PLAYER_ID"]),
+    player:     d["PLAYER_NAME"] || "",
+    team:       d["TEAM_ABBREVIATION"] || "",
+    gp:         num(d["GP"]),
+    touches:    num(d["TOUCHES"]),
+    timeOfPoss: num(d["TIME_OF_POSS"]),
+  };
+}
+
 export function getPlayerPossessions(): PlayerPossessions[] {
-  return loadRows("player_possessions.csv")
-    .map((d) => ({
-      playerId:   num(d["PLAYER_ID"]),
-      player:     d["PLAYER_NAME"] || "",
-      team:       d["TEAM_ABBREVIATION"] || "",
-      gp:         num(d["GP"]),
-      touches:    num(d["TOUCHES"]),
-      timeOfPoss: num(d["TIME_OF_POSS"]),
-    }));
+  return loadRows("player_possessions.csv").map(mapPossessions);
+}
+
+export function getPlayoffPlayerPossessions(): PlayerPossessions[] {
+  return loadRows("po_player_possessions.csv").map(mapPossessions);
 }
