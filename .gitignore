@@ -48,3 +48,6 @@ docs/
 
 # runtime logs
 logs/
+
+# Python
+__pycache__/
