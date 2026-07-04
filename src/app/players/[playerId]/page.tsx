@@ -8,6 +8,8 @@ import { getTeamColor, getTeamInfo } from "@/lib/constants/teams";
 import { PercentileBars, percentileOf, type PercentileRow } from "@/components/percentile-bars";
 import { VersatilityRadar, versatilityScore } from "@/components/versatility-radar";
 import { ScoringWaffle } from "@/components/scoring-waffle";
+import { ShotChart } from "@/components/shot-chart";
+import { getPlayerShots, type Shot } from "@/lib/data/shots";
 
 export const revalidate = 3600;
 
@@ -35,6 +37,7 @@ function VisualGroup({
   pts2,
   ptsFt,
   ptsAvg,
+  shots,
 }: {
   title: string;
   accent?: boolean;
@@ -46,9 +49,11 @@ function VisualGroup({
   pts2: number;
   ptsFt: number;
   ptsAvg: number;
+  shots: Shot[] | null;
 }) {
   const hasWaffle = pts3 + pts2 + ptsFt > 0;
-  if (!pctRows && !radarItems && !hasWaffle) return null;
+  const hasShots = shots != null && shots.length > 0;
+  if (!pctRows && !radarItems && !hasWaffle && !hasShots) return null;
   return (
     <section className="space-y-4">
       <h2 className={`text-lg font-semibold ${accent ? "text-orange-400" : ""}`}>{title}</h2>
@@ -63,8 +68,19 @@ function VisualGroup({
           </CardContent>
         </Card>
       )}
-      {(radarItems || hasWaffle) && (
+      {(radarItems || hasWaffle || hasShots) && (
         <div className="grid gap-6 md:grid-cols-2">
+          {hasShots && (
+            <Card>
+              <CardHeader>
+                <CardTitle>ショットチャート</CardTitle>
+                <p className="text-xs text-muted-foreground">全試投の位置（緑=成功 / 灰=失敗）</p>
+              </CardHeader>
+              <CardContent className="flex justify-center">
+                <ShotChart shots={shots!} />
+              </CardContent>
+            </Card>
+          )}
           {radarItems && vScore != null && (
             <Card>
               <CardHeader>
@@ -190,6 +206,10 @@ export default async function PlayerDetailPage({
   const poPts3 = poT ? (poT.threePt * 3) / poT.gp : 0;
   const poPts2 = poT ? ((poT.fg - poT.threePt) * 2) / poT.gp : 0;
   const poPtsFt = poT ? poT.ft / poT.gp : 0;
+  // ショットチャート（Phase 3・ローカル一括取得したdata/shots/があるときのみ表示）
+  const shots = getPlayerShots(playerIdNum);
+  const rsShots = shots?.rs ?? null;
+  const poShots = poPg && poPg.gp >= PO_MIN_GP ? shots?.po ?? null : null;
 
   return (
     <div className="space-y-6">
@@ -301,6 +321,7 @@ export default async function PlayerDetailPage({
         pts2={poPts2}
         ptsFt={poPtsFt}
         ptsAvg={poPg?.pts ?? 0}
+        shots={poShots}
       />
 
       {/* Regular Season ビジュアル */}
@@ -314,6 +335,7 @@ export default async function PlayerDetailPage({
         pts2={pts2}
         ptsFt={ptsFt}
         ptsAvg={pg.pts}
+        shots={rsShots}
       />
 
       {/* Advanced Stats */}
