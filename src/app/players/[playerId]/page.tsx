@@ -51,34 +51,46 @@ export default async function PlayerDetailPage({
 
   const fmtPct = (v: number | undefined | null) => (v != null && v !== 0) ? (v * 100).toFixed(1) + "%" : "-";
 
-  // リーグ内パーセンタイル（母集団: GP20以上・1選手1行。トレード選手はTOT行=フルシーズンを採用）
+  // リーグ内パーセンタイル（母集団: 1選手1行。トレード選手はTOT行=フルシーズンを採用）
+  // GP下限はRS=20/82試合、PO=4試合（1シリーズ弱）で母集団を回転選手に絞る
   const MIN_GP = 20;
-  const dedupe = <T extends { playerId: number; team: string; gp: number }>(all: T[]) => {
+  const PO_MIN_GP = 4;
+  type PgRow = typeof allPerGame[number];
+  type AdvRow = typeof allAdvanced[number];
+  const dedupe = <T extends { playerId: number; team: string; gp: number }>(all: T[], minGp: number) => {
     const byId = new Map<number, T>();
     for (const p of all) {
       if (p.team === "TOT" || !byId.has(p.playerId)) byId.set(p.playerId, p);
     }
-    return [...byId.values()].filter((p) => p.gp >= MIN_GP);
+    return [...byId.values()].filter((p) => p.gp >= minGp);
   };
-  const pgPool = dedupe(allPerGame);
-  const advPool = dedupe(allAdvanced);
+  const buildPctRows = (
+    pgRow: PgRow,
+    advRow: AdvRow | undefined,
+    pgPool: PgRow[],
+    advPool: AdvRow[],
+  ): PercentileRow[] => [
+    { label: "得点", display: pgRow.pts.toFixed(1), pct: percentileOf(pgPool.map((p) => p.pts), pgRow.pts) },
+    { label: "リバウンド", display: pgRow.trb.toFixed(1), pct: percentileOf(pgPool.map((p) => p.trb), pgRow.trb) },
+    { label: "アシスト", display: pgRow.ast.toFixed(1), pct: percentileOf(pgPool.map((p) => p.ast), pgRow.ast) },
+    { label: "スティール", display: pgRow.stl.toFixed(1), pct: percentileOf(pgPool.map((p) => p.stl), pgRow.stl) },
+    { label: "ブロック", display: pgRow.blk.toFixed(1), pct: percentileOf(pgPool.map((p) => p.blk), pgRow.blk) },
+    ...(advRow
+      ? [
+          { label: "TS%", display: (advRow.tsPct * 100).toFixed(1), pct: percentileOf(advPool.map((p) => p.tsPct), advRow.tsPct) },
+          { label: "PIE", display: (advRow.pie * 100).toFixed(1), pct: percentileOf(advPool.map((p) => p.pie), advRow.pie) },
+        ]
+      : []),
+    { label: "TOV(少なさ)", display: pgRow.tov.toFixed(1), pct: 1 - percentileOf(pgPool.map((p) => p.tov), pgRow.tov) },
+  ];
+
   const pgFull = allPerGame.find((p) => p.playerId === playerIdNum && p.team === "TOT") ?? pg;
   const advFull = allAdvanced.find((p) => p.playerId === playerIdNum && p.team === "TOT") ?? adv;
-  const pctRows: PercentileRow[] | null = pgFull.gp >= MIN_GP
-    ? [
-        { label: "得点", display: pgFull.pts.toFixed(1), pct: percentileOf(pgPool.map((p) => p.pts), pgFull.pts) },
-        { label: "リバウンド", display: pgFull.trb.toFixed(1), pct: percentileOf(pgPool.map((p) => p.trb), pgFull.trb) },
-        { label: "アシスト", display: pgFull.ast.toFixed(1), pct: percentileOf(pgPool.map((p) => p.ast), pgFull.ast) },
-        { label: "スティール", display: pgFull.stl.toFixed(1), pct: percentileOf(pgPool.map((p) => p.stl), pgFull.stl) },
-        { label: "ブロック", display: pgFull.blk.toFixed(1), pct: percentileOf(pgPool.map((p) => p.blk), pgFull.blk) },
-        ...(advFull
-          ? [
-              { label: "TS%", display: (advFull.tsPct * 100).toFixed(1), pct: percentileOf(advPool.map((p) => p.tsPct), advFull.tsPct) },
-              { label: "PIE", display: (advFull.pie * 100).toFixed(1), pct: percentileOf(advPool.map((p) => p.pie), advFull.pie) },
-            ]
-          : []),
-        { label: "TOV(少なさ)", display: pgFull.tov.toFixed(1), pct: 1 - percentileOf(pgPool.map((p) => p.tov), pgFull.tov) },
-      ]
+  const pctRows = pgFull.gp >= MIN_GP
+    ? buildPctRows(pgFull, advFull, dedupe(allPerGame, MIN_GP), dedupe(allAdvanced, MIN_GP))
+    : null;
+  const poPctRows = poPg && poPg.gp >= PO_MIN_GP
+    ? buildPctRows(poPg, poAdv, dedupe(allPoPerGame, PO_MIN_GP), dedupe(allPoAdvanced, PO_MIN_GP))
     : null;
 
   return (
@@ -180,14 +192,25 @@ export default async function PlayerDetailPage({
       </Card>
 
       {/* League Percentile */}
-      {pctRows && (
+      {(pctRows || poPctRows) && (
         <Card>
           <CardHeader>
             <CardTitle>League Percentile</CardTitle>
-            <p className="text-xs text-muted-foreground">レギュラーシーズン · GP{MIN_GP}以上の選手内での位置（100が最上位）</p>
+            <p className="text-xs text-muted-foreground">リーグ内での位置（100が最上位）</p>
           </CardHeader>
-          <CardContent>
-            <PercentileBars rows={pctRows} />
+          <CardContent className="space-y-5">
+            {poPctRows && (
+              <div>
+                <div className="text-xs font-medium text-orange-400 mb-2">Playoffs · GP{PO_MIN_GP}以上のPO出場選手内</div>
+                <PercentileBars rows={poPctRows} />
+              </div>
+            )}
+            {pctRows && (
+              <div>
+                <div className="text-xs font-medium text-muted-foreground mb-2">Regular Season · GP{MIN_GP}以上の選手内</div>
+                <PercentileBars rows={pctRows} />
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
