@@ -1,5 +1,9 @@
 import { readCsvFile, csvToObjects, num } from "./csv-utils";
 
+// 共通プロローグ: CSV読み込み＋名前なし行（集計行等）の除外
+const loadRows = (fname: string) =>
+  csvToObjects(readCsvFile(fname)).filter((d) => d["PLAYER_NAME"]);
+
 // ハッスル統計（per game）。G はトラッキング計測試合数で player_per_game の GP と一致しないことがある
 export interface PlayerHustle {
   playerId: number;
@@ -32,11 +36,11 @@ function mapHustle(d: Record<string, string>): PlayerHustle {
 }
 
 export function getPlayerHustle(): PlayerHustle[] {
-  return csvToObjects(readCsvFile("player_hustle.csv")).filter((d) => d["PLAYER_NAME"]).map(mapHustle);
+  return loadRows("player_hustle.csv").map(mapHustle);
 }
 
 export function getPlayoffPlayerHustle(): PlayerHustle[] {
-  return csvToObjects(readCsvFile("po_player_hustle.csv")).filter((d) => d["PLAYER_NAME"]).map(mapHustle);
+  return loadRows("po_player_hustle.csv").map(mapHustle);
 }
 
 // 走行距離（シーズン合計マイル）と平均速度（mph）
@@ -48,8 +52,7 @@ export interface PlayerSpeed {
 }
 
 export function getPlayerSpeed(): PlayerSpeed[] {
-  return csvToObjects(readCsvFile("player_speed.csv"))
-    .filter((d) => d["PLAYER_NAME"])
+  return loadRows("player_speed.csv")
     .map((d) => ({
       playerId:  num(d["PLAYER_ID"]),
       gp:        num(d["GP"]),
@@ -69,8 +72,7 @@ export interface PlayerPossessions {
 }
 
 export function getPlayerPossessions(): PlayerPossessions[] {
-  return csvToObjects(readCsvFile("player_possessions.csv"))
-    .filter((d) => d["PLAYER_NAME"])
+  return loadRows("player_possessions.csv")
     .map((d) => ({
       playerId:   num(d["PLAYER_ID"]),
       player:     d["PLAYER_NAME"] || "",

@@ -202,7 +202,7 @@ export default async function TeamDetailPage({
           <CardHeader>
             <CardTitle>ボール支配</CardTitle>
             <p className="text-xs text-muted-foreground">
-              シーズン総タッチ数のチーム内シェア（上位{TOP_N}人＋その他） · ボールが誰の手を経由するか
+              シーズン総タッチ数のチーム内シェア（上位{TOP_N}人＋その他） · ボールが誰の手を経由するか · トレード選手はシーズン通算を現所属に計上
             </p>
           </CardHeader>
           <CardContent>

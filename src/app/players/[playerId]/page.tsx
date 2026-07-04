@@ -40,7 +40,6 @@ function VisualGroup({
   ptsAvg,
   shots,
   hustleItems,
-  hustleScore,
   motion,
 }: {
   title: string;
@@ -55,11 +54,12 @@ function VisualGroup({
   ptsAvg: number;
   shots: Shot[];
   hustleItems: { label: string; pct: number }[] | null;
-  hustleScore: number | null;
   motion: { distKm: number; marathons: number; speedKmh: number; touches: number; timeOfPoss: number } | null;
 }) {
   const hasWaffle = pts3 + pts2 + ptsFt > 0;
   const hasShots = shots.length > 0;
+  // 縁の下の力持ち度 = ハッスル6部門パーセンタイルの単純平均
+  const hustleScore = hustleItems ? hustleItems.reduce((a, r) => a + r.pct, 0) / hustleItems.length : null;
   if (!pctRows && !radarItems && !hasWaffle && !hasShots && !hustleItems && !motion) return null;
   return (
     <section className="space-y-4">
@@ -273,16 +273,14 @@ export default async function PlayerDetailPage({
     }));
   };
   const hustleItems = buildHustle(getPlayerHustle(), MIN_GP);
-  const hustleScore = hustleItems ? hustleItems.reduce((a, r) => a + r.pct, 0) / hustleItems.length : null;
   const poHustleItems = poEligible ? buildHustle(getPlayoffPlayerHustle(), PO_MIN_GP) : null;
-  const poHustleScore = poHustleItems ? poHustleItems.reduce((a, r) => a + r.pct, 0) / poHustleItems.length : null;
 
   // 運動量（Phase 4・RSのみ）
   const MILE_KM = 1.609344;
   const MARATHON_KM = 42.195;
   const speed = getPlayerSpeed().find((p) => p.playerId === playerIdNum);
   const poss = getPlayerPossessions().find((p) => p.playerId === playerIdNum);
-  const motion = speed && poss && speed.distMiles > 0
+  const motion = speed && poss && speed.distMiles > 0 && speed.gp >= MIN_GP
     ? {
         distKm: speed.distMiles * MILE_KM,
         marathons: (speed.distMiles * MILE_KM) / MARATHON_KM,
@@ -404,7 +402,6 @@ export default async function PlayerDetailPage({
         ptsAvg={poPg?.pts ?? 0}
         shots={poShots}
         hustleItems={poHustleItems}
-        hustleScore={poHustleScore}
         motion={null}
       />
 
@@ -421,7 +418,6 @@ export default async function PlayerDetailPage({
         ptsAvg={pg.pts}
         shots={rsShots}
         hustleItems={hustleItems}
-        hustleScore={hustleScore}
         motion={motion}
       />
 

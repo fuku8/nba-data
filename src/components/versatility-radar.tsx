@@ -28,7 +28,7 @@ export function VersatilityRadar({ items }: { items: RadarItem[] }) {
   const shape = items.map((it, i) => pt(i, n, R * Math.max(0.02, it.pct)).join(",")).join(" ");
 
   return (
-    <svg viewBox="0 0 260 220" className="w-full max-w-[260px]" role="img" aria-label="5部門パーセンタイルのレーダーチャート">
+    <svg viewBox="0 0 260 220" className="w-full max-w-[260px]" role="img" aria-label={`${n}部門パーセンタイルのレーダーチャート`}>
       {[0.25, 0.5, 0.75, 1].map((f) => (
         <polygon key={f} points={ring(f)} fill="none" stroke="currentColor" strokeOpacity={0.15} />
       ))}
