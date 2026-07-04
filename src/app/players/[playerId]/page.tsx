@@ -10,6 +10,7 @@ import { VersatilityRadar, versatilityScore } from "@/components/versatility-rad
 import { ScoringWaffle } from "@/components/scoring-waffle";
 import { ShotChart } from "@/components/shot-chart";
 import { getPlayerShots, type Shot } from "@/lib/data/shots";
+import { getPlayerHustle, getPlayoffPlayerHustle, getPlayerSpeed, getPlayerPossessions, type PlayerHustle } from "@/lib/data/tracking";
 
 export const revalidate = 3600;
 
@@ -38,6 +39,9 @@ function VisualGroup({
   ptsFt,
   ptsAvg,
   shots,
+  hustleItems,
+  hustleScore,
+  motion,
 }: {
   title: string;
   accent?: boolean;
@@ -50,10 +54,13 @@ function VisualGroup({
   ptsFt: number;
   ptsAvg: number;
   shots: Shot[];
+  hustleItems: { label: string; pct: number }[] | null;
+  hustleScore: number | null;
+  motion: { distKm: number; marathons: number; speedKmh: number; touches: number; timeOfPoss: number } | null;
 }) {
   const hasWaffle = pts3 + pts2 + ptsFt > 0;
   const hasShots = shots.length > 0;
-  if (!pctRows && !radarItems && !hasWaffle && !hasShots) return null;
+  if (!pctRows && !radarItems && !hasWaffle && !hasShots && !hustleItems && !motion) return null;
   return (
     <section className="space-y-4">
       <h2 className={`text-lg font-semibold ${accent ? "text-orange-400" : ""}`}>{title}</h2>
@@ -68,7 +75,7 @@ function VisualGroup({
           </CardContent>
         </Card>
       )}
-      {(radarItems || hasWaffle || hasShots) && (
+      {(radarItems || hasWaffle || hasShots || hustleItems || motion) && (
         <div className="grid gap-6 md:grid-cols-2">
           {hasShots && (
             <Card>
@@ -100,6 +107,41 @@ function VisualGroup({
               </CardHeader>
               <CardContent>
                 <ScoringWaffle pts3={pts3} pts2={pts2} ptsFt={ptsFt} />
+              </CardContent>
+            </Card>
+          )}
+          {hustleItems && hustleScore != null && (
+            <Card>
+              <CardHeader>
+                <CardTitle>縁の下の力持ち度 {(hustleScore * 100).toFixed(1)}</CardTitle>
+                <p className="text-xs text-muted-foreground">ハッスル6部門パーセンタイルの平均（スタッツに出ない貢献）</p>
+              </CardHeader>
+              <CardContent className="flex justify-center">
+                <VersatilityRadar items={hustleItems} />
+              </CardContent>
+            </Card>
+          )}
+          {motion && (
+            <Card>
+              <CardHeader>
+                <CardTitle>運動量</CardTitle>
+                <p className="text-xs text-muted-foreground">トラッキング計測（レギュラーシーズン）</p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  {[
+                    { label: "シーズン走行距離", value: `${motion.distKm.toFixed(1)} km`, sub: `フルマラソン${motion.marathons.toFixed(1)}本分` },
+                    { label: "平均速度", value: `${motion.speedKmh.toFixed(1)} km/h`, sub: "コート上の移動速度" },
+                    { label: "タッチ", value: `${motion.touches.toFixed(1)} 回/試合`, sub: "ボールに触れた回数" },
+                    { label: "保持時間", value: `${motion.timeOfPoss.toFixed(1)} 分/試合`, sub: "ボールを持っていた時間" },
+                  ].map((s) => (
+                    <div key={s.label}>
+                      <div className="text-xs text-muted-foreground">{s.label}</div>
+                      <div className="text-lg font-semibold font-mono">{s.value}</div>
+                      <div className="text-xs text-muted-foreground">{s.sub}</div>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           )}
@@ -212,6 +254,44 @@ export default async function PlayerDetailPage({
   const rsShots = shots?.rs ?? [];
   const poShots = poEligible ? shots?.po ?? [] : [];
 
+  // ハッスルレーダー（Phase 4）: パーセンタイル母集団はハッスル計測試合数Gで絞る
+  const HUSTLE_ITEMS: { label: string; get: (h: PlayerHustle) => number }[] = [
+    { label: "コンテスト", get: (h) => h.contestedShots },
+    { label: "ディフレクション", get: (h) => h.deflections },
+    { label: "チャージ", get: (h) => h.chargesDrawn },
+    { label: "スクリーンAST", get: (h) => h.screenAssists },
+    { label: "ルーズボール", get: (h) => h.looseBalls },
+    { label: "ボックスアウト", get: (h) => h.boxOuts },
+  ];
+  const buildHustle = (all: PlayerHustle[], minGp: number) => {
+    const row = all.find((h) => h.playerId === playerIdNum);
+    if (!row || row.gp < minGp) return null;
+    const pool = all.filter((h) => h.gp >= minGp);
+    return HUSTLE_ITEMS.map(({ label, get }) => ({
+      label,
+      pct: percentileOf(pool.map(get), get(row)),
+    }));
+  };
+  const hustleItems = buildHustle(getPlayerHustle(), MIN_GP);
+  const hustleScore = hustleItems ? hustleItems.reduce((a, r) => a + r.pct, 0) / hustleItems.length : null;
+  const poHustleItems = poEligible ? buildHustle(getPlayoffPlayerHustle(), PO_MIN_GP) : null;
+  const poHustleScore = poHustleItems ? poHustleItems.reduce((a, r) => a + r.pct, 0) / poHustleItems.length : null;
+
+  // 運動量（Phase 4・RSのみ）
+  const MILE_KM = 1.609344;
+  const MARATHON_KM = 42.195;
+  const speed = getPlayerSpeed().find((p) => p.playerId === playerIdNum);
+  const poss = getPlayerPossessions().find((p) => p.playerId === playerIdNum);
+  const motion = speed && poss && speed.distMiles > 0
+    ? {
+        distKm: speed.distMiles * MILE_KM,
+        marathons: (speed.distMiles * MILE_KM) / MARATHON_KM,
+        speedKmh: speed.avgSpeed * MILE_KM,
+        touches: poss.touches,
+        timeOfPoss: poss.timeOfPoss,
+      }
+    : null;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -323,6 +403,9 @@ export default async function PlayerDetailPage({
         ptsFt={poPtsFt}
         ptsAvg={poPg?.pts ?? 0}
         shots={poShots}
+        hustleItems={poHustleItems}
+        hustleScore={poHustleScore}
+        motion={null}
       />
 
       {/* Regular Season ビジュアル */}
@@ -337,6 +420,9 @@ export default async function PlayerDetailPage({
         ptsFt={ptsFt}
         ptsAvg={pg.pts}
         shots={rsShots}
+        hustleItems={hustleItems}
+        hustleScore={hustleScore}
+        motion={motion}
       />
 
       {/* Advanced Stats */}

@@ -8,6 +8,8 @@ import { getPlayerPerGame, getPlayerAdvanced, getPlayerTotals } from "@/lib/data
 import { getTeamMargins } from "@/lib/data/games";
 import { SeasonHeartbeat } from "@/components/season-heartbeat";
 import { LorenzCurve } from "@/components/lorenz-curve";
+import { PossessionBand } from "@/components/possession-band";
+import { getPlayerPossessions } from "@/lib/data/tracking";
 import { NBA_TEAMS, getTeamAbbr } from "@/lib/constants/teams";
 import { TeamRosterTable } from "./roster-table";
 
@@ -64,6 +66,22 @@ export default async function TeamDetailPage({
   const topShare = teamScorers.length > 0 && teamTotalPts > 0
     ? teamScorers[0].pts / teamTotalPts
     : 0;
+
+  // ボール支配の帯: シーズン総タッチ数（タッチ/試合 × GP）のチーム内シェア
+  const teamPoss = getPlayerPossessions()
+    .filter((p) => p.team === abbr && p.gp > 0)
+    .map((p) => ({ name: p.player, total: p.touches * p.gp }))
+    .sort((a, b) => b.total - a.total);
+  const possTotal = teamPoss.reduce((a, p) => a + p.total, 0);
+  const TOP_N = 8;
+  const possSegments = possTotal > 0
+    ? [
+        ...teamPoss.slice(0, TOP_N).map((p) => ({ name: p.name, share: p.total / possTotal })),
+        ...(teamPoss.length > TOP_N
+          ? [{ name: "その他", share: teamPoss.slice(TOP_N).reduce((a, p) => a + p.total, 0) / possTotal }]
+          : []),
+      ]
+    : [];
 
   const roster = allPlayers.filter((p) => p.team === abbr && p.gp >= 1);
   const rosterAdvanced = new Map(
@@ -174,6 +192,21 @@ export default async function TeamDetailPage({
           </CardHeader>
           <CardContent className="flex justify-center">
             <LorenzCurve values={teamScorers.map((p) => p.pts)} />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ボール支配の帯 */}
+      {possSegments.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>ボール支配</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              シーズン総タッチ数のチーム内シェア（上位{TOP_N}人＋その他） · ボールが誰の手を経由するか
+            </p>
+          </CardHeader>
+          <CardContent>
+            <PossessionBand segments={possSegments} color={teamInfo.primaryColor} />
           </CardContent>
         </Card>
       )}
