@@ -11,6 +11,7 @@ import { ScoringWaffle } from "@/components/scoring-waffle";
 import { ShotChart } from "@/components/shot-chart";
 import { getPlayerShots, type Shot } from "@/lib/data/shots";
 import { getPlayerHustle, getPlayoffPlayerHustle, getPlayerSpeed, getPlayerPossessions, type PlayerHustle } from "@/lib/data/tracking";
+import { MetricLink } from "@/components/metric-link";
 
 export const revalidate = 3600;
 
@@ -67,7 +68,10 @@ function VisualGroup({
       {pctRows && (
         <Card>
           <CardHeader>
-            <CardTitle>League Percentile</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle>League Percentile</CardTitle>
+              <MetricLink anchor="percentile" />
+            </div>
             <p className="text-xs text-muted-foreground">{pctNote}</p>
           </CardHeader>
           <CardContent>
@@ -80,7 +84,10 @@ function VisualGroup({
           {hasShots && (
             <Card>
               <CardHeader>
-                <CardTitle>ショットチャート</CardTitle>
+                <div className="flex items-center gap-2">
+                  <CardTitle>ショットチャート</CardTitle>
+                  <MetricLink anchor="shot-chart" />
+                </div>
                 <p className="text-xs text-muted-foreground">全試投の位置（緑=成功 / 灰=失敗）</p>
               </CardHeader>
               <CardContent className="flex justify-center">
@@ -91,7 +98,10 @@ function VisualGroup({
           {radarItems && vScore != null && (
             <Card>
               <CardHeader>
-                <CardTitle>オールラウンド度 {(vScore * 100).toFixed(1)}</CardTitle>
+                <div className="flex items-center gap-2">
+                  <CardTitle>オールラウンド度 {(vScore * 100).toFixed(1)}</CardTitle>
+                  <MetricLink anchor="versatility" />
+                </div>
                 <p className="text-xs text-muted-foreground">5部門パーセンタイルの平均×均等さ</p>
               </CardHeader>
               <CardContent className="flex justify-center">
@@ -102,7 +112,10 @@ function VisualGroup({
           {hasWaffle && (
             <Card>
               <CardHeader>
-                <CardTitle>得点の作り方</CardTitle>
+                <div className="flex items-center gap-2">
+                  <CardTitle>得点の作り方</CardTitle>
+                  <MetricLink anchor="scoring-mix" />
+                </div>
                 <p className="text-xs text-muted-foreground">平均{ptsAvg.toFixed(1)}点の内訳（1マス=1%）</p>
               </CardHeader>
               <CardContent>
@@ -113,7 +126,10 @@ function VisualGroup({
           {hustleItems && hustleScore != null && (
             <Card>
               <CardHeader>
-                <CardTitle>縁の下の力持ち度 {(hustleScore * 100).toFixed(1)}</CardTitle>
+                <div className="flex items-center gap-2">
+                  <CardTitle>縁の下の力持ち度 {(hustleScore * 100).toFixed(1)}</CardTitle>
+                  <MetricLink anchor="hustle" />
+                </div>
                 <p className="text-xs text-muted-foreground">ハッスル6部門パーセンタイルの平均（スタッツに出ない貢献）</p>
               </CardHeader>
               <CardContent className="flex justify-center">
@@ -124,7 +140,10 @@ function VisualGroup({
           {motion && (
             <Card>
               <CardHeader>
-                <CardTitle>運動量</CardTitle>
+                <div className="flex items-center gap-2">
+                  <CardTitle>運動量</CardTitle>
+                  <MetricLink anchor="motion" />
+                </div>
                 <p className="text-xs text-muted-foreground">トラッキング計測（レギュラーシーズン）</p>
               </CardHeader>
               <CardContent>

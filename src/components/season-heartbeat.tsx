@@ -17,8 +17,7 @@ export function SeasonHeartbeat({ games }: { games: TeamGameMargin[] }) {
     <div className="overflow-x-auto">
       <svg
         viewBox={`0 0 ${width} ${height}`}
-        width={width}
-        height={height}
+        className="w-full min-w-[560px]"
         role="img"
         aria-label="シーズン全試合の点差"
       >

@@ -10,6 +10,7 @@ import { SeasonHeartbeat } from "@/components/season-heartbeat";
 import { LorenzCurve } from "@/components/lorenz-curve";
 import { PossessionBand } from "@/components/possession-band";
 import { getPlayerPossessions } from "@/lib/data/tracking";
+import { MetricLink } from "@/components/metric-link";
 import { NBA_TEAMS, getTeamAbbr } from "@/lib/constants/teams";
 import { TeamRosterTable } from "./roster-table";
 
@@ -166,41 +167,51 @@ export default async function TeamDetailPage({
         />
       </div>
 
-      {/* シーズン心電図 */}
-      {margins.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Season Heartbeat</CardTitle>
-            <p className="text-xs text-muted-foreground">全{margins.length}試合の点差 · 上=勝ち / 下=負け · バーにホバーで詳細</p>
-          </CardHeader>
-          <CardContent>
-            <SeasonHeartbeat games={margins} />
-          </CardContent>
-        </Card>
-      )}
+      {/* シーズン心電図 & ワンマン度（PCでは横並び） */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {margins.length > 0 && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <CardTitle>Season Heartbeat</CardTitle>
+                <MetricLink anchor="heartbeat" />
+              </div>
+              <p className="text-xs text-muted-foreground">全{margins.length}試合の点差 · 上=勝ち / 下=負け · バーにホバーで詳細</p>
+            </CardHeader>
+            <CardContent>
+              <SeasonHeartbeat games={margins} />
+            </CardContent>
+          </Card>
+        )}
 
-      {/* ワンマン度 */}
-      {teamGini && teamScorers.length >= 3 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>ワンマン度 {teamGini.gini.toFixed(3)}</CardTitle>
-            <p className="text-xs text-muted-foreground">
-              得点分布の偏り（Gini係数・MIN{GINI_MIN_MP}以上） · リーグ{giniRank}位に偏重 · 最多得点者
-              {teamScorers[0].player}がチーム得点の{(topShare * 100).toFixed(1)}%
-              · トレード選手はシーズン通算を現所属に計上
-            </p>
-          </CardHeader>
-          <CardContent className="flex justify-center">
-            <LorenzCurve values={teamScorers.map((p) => p.pts)} />
-          </CardContent>
-        </Card>
-      )}
+        {teamGini && teamScorers.length >= 3 && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <CardTitle>ワンマン度 {teamGini.gini.toFixed(3)}</CardTitle>
+                <MetricLink anchor="one-man" />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                得点分布の偏り（Gini係数・MIN{GINI_MIN_MP}以上） · リーグ{giniRank}位に偏重 · 最多得点者
+                {teamScorers[0].player}がチーム得点の{(topShare * 100).toFixed(1)}%
+                · トレード選手はシーズン通算を現所属に計上
+              </p>
+            </CardHeader>
+            <CardContent className="flex justify-center">
+              <LorenzCurve values={teamScorers.map((p) => p.pts)} />
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       {/* ボール支配の帯 */}
       {possSegments.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>ボール支配</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle>ボール支配</CardTitle>
+              <MetricLink anchor="possession" />
+            </div>
             <p className="text-xs text-muted-foreground">
               シーズン総タッチ数のチーム内シェア（上位{TOP_N}人＋その他） · ボールが誰の手を経由するか · トレード選手はシーズン通算を現所属に計上
             </p>

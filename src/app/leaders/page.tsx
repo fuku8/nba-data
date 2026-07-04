@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getPlayerPerGame, getPlayerAdvanced } from "@/lib/data/players";
 import { UsageEfficiencyMap } from "@/components/usage-efficiency-map";
+import { MetricLink } from "@/components/metric-link";
 import { LeadersClient } from "./client";
 
 export const revalidate = 3600;
@@ -18,7 +19,10 @@ export default function LeadersPage() {
       <LeadersClient perGame={perGame} advanced={advanced} />
       <Card>
         <CardHeader>
-          <CardTitle>USG% × TS% 四象限マップ</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle>USG% × TS% 四象限マップ</CardTitle>
+            <MetricLink anchor="usg-ts" />
+          </div>
           <p className="text-xs text-muted-foreground">
             攻撃をどれだけ背負い、どれだけ効率よく決めたか（GP40・MPG25以上の{dots.length}人 · 点線は中央値 · 点にホバーで選手名）
           </p>

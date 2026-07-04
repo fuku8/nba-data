@@ -38,9 +38,14 @@ function GameCard({ game }: { game: PoGame }) {
             <span className="text-xs text-muted-foreground">{game.gameDate}</span>
             <div className="flex items-center gap-1.5">
               {flames && (
-                <span className="text-xs" title={`熱戦指数 ${game.drama}（リード交代+同点−点差）`}>
+                <Link
+                  href="/metrics#drama"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-xs"
+                  title={`熱戦指数 ${game.drama}（リード交代+同点−点差）· クリックで解説`}
+                >
                   {flames}
-                </span>
+                </Link>
               )}
               <Badge variant={inProgress ? "outline" : "secondary"} className="text-xs">
                 {inProgress ? "進行中" : "Final"}
