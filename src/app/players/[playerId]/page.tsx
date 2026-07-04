@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getPlayerPerGame, getPlayerAdvanced, getPlayerProfile, getPlayerTotals } from "@/lib/data/players";
-import { getPlayoffPlayerPerGame, getPlayoffPlayerAdvanced } from "@/lib/data/playoffs";
+import { getPlayoffPlayerPerGame, getPlayoffPlayerAdvanced, getPlayoffPlayerTotals } from "@/lib/data/playoffs";
 import { getTeamColor, getTeamInfo } from "@/lib/constants/teams";
 import { PercentileBars, percentileOf, type PercentileRow } from "@/components/percentile-bars";
 import { VersatilityRadar, versatilityScore } from "@/components/versatility-radar";
@@ -21,6 +21,76 @@ function fmtWeight(w: string): string {
   const lbs = parseFloat(w);
   if (isNaN(lbs)) return w;
   return `${Math.round(lbs * 0.453592)} kg`;
+}
+
+// パーセンタイル・レーダー・ワッフルを「Playoffs / Regular Season」の期間別グループで表示する
+function VisualGroup({
+  title,
+  accent = false,
+  pctNote,
+  pctRows,
+  radarItems,
+  vScore,
+  pts3,
+  pts2,
+  ptsFt,
+  ptsAvg,
+}: {
+  title: string;
+  accent?: boolean;
+  pctNote: string;
+  pctRows: PercentileRow[] | null;
+  radarItems: { label: string; pct: number }[] | null;
+  vScore: number | null;
+  pts3: number;
+  pts2: number;
+  ptsFt: number;
+  ptsAvg: number;
+}) {
+  const hasWaffle = pts3 + pts2 + ptsFt > 0;
+  if (!pctRows && !radarItems && !hasWaffle) return null;
+  return (
+    <section className="space-y-4">
+      <h2 className={`text-lg font-semibold ${accent ? "text-orange-400" : ""}`}>{title}</h2>
+      {pctRows && (
+        <Card>
+          <CardHeader>
+            <CardTitle>League Percentile</CardTitle>
+            <p className="text-xs text-muted-foreground">{pctNote}</p>
+          </CardHeader>
+          <CardContent>
+            <PercentileBars rows={pctRows} />
+          </CardContent>
+        </Card>
+      )}
+      {(radarItems || hasWaffle) && (
+        <div className="grid gap-6 md:grid-cols-2">
+          {radarItems && vScore != null && (
+            <Card>
+              <CardHeader>
+                <CardTitle>オールラウンド度 {(vScore * 100).toFixed(1)}</CardTitle>
+                <p className="text-xs text-muted-foreground">5部門パーセンタイルの平均×均等さ</p>
+              </CardHeader>
+              <CardContent className="flex justify-center">
+                <VersatilityRadar items={radarItems} />
+              </CardContent>
+            </Card>
+          )}
+          {hasWaffle && (
+            <Card>
+              <CardHeader>
+                <CardTitle>得点の作り方</CardTitle>
+                <p className="text-xs text-muted-foreground">平均{ptsAvg.toFixed(1)}点の内訳（1マス=1%）</p>
+              </CardHeader>
+              <CardContent>
+                <ScoringWaffle pts3={pts3} pts2={pts2} ptsFt={ptsFt} />
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+    </section>
+  );
 }
 
 export default async function PlayerDetailPage({
@@ -96,10 +166,15 @@ export default async function PlayerDetailPage({
     ? buildPctRows(poPg, poAdv, dedupe(allPoPerGame, PO_MIN_GP), dedupe(allPoAdvanced, PO_MIN_GP))
     : null;
 
-  // レーダー: League Percentile（RS）の5部門値をラベルで明示的に抽出（行順への位置依存を避ける）
-  const radarItemsRaw = pctRows?.filter((r) => RADAR_LABELS.includes(r.label)) ?? null;
-  const radarItems = radarItemsRaw && radarItemsRaw.length === RADAR_LABELS.length ? radarItemsRaw : null;
+  // レーダー: League Percentileの5部門値をラベルで明示的に抽出（行順への位置依存を避ける）
+  const extractRadar = (rows: PercentileRow[] | null) => {
+    const raw = rows?.filter((r) => RADAR_LABELS.includes(r.label)) ?? null;
+    return raw && raw.length === RADAR_LABELS.length ? raw : null;
+  };
+  const radarItems = extractRadar(pctRows);
   const vScore = radarItems ? versatilityScore(radarItems.map((r) => r.pct)) : null;
+  const poRadarItems = extractRadar(poPctRows);
+  const poVScore = poRadarItems ? versatilityScore(poRadarItems.map((r) => r.pct)) : null;
   // 得点構成: 3P/2P/FT由来の得点（per game）。整数の生値（totals）から算出し丸め誤差を避ける
   // FG3M*3 + (FGM-FG3M)*2 + FTM = PTS が厳密に成立する
   const allTotals = getPlayerTotals();
@@ -108,6 +183,13 @@ export default async function PlayerDetailPage({
   const pts3 = t ? (t.threePt * 3) / t.gp : pg.threePt * 3;
   const pts2 = t ? ((t.fg - t.threePt) * 2) / t.gp : (pg.fg - pg.threePt) * 2;
   const ptsFt = t ? t.ft / t.gp : pg.ft;
+  // PO版ワッフル（パーセンタイルと同じGP4以上を条件に。少試合のノイズ表示を防ぐ）
+  const allPoTotals = poPg && poPg.gp >= PO_MIN_GP ? getPlayoffPlayerTotals() : [];
+  const poT = allPoTotals.find((p) => p.playerId === playerIdNum && p.team !== "TOT")
+    ?? allPoTotals.find((p) => p.playerId === playerIdNum);
+  const poPts3 = poT ? (poT.threePt * 3) / poT.gp : 0;
+  const poPts2 = poT ? ((poT.fg - poT.threePt) * 2) / poT.gp : 0;
+  const poPtsFt = poT ? poT.ft / poT.gp : 0;
 
   return (
     <div className="space-y-6">
@@ -207,55 +289,32 @@ export default async function PlayerDetailPage({
         </CardContent>
       </Card>
 
-      {/* League Percentile */}
-      {(pctRows || poPctRows) && (
-        <Card>
-          <CardHeader>
-            <CardTitle>League Percentile</CardTitle>
-            <p className="text-xs text-muted-foreground">リーグ内での位置（100が最上位）</p>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            {poPctRows && (
-              <div>
-                <div className="text-xs font-medium text-orange-400 mb-2">Playoffs · GP{PO_MIN_GP}以上のPO出場選手内</div>
-                <PercentileBars rows={poPctRows} />
-              </div>
-            )}
-            {pctRows && (
-              <div>
-                <div className="text-xs font-medium text-muted-foreground mb-2">Regular Season · GP{MIN_GP}以上の選手内</div>
-                <PercentileBars rows={pctRows} />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+      {/* Playoffs ビジュアル */}
+      <VisualGroup
+        title="Playoffs"
+        accent
+        pctNote={`GP${PO_MIN_GP}以上のPO出場選手内での位置（100が最上位）`}
+        pctRows={poPctRows}
+        radarItems={poRadarItems}
+        vScore={poVScore}
+        pts3={poPts3}
+        pts2={poPts2}
+        ptsFt={poPtsFt}
+        ptsAvg={poPg?.pts ?? 0}
+      />
 
-      {/* オールラウンド度 & 得点構成 */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {radarItems && vScore != null && (
-          <Card>
-            <CardHeader>
-              <CardTitle>オールラウンド度 {(vScore * 100).toFixed(1)}</CardTitle>
-              <p className="text-xs text-muted-foreground">5部門パーセンタイルの平均×均等さ（レギュラーシーズン）</p>
-            </CardHeader>
-            <CardContent className="flex justify-center">
-              <VersatilityRadar items={radarItems} />
-            </CardContent>
-          </Card>
-        )}
-        {pts3 + pts2 + ptsFt > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>得点の作り方</CardTitle>
-              <p className="text-xs text-muted-foreground">平均{pg.pts.toFixed(1)}点の内訳（1マス=1%）</p>
-            </CardHeader>
-            <CardContent>
-              <ScoringWaffle pts3={pts3} pts2={pts2} ptsFt={ptsFt} />
-            </CardContent>
-          </Card>
-        )}
-      </div>
+      {/* Regular Season ビジュアル */}
+      <VisualGroup
+        title="Regular Season"
+        pctNote={`GP${MIN_GP}以上の選手内での位置（100が最上位）`}
+        pctRows={pctRows}
+        radarItems={radarItems}
+        vScore={vScore}
+        pts3={pts3}
+        pts2={pts2}
+        ptsFt={ptsFt}
+        ptsAvg={pg.pts}
+      />
 
       {/* Advanced Stats */}
       {(adv || poAdv) && (
