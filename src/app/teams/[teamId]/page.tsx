@@ -188,11 +188,13 @@ export default async function TeamDetailPage({
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
-                <CardTitle>ワンマン度 {teamGini.gini.toFixed(3)}</CardTitle>
+                <CardTitle>
+                  ワンマン度 {teamGini.gini.toFixed(3)} · 偏りリーグ{giniRank}位/{giniByTeam.length}
+                </CardTitle>
                 <MetricLink anchor="one-man" />
               </div>
               <p className="text-xs text-muted-foreground">
-                得点分布の偏り（Gini係数・MIN{GINI_MIN_MP}以上） · リーグ{giniRank}位に偏重 · 最多得点者
+                得点分布の偏り（Gini係数・MIN{GINI_MIN_MP}以上、1位=最も偏っている） · 最多得点者
                 {teamScorers[0].player}がチーム得点の{(topShare * 100).toFixed(1)}%
                 · トレード選手はシーズン通算を現所属に計上
               </p>
