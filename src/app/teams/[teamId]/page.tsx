@@ -189,7 +189,7 @@ export default async function TeamDetailPage({
             <CardHeader>
               <div className="flex items-center gap-2">
                 <CardTitle>
-                  ワンマン度 {teamGini.gini.toFixed(3)} · 偏りリーグ{giniRank}位/{giniByTeam.length}
+                  ワンマン度 {teamGini.gini.toFixed(3)} · 偏り NBA{giniRank}位 / {giniByTeam.length}チーム
                 </CardTitle>
                 <MetricLink anchor="one-man" />
               </div>
