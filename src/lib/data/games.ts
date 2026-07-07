@@ -62,6 +62,13 @@ export interface TeamGameMargin {
   gameDate: string;
   opponent: string;
   margin: number; // 自チーム得点 − 相手得点
+  teamScore: number;
+  oppScore: number;
+  isHome: boolean;
+  fgPct: number;
+  fg3Pct: number;
+  oppFgPct: number;
+  oppFg3Pct: number;
 }
 
 // シーズン心電図用: 指定チームの全試合の点差系列（日付順）
@@ -74,6 +81,13 @@ export function getTeamMargins(abbr: string): TeamGameMargin[] {
         gameDate: g.gameDate,
         opponent: isHome ? g.awayTeam : g.homeTeam,
         margin: isHome ? g.homePts - g.awayPts : g.awayPts - g.homePts,
+        teamScore: isHome ? g.homePts : g.awayPts,
+        oppScore: isHome ? g.awayPts : g.homePts,
+        isHome,
+        fgPct: isHome ? g.homeFgPct : g.awayFgPct,
+        fg3Pct: isHome ? g.homeFg3Pct : g.awayFg3Pct,
+        oppFgPct: isHome ? g.awayFgPct : g.homeFgPct,
+        oppFg3Pct: isHome ? g.awayFg3Pct : g.homeFg3Pct,
       };
     });
 }
