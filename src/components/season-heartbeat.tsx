@@ -4,6 +4,7 @@
 
 import { useState } from "react";
 import type { TeamGameMargin } from "@/lib/data/games";
+import { gameDetailUrl } from "@/lib/game-url";
 
 const BAR_W = 5;
 const GAP = 2;
@@ -90,6 +91,15 @@ export function SeasonHeartbeat({ games }: { games: TeamGameMargin[] }) {
           <div className="mt-1 text-xs text-muted-foreground">
             FG% {pct(sel.fgPct)}（相手 {pct(sel.oppFgPct)}）・3P% {pct(sel.fg3Pct)}（相手 {pct(sel.oppFg3Pct)}）
           </div>
+          <a
+            href={gameDetailUrl(sel.gameId)}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="NBA.comの試合詳細を開く"
+            className="mt-1 inline-block text-xs text-muted-foreground hover:underline"
+          >
+            NBA.comの試合詳細を開く ↗
+          </a>
         </div>
       )}
     </div>

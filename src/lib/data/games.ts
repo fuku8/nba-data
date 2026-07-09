@@ -59,6 +59,7 @@ export function getGameDates(): string[] {
 }
 
 export interface TeamGameMargin {
+  gameId: string;
   gameDate: string;
   opponent: string;
   margin: number; // 自チーム得点 − 相手得点
@@ -78,6 +79,7 @@ export function getTeamMargins(abbr: string): TeamGameMargin[] {
     .map((g) => {
       const isHome = g.homeTeam === abbr;
       return {
+        gameId: g.gameId,
         gameDate: g.gameDate,
         opponent: isHome ? g.awayTeam : g.homeTeam,
         margin: isHome ? g.homePts - g.awayPts : g.awayPts - g.homePts,

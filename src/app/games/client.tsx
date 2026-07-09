@@ -13,6 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { getTeamColor } from "@/lib/constants/teams";
 import type { GameResult } from "@/lib/data/games";
+import { gameDetailUrl } from "@/lib/game-url";
 
 export function GamesClient({
   games,
@@ -34,7 +35,7 @@ export function GamesClient({
         <div>
           <h1 className="text-3xl font-bold tracking-tight">試合結果</h1>
           <p className="text-muted-foreground text-sm">
-            {games.length} 試合 · NBA.com · 日付は米国東部時間(ET)基準
+            {games.length} 試合 · NBA.com · 日付は米国東部時間(ET)基準 · FinalバッジをクリックするとNBA.comの試合詳細が開きます
           </p>
         </div>
         <Select value={selectedDate} onValueChange={(v) => setSelectedDate(v ?? dates[0])}>
@@ -68,7 +69,17 @@ export function GamesClient({
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs text-muted-foreground">{game.gameDate}</span>
-                    <Badge variant="secondary" className="text-xs">Final</Badge>
+                    {/* チーム名は/teamsへのLinkなのでカード全体はリンク化せず、この行だけをNBA.com詳細への外部リンクにする */}
+                    <a
+                      href={gameDetailUrl(game.gameId)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="NBA.comの試合詳細を開く"
+                      className="flex items-center gap-1.5 hover:underline"
+                    >
+                      <Badge variant="secondary" className="text-xs">Final</Badge>
+                      <span className="text-xs text-muted-foreground">↗</span>
+                    </a>
                   </div>
                   <div className="space-y-2">
                     {/* Away */}
