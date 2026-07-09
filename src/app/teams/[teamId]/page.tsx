@@ -176,7 +176,7 @@ export default async function TeamDetailPage({
                 <CardTitle>Season Heartbeat</CardTitle>
                 <MetricLink anchor="heartbeat" />
               </div>
-              <p className="text-xs text-muted-foreground">全{margins.length}試合の点差 · 上=勝ち / 下=負け · バーにホバーで詳細（クリックするとNBA.comの試合詳細が開きます）</p>
+              <p className="text-xs text-muted-foreground">全{margins.length}試合の点差 · 上=勝ち / 下=負け · バーをクリックすると詳細と「試合詳細」ボタン（NBA.comへ）が表示されます</p>
             </CardHeader>
             <CardContent>
               <SeasonHeartbeat games={margins} />

@@ -96,9 +96,9 @@ export function SeasonHeartbeat({ games }: { games: TeamGameMargin[] }) {
             target="_blank"
             rel="noopener noreferrer"
             title="NBA.comの試合詳細を開く"
-            className="mt-1 inline-block text-xs text-muted-foreground hover:underline"
+            className="mt-2 inline-flex h-7 items-center gap-1 rounded-md border border-border bg-background px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           >
-            NBA.comの試合詳細を開く ↗
+            試合詳細 ↗
           </a>
         </div>
       )}

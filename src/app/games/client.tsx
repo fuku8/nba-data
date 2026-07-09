@@ -35,7 +35,7 @@ export function GamesClient({
         <div>
           <h1 className="text-3xl font-bold tracking-tight">試合結果</h1>
           <p className="text-muted-foreground text-sm">
-            {games.length} 試合 · NBA.com · 日付は米国東部時間(ET)基準 · FinalバッジをクリックするとNBA.comの試合詳細が開きます
+            {games.length} 試合 · NBA.com · 日付は米国東部時間(ET)基準 · 「試合詳細」ボタンでNBA.comの試合詳細が開きます
           </p>
         </div>
         <Select value={selectedDate} onValueChange={(v) => setSelectedDate(v ?? dates[0])}>
@@ -70,16 +70,18 @@ export function GamesClient({
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs text-muted-foreground">{game.gameDate}</span>
                     {/* チーム名は/teamsへのLinkなのでカード全体はリンク化せず、この行だけをNBA.com詳細への外部リンクにする */}
-                    <a
-                      href={gameDetailUrl(game.gameId)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title="NBA.comの試合詳細を開く"
-                      className="flex items-center gap-1.5 hover:underline"
-                    >
+                    <div className="flex items-center gap-2">
                       <Badge variant="secondary" className="text-xs">Final</Badge>
-                      <span className="text-xs text-muted-foreground">↗</span>
-                    </a>
+                      <a
+                        href={gameDetailUrl(game.gameId)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="NBA.comの試合詳細を開く"
+                        className="inline-flex h-7 items-center gap-1 rounded-md border border-border bg-background px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                      >
+                        試合詳細 ↗
+                      </a>
+                    </div>
                   </div>
                   <div className="space-y-2">
                     {/* Away */}
