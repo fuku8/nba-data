@@ -59,6 +59,21 @@ export interface ComparePlayer {
 const normalizeName = (s: string) =>
   s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
+// 凡例を選択順・縦1列で描画（rechartsの並びに依存しない）
+const legendContent = (items: { name: string; color: string }[]) =>
+  function LegendList() {
+    return (
+      <ul className="flex flex-col items-center gap-1 text-sm" style={{ paddingTop: 20 }}>
+        {items.map((it) => (
+          <li key={it.name} className="flex items-center gap-1.5" style={{ color: it.color }}>
+            <span className="inline-block h-2.5 w-2.5 shrink-0" style={{ backgroundColor: it.color }} />
+            {it.name}
+          </li>
+        ))}
+      </ul>
+    );
+  };
+
 const HUSTLE_AXES: { key: keyof NonNullable<ComparePlayer["hustle2"]>; label: string }[] = [
   { key: "screenAssists", label: "スクリーンAST" },
   { key: "deflections", label: "ディフレクション" },
@@ -242,7 +257,7 @@ export function CompareClient({ players }: { players: ComparePlayer[] }) {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={480}>
-                <RadarChart data={radarData}>
+                <RadarChart data={radarData} outerRadius="72%">
                   <PolarGrid />
                   <PolarAngleAxis dataKey="stat" />
                   <PolarRadiusAxis domain={[0, 100]} tick={false} />
@@ -257,7 +272,10 @@ export function CompareClient({ players }: { players: ComparePlayer[] }) {
                       fillOpacity={0.12}
                     />
                   ))}
-                  <Legend layout="vertical" verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: 20 }} />
+                  <Legend
+                    verticalAlign="bottom"
+                    content={legendContent(selectedPlayers.map((p, i) => ({ name: p.player, color: COLORS[i] })))}
+                  />
                 </RadarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -273,7 +291,7 @@ export function CompareClient({ players }: { players: ComparePlayer[] }) {
             <CardContent className="space-y-2">
               {hustleEligible.length > 0 ? (
                 <ResponsiveContainer width="100%" height={480}>
-                  <RadarChart data={radarData2}>
+                  <RadarChart data={radarData2} outerRadius="72%">
                     <PolarGrid />
                     <PolarAngleAxis dataKey="stat" />
                     <PolarRadiusAxis domain={[0, 100]} tick={false} />
@@ -291,7 +309,10 @@ export function CompareClient({ players }: { players: ComparePlayer[] }) {
                         />
                       );
                     })}
-                    <Legend layout="vertical" verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: 20 }} />
+                    <Legend
+                      verticalAlign="bottom"
+                      content={legendContent(hustleEligible.map((p) => ({ name: p.player, color: COLORS[selectedPlayers.indexOf(p)] })))}
+                    />
                   </RadarChart>
                 </ResponsiveContainer>
               ) : (
