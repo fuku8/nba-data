@@ -234,12 +234,14 @@ export function CompareClient({ players }: { players: ComparePlayer[] }) {
 
       {selectedPlayers.length >= 2 && (
         <>
+          {/* PCではレーダー2枚を横並び */}
+          <div className="grid gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle>スタッツ比較</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
+              <ResponsiveContainer width="100%" height={460}>
                 <RadarChart data={radarData}>
                   <PolarGrid />
                   <PolarAngleAxis dataKey="stat" />
@@ -255,7 +257,7 @@ export function CompareClient({ players }: { players: ComparePlayer[] }) {
                       fillOpacity={0.12}
                     />
                   ))}
-                  <Legend />
+                  <Legend layout="vertical" verticalAlign="bottom" align="center" />
                 </RadarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -270,7 +272,7 @@ export function CompareClient({ players }: { players: ComparePlayer[] }) {
             </CardHeader>
             <CardContent className="space-y-2">
               {hustleEligible.length > 0 ? (
-                <ResponsiveContainer width="100%" height={400}>
+                <ResponsiveContainer width="100%" height={460}>
                   <RadarChart data={radarData2}>
                     <PolarGrid />
                     <PolarAngleAxis dataKey="stat" />
@@ -289,7 +291,7 @@ export function CompareClient({ players }: { players: ComparePlayer[] }) {
                         />
                       );
                     })}
-                    <Legend />
+                    <Legend layout="vertical" verticalAlign="bottom" align="center" />
                   </RadarChart>
                 </ResponsiveContainer>
               ) : (
@@ -302,6 +304,7 @@ export function CompareClient({ players }: { players: ComparePlayer[] }) {
               )}
             </CardContent>
           </Card>
+          </div>
 
           <Card>
             <CardHeader>
