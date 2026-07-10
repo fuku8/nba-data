@@ -55,6 +55,10 @@ export interface ComparePlayer {
   } | null;
 }
 
+// ダイアクリティカルマーク除去（Jokić を "jokic" で検索可能に）
+const normalizeName = (s: string) =>
+  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
 const HUSTLE_AXES: { key: keyof NonNullable<ComparePlayer["hustle2"]>; label: string }[] = [
   { key: "screenAssists", label: "スクリーンAST" },
   { key: "deflections", label: "ディフレクション" },
@@ -70,9 +74,9 @@ export function CompareClient({ players }: { players: ComparePlayer[] }) {
 
   const suggestions = useMemo(() => {
     if (search.length < 1) return [];
-    const q = search.toLowerCase();
+    const q = normalizeName(search);
     return players
-      .filter((p) => p.player.toLowerCase().includes(q) && !selectedIds.includes(p.playerId))
+      .filter((p) => normalizeName(p.player).includes(q) && !selectedIds.includes(p.playerId))
       .slice(0, 8);
   }, [search, players, selectedIds]);
 
