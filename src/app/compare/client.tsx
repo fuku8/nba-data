@@ -241,7 +241,7 @@ export function CompareClient({ players }: { players: ComparePlayer[] }) {
               <CardTitle>スタッツ比較</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={460}>
+              <ResponsiveContainer width="100%" height={480}>
                 <RadarChart data={radarData}>
                   <PolarGrid />
                   <PolarAngleAxis dataKey="stat" />
@@ -257,7 +257,7 @@ export function CompareClient({ players }: { players: ComparePlayer[] }) {
                       fillOpacity={0.12}
                     />
                   ))}
-                  <Legend layout="vertical" verticalAlign="bottom" align="center" />
+                  <Legend layout="vertical" verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: 20 }} />
                 </RadarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -272,7 +272,7 @@ export function CompareClient({ players }: { players: ComparePlayer[] }) {
             </CardHeader>
             <CardContent className="space-y-2">
               {hustleEligible.length > 0 ? (
-                <ResponsiveContainer width="100%" height={460}>
+                <ResponsiveContainer width="100%" height={480}>
                   <RadarChart data={radarData2}>
                     <PolarGrid />
                     <PolarAngleAxis dataKey="stat" />
@@ -291,7 +291,7 @@ export function CompareClient({ players }: { players: ComparePlayer[] }) {
                         />
                       );
                     })}
-                    <Legend layout="vertical" verticalAlign="bottom" align="center" />
+                    <Legend layout="vertical" verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: 20 }} />
                   </RadarChart>
                 </ResponsiveContainer>
               ) : (
