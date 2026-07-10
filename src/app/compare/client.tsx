@@ -63,7 +63,7 @@ const normalizeName = (s: string) =>
 const legendContent = (items: { name: string; color: string }[]) =>
   function LegendList() {
     return (
-      <ul className="flex flex-col items-center gap-1 text-sm" style={{ paddingTop: 20 }}>
+      <ul className="flex flex-col items-center gap-1 text-sm" style={{ paddingTop: 36 }}>
         {items.map((it) => (
           <li key={it.name} className="flex items-center gap-1.5" style={{ color: it.color }}>
             <span className="inline-block h-2.5 w-2.5 shrink-0" style={{ backgroundColor: it.color }} />
