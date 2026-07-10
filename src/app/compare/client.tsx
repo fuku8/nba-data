@@ -154,7 +154,7 @@ export function CompareClient({ players }: { players: ComparePlayer[] }) {
     <div className="space-y-6">
       <h1 className="text-3xl font-bold tracking-tight">検索</h1>
       <p className="text-muted-foreground mt-1">
-        選手を追加すると比較表が表示されます（1名から可）。2名以上でレーダーチャートと得点の作り方も表示されます。
+        選手を追加すると比較表・レーダーチャート・得点の作り方が表示されます（1名から可、最大{MAX_PLAYERS}名で比較）。
       </p>
 
       {/* Search + Selected */}
@@ -247,7 +247,7 @@ export function CompareClient({ players }: { players: ComparePlayer[] }) {
         </Card>
       )}
 
-      {selectedPlayers.length >= 2 && (
+      {selectedPlayers.length > 0 && (
         <>
           {/* PCではレーダー2枚を横並び */}
           <div className="grid gap-6 lg:grid-cols-2">

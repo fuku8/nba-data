@@ -28,7 +28,7 @@ export function ScoringWaffle({ pts3, pts2, ptsFt }: { pts3: number; pts2: numbe
           <div key={i} className="h-3.5 w-3.5 rounded-[2px]" style={{ backgroundColor: color }} />
         ))}
       </div>
-      <div className="flex gap-4 text-xs text-muted-foreground flex-wrap">
+      <div className="flex flex-col gap-1 text-xs text-muted-foreground">
         {PARTS.map((p, i) => (
           <span key={p.key} className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-[2px] inline-block" style={{ backgroundColor: p.color }} />
