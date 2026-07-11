@@ -13,6 +13,7 @@ import { getPlayerShots, type Shot } from "@/lib/data/shots";
 import { getPlayerHustle, getPlayoffPlayerHustle, getPlayerSpeed, getPlayoffPlayerSpeed, getPlayerPossessions, getPlayoffPlayerPossessions, type PlayerHustle, type PlayerSpeed, type PlayerPossessions } from "@/lib/data/tracking";
 import { MetricLink } from "@/components/metric-link";
 import { getPlayerTypes, getPoSwing, MIN_GP, PO_MIN_GP, type TypeBadge, type PoSwing } from "@/lib/data/player-types";
+import { getSimilarPlayers } from "@/lib/data/similar";
 
 export const revalidate = 3600;
 
@@ -361,6 +362,9 @@ export default async function PlayerDetailPage({
   const motion = buildMotion(getPlayerSpeed(), getPlayerPossessions(), MIN_GP);
   const poMotion = poEligible ? buildMotion(getPlayoffPlayerSpeed(), getPlayoffPlayerPossessions(), PO_MIN_GP) : null;
 
+  // 似たタイプの選手: スタッツのユークリッド距離が近い3名へのリンク
+  const similarIds = getSimilarPlayers(playerIdNum);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -401,6 +405,14 @@ export default async function PlayerDetailPage({
             </div>
           )}
         </div>
+        {similarIds && similarIds.length > 0 && (
+          <Link
+            href={`/compare?ids=${[playerIdNum, ...similarIds].join(",")}`}
+            className="ml-auto self-start inline-flex h-7 items-center gap-1 rounded-md border border-border bg-background px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          >
+            似たタイプの選手 ↗
+          </Link>
+        )}
       </div>
 
       {/* Stats */}

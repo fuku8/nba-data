@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { getTeamColor } from "@/lib/constants/teams";
 import { ScoringWaffle } from "@/components/scoring-waffle";
@@ -83,8 +84,8 @@ const HUSTLE_AXES: { key: keyof NonNullable<ComparePlayer["hustle2"]>; label: st
   { key: "avgSpeed", label: "平均スピード" },
 ];
 
-export function CompareClient({ players }: { players: ComparePlayer[] }) {
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+export function CompareClient({ players, initialIds }: { players: ComparePlayer[]; initialIds?: number[] }) {
+  const [selectedIds, setSelectedIds] = useState<number[]>(initialIds ?? []);
   const [search, setSearch] = useState("");
 
   const suggestions = useMemo(() => {
@@ -183,7 +184,12 @@ export function CompareClient({ players }: { players: ComparePlayer[] }) {
           )}
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {selectedPlayers.length > 0 && (
+            <Button variant="ghost" size="sm" onClick={() => setSelectedIds([])}>
+              すべてクリア
+            </Button>
+          )}
           {selectedPlayers.map((p, i) => (
             <Badge
               key={p.playerId}
@@ -222,6 +228,7 @@ export function CompareClient({ players }: { players: ComparePlayer[] }) {
                         {row.label}
                       </th>
                     ))}
+                    <th className="py-2 px-3" />
                   </tr>
                 </thead>
                 <tbody>
@@ -238,6 +245,11 @@ export function CompareClient({ players }: { players: ComparePlayer[] }) {
                           {row.get(p)}
                         </td>
                       ))}
+                      <td className="py-2 px-3">
+                        <button onClick={() => removePlayer(p.playerId)}>
+                          <X className="h-3 w-3" />
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

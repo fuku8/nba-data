@@ -7,7 +7,11 @@ export const revalidate = 3600;
 
 const maxOf = <T,>(pool: T[], get: (x: T) => number) => Math.max(...pool.map(get), 1);
 
-export default function ComparePage() {
+export default async function ComparePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ids?: string }>;
+}) {
   const perGame = getPlayerPerGame().filter((p) => p.team !== "TOT" && p.gp >= 10);
   const advById = new Map(
     getPlayerAdvanced()
@@ -78,5 +82,12 @@ export default function ComparePage() {
     };
   });
 
-  return <CompareClient players={players} />;
+  const { ids } = await searchParams;
+  const initialIds = ids
+    ?.split(",")
+    .map((s) => parseInt(s, 10))
+    .filter((id, i, arr) => !isNaN(id) && arr.indexOf(id) === i && players.some((p) => p.playerId === id))
+    .slice(0, 4); // MAX_PLAYERS（client.tsx）と同じ上限
+
+  return <CompareClient players={players} initialIds={initialIds} />;
 }
