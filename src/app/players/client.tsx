@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SortableHeader } from "@/components/sortable-header";
+import { QuadrantMap, type QuadrantDot } from "@/components/quadrant-map";
 import { getTeamColor } from "@/lib/constants/teams";
 import type { PlayerPerGame, PlayerAdvanced, SortConfig } from "@/lib/types";
 
@@ -31,9 +32,17 @@ const PAGE_SIZE = 50;
 export function PlayersClient({
   perGame,
   advanced,
+  usageEfficiencyDots,
+  shooterDots,
+  minGp,
+  shooterMin3pa,
 }: {
   perGame: PlayerPerGame[];
   advanced: PlayerAdvanced[];
+  usageEfficiencyDots: QuadrantDot[];
+  shooterDots: QuadrantDot[];
+  minGp: number;
+  shooterMin3pa: number;
 }) {
   const [search, setSearch] = useState("");
   const [minGames, setMinGames] = useState(20);
@@ -131,6 +140,43 @@ export function PlayersClient({
             </SelectContent>
           </Select>
         </div>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>使われ方 × 効率マップ</CardTitle>
+            <CardDescription>
+              USG%（攻撃をどれだけ背負うか）× TS%（得点効率）・GP{minGp}以上の{usageEfficiencyDots.length}人・点線は中央値
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <QuadrantMap
+              dots={usageEfficiencyDots}
+              xLabel="USG%"
+              yLabel="TS%"
+              xFormat={(v) => `${(v * 100).toFixed(1)}%`}
+              yFormat={(v) => `${(v * 100).toFixed(1)}%`}
+            />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>シューターマップ</CardTitle>
+            <CardDescription>
+              3P試投/G × 3P%・GP{minGp}以上かつ3PA/G {shooterMin3pa.toFixed(1)}以上の{shooterDots.length}人（試投が少ない選手のノイズを除外）・点線は中央値
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <QuadrantMap
+              dots={shooterDots}
+              xLabel="3PA/G"
+              yLabel="3P%"
+              xFormat={(v) => v.toFixed(1)}
+              yFormat={(v) => `${(v * 100).toFixed(1)}%`}
+            />
+          </CardContent>
+        </Card>
       </div>
 
       <Tabs defaultValue="basic" onValueChange={(v) => { setActiveTab(v); setPage(0); }}>
