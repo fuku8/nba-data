@@ -1,0 +1,16 @@
+team1,team2,team1_wins,team2_wins,first_game_date,last_game_date,round,round_name,winner,series_status
+ATL,NYK,2,4,2026-04-18,2026-04-30,1,First Round,NYK,2-4
+CLE,TOR,4,3,2026-04-18,2026-05-03,1,First Round,CLE,4-3
+DEN,MIN,2,4,2026-04-18,2026-04-30,1,First Round,MIN,2-4
+HOU,LAL,2,4,2026-04-18,2026-05-01,1,First Round,LAL,2-4
+DET,ORL,4,3,2026-04-19,2026-05-03,1,First Round,DET,4-3
+BOS,PHI,3,4,2026-04-19,2026-05-02,1,First Round,PHI,3-4
+OKC,PHX,4,0,2026-04-19,2026-04-27,1,First Round,OKC,4-0
+POR,SAS,1,4,2026-04-19,2026-04-28,1,First Round,SAS,1-4
+NYK,PHI,4,0,2026-05-04,2026-05-10,2,Second Round,NYK,4-0
+MIN,SAS,2,4,2026-05-04,2026-05-15,2,Second Round,SAS,2-4
+CLE,DET,4,3,2026-05-05,2026-05-17,2,Second Round,CLE,4-3
+LAL,OKC,0,4,2026-05-05,2026-05-11,2,Second Round,OKC,0-4
+OKC,SAS,3,4,2026-05-18,2026-05-30,3,Conference Finals,SAS,3-4
+CLE,NYK,0,4,2026-05-19,2026-05-25,3,Conference Finals,NYK,0-4
+NYK,SAS,4,1,2026-06-03,2026-06-13,4,Finals,NYK,4-1
