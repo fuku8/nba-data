@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { getTeamColor } from "@/lib/constants/teams";
 import { ScoringWaffle } from "@/components/scoring-waffle";
+import { CompareStatsTable, type CompareStatRow } from "@/components/compare-stats-table";
 import {
   RadarChart,
   PolarGrid,
@@ -133,21 +133,22 @@ export function CompareClient({ players }: { players: ComparePlayer[] }) {
     ...Object.fromEntries(hustleEligible.map((p) => [p.playerId, p.hustle2![key] * 100])),
   }));
 
-  const statRows: { label: string; get: (p: ComparePlayer) => string }[] = [
-    { label: "PTS", get: (p) => p.pts.toFixed(1) },
-    { label: "REB", get: (p) => p.trb.toFixed(1) },
-    { label: "AST", get: (p) => p.ast.toFixed(1) },
-    { label: "STL", get: (p) => p.stl.toFixed(1) },
-    { label: "BLK", get: (p) => p.blk.toFixed(1) },
-    { label: "FG%", get: (p) => (p.fgPct ? (p.fgPct * 100).toFixed(1) + "%" : "-") },
-    { label: "3P%", get: (p) => (p.threePtPct ? (p.threePtPct * 100).toFixed(1) + "%" : "-") },
-    { label: "MPG", get: (p) => p.mpg.toFixed(1) },
-    { label: "GP", get: (p) => String(p.gp) },
-    { label: "ORtg", get: (p) => p.offRating?.toFixed(1) ?? "-" },
-    { label: "DRtg", get: (p) => p.defRating?.toFixed(1) ?? "-" },
-    { label: "NRtg", get: (p) => (p.netRating != null ? (p.netRating > 0 ? "+" : "") + p.netRating.toFixed(1) : "-") },
-    { label: "TS%", get: (p) => (p.tsPct != null ? (p.tsPct * 100).toFixed(1) + "%" : "-") },
-    { label: "PIE", get: (p) => (p.pie != null ? (p.pie * 100).toFixed(1) + "%" : "-") },
+  // value は優劣・差分判定用の生値（表示と同じスケール。%系は×100）。better未指定=向きなし。DRtgのみ低いほど良い
+  const statRows: CompareStatRow<ComparePlayer>[] = [
+    { label: "PTS", get: (p) => p.pts.toFixed(1), value: (p) => p.pts, better: "high", digits: 1 },
+    { label: "REB", get: (p) => p.trb.toFixed(1), value: (p) => p.trb, better: "high", digits: 1 },
+    { label: "AST", get: (p) => p.ast.toFixed(1), value: (p) => p.ast, better: "high", digits: 1 },
+    { label: "STL", get: (p) => p.stl.toFixed(1), value: (p) => p.stl, better: "high", digits: 1 },
+    { label: "BLK", get: (p) => p.blk.toFixed(1), value: (p) => p.blk, better: "high", digits: 1 },
+    { label: "FG%", get: (p) => (p.fgPct ? (p.fgPct * 100).toFixed(1) + "%" : "-"), value: (p) => (p.fgPct ? p.fgPct * 100 : null), better: "high", digits: 1 },
+    { label: "3P%", get: (p) => (p.threePtPct ? (p.threePtPct * 100).toFixed(1) + "%" : "-"), value: (p) => (p.threePtPct ? p.threePtPct * 100 : null), better: "high", digits: 1 },
+    { label: "MPG", get: (p) => p.mpg.toFixed(1), value: (p) => p.mpg, digits: 1 },
+    { label: "GP", get: (p) => String(p.gp), value: (p) => p.gp, digits: 0 },
+    { label: "ORtg", get: (p) => p.offRating?.toFixed(1) ?? "-", value: (p) => p.offRating, better: "high", digits: 1 },
+    { label: "DRtg", get: (p) => p.defRating?.toFixed(1) ?? "-", value: (p) => p.defRating, better: "low", digits: 1 },
+    { label: "NRtg", get: (p) => (p.netRating != null ? (p.netRating > 0 ? "+" : "") + p.netRating.toFixed(1) : "-"), value: (p) => p.netRating, better: "high", digits: 1 },
+    { label: "TS%", get: (p) => (p.tsPct != null ? (p.tsPct * 100).toFixed(1) + "%" : "-"), value: (p) => (p.tsPct != null ? p.tsPct * 100 : null), better: "high", digits: 1 },
+    { label: "PIE", get: (p) => (p.pie != null ? (p.pie * 100).toFixed(1) + "%" : "-"), value: (p) => (p.pie != null ? p.pie * 100 : null), better: "high", digits: 1 },
   ];
 
   return (
@@ -212,37 +213,7 @@ export function CompareClient({ players }: { players: ComparePlayer[] }) {
             <CardTitle>比較表</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2 px-3">選手</th>
-                    {statRows.map((row) => (
-                      <th key={row.label} className="text-right py-2 px-3 whitespace-nowrap">
-                        {row.label}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedPlayers.map((p, i) => (
-                    <tr key={p.playerId} className="border-b hover:bg-accent/30">
-                      <td className="py-2 px-3 font-medium whitespace-nowrap">
-                        <Link href={`/players/${p.playerId}`} className="flex items-center gap-2 hover:underline">
-                          <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[i] }} />
-                          {p.player}
-                        </Link>
-                      </td>
-                      {statRows.map((row) => (
-                        <td key={row.label} className="text-right py-2 px-3 font-mono">
-                          {row.get(p)}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <CompareStatsTable rows={statRows} players={selectedPlayers} colors={COLORS} />
           </CardContent>
         </Card>
       )}
