@@ -549,6 +549,12 @@ GP / GS / MIN / PTS / REB (TRB/ORB/DRB) / AST / STL / BLK / TOV / PF / FGM / FGA
    - 指標の年次比較はリーグ環境の変化（ペース・3P率）があるため、生値と併せてリーグ内パーセンタイル比較を検討
    - **実装手段の検討候補: flint-chart**（2026-08-03 追加・未採用）。`microsoft/flint-chart`（MIT）はチャート仕様を中間言語で1回書いて Vega-Lite / ECharts / Chart.js / Plotly / Excelネイティブへコンパイルする。ここで要る折れ線・積み上げは**feel-vizの守備範囲外**（feel-viz coreは水準の相対評価のみで時系列変化の翻訳を持たない）ため、翻訳層＝feel-viz／汎用チャート＝外部、という分界なら feel-viz の「チャートライブラリなし」方針を壊さずに済む。採用前にアクセシビリティ基準（feel-viz README §アクセシビリティの自前基準）・日本語ラベル・静的SVG書き出し可否を確認すること。詳細と未検証項目は `~/projects/feel-viz/README.md` §外部チャート層の候補
 
+5. **HTML-in-Canvas の origin trial を検証する**（2026-08-26 追加・Clippings検証レポート_20260826で★4確認）
+   - 対象: Canvas上のラベル・多言語テキストの折り返しに困る箇所。**現状 nba-data は Canvas 未使用**（`src/` に `<canvas>` / `getContext(` なし・描画は Recharts + 自前SVG）ので、§10-4 の積み上げ・比較表示や feel-viz 連携で Canvas 描画を選ぶ場面が出たときに、`fillText` で自前レイアウトを組む前にこちらを当てる
+   - 仕様: WICG/html-in-canvas（提案段階・未確定）。`layoutsubtree` 属性 / `drawElementImage()` / `requestPaint()` / `paint` イベント / 戻り値 `DOMMatrix`。デモ3種（ワンショット転写・自動再描画・座標同期）は https://github.com/ics-creative/260825_html_in_canvas
+   - 期限: **Chrome origin trial は Chrome 154 まで**（当初150、2026-06に延長。155は2026-10予定）。ローカル検証は `chrome://flags/#canvas-draw-element`。Firefox は未決着・Safari は2026-07から試験実装のみなので、公開サイトの本番採用は不可＝**検証止まり**が前提
+   - 出典: https://ics.media/entry/260825/ 、https://developer.chrome.com/blog/html-in-canvas-origin-trial
+
 ### 備考
 
 - bleague-dataにも同種の計画あり（bleague plan.md §7「2026-27シーズン対応」）。設計判断（シーズンセレクタのUI・URL設計）は両サイトで揃えると迷いが減る
@@ -566,3 +572,12 @@ GP / GS / MIN / PTS / REB (TRB/ORB/DRB) / AST / STL / BLK / TOV / PF / FGM / FGA
 | ⑤プレースタイル署名 | スタイルの定性ラベル化 | ある（player-types 7タイプ+z標準化・/types・ワッフル・ショットチャート・similar。5類型で最も充実） |
 
 ②のギャップ（/compare差分・優劣表示）は **実装済み（2026-08-16・104daa4）**: npb-data の方式（`compare-diff.ts` の bestIndexes/formatDiff/diffFavors + 行定義への value/better/digits 拡張、npb `71a5f61` 時点）が**そのまま移植できる**: nba の比較表は npb と同じ向き（選手=行・スタッツ=列）で、`{label, get}` 行定義パターンも共通。実装は `src/lib/compare-diff.ts`（純ロジック+テスト5件）+ `src/components/compare-stats-table.tsx`（RS/PO両compareの表を共通化）。nba 固有事項は (a) better方向: DRtg のみ low・NRtg/ORtg/PTS 等は high・GP/MPG は向きなし、(b) RS版とPO版（/playoffs/compare）がほぼ全文コピーの2枚あるため両方に適用、(c) スタイリングは Tailwind クラスで。
+
+### カラーマップ規約（2026-08-29追加）
+
+連続量に色勾配を割り当てる可視化を足す・変えるときは、**タスク依存で使い分ける**（§10の2026-27対応で新規図を設計する際もこの規約に従う）:
+
+- **連続量・順序・知覚距離の比較**（濃淡勾配で「どちらが大きいか・どれくらい違うか」を読ませる図）→ 知覚均等カラーマップ（viridis系等）。rainbow系は偽の境界を生み順序判断を阻害する
+- **個別値の読み取り・カテゴリ弁別**（「どの帯・どのタイプに属するか」を同定する図。player-types 7タイプのような離散分類を含む）→ 色名で分節できる多色相マップも可。命名可能色が多いほど同定・推論課題で精度が上がる実測がある
+- 既存実装（ショットチャート等）は再開時の変更対象になったものだけこの規約で見直す（規約適用のためだけの改修はしない）
+- 出典: Eos記事＋反証 IEEE 2023「Rainbow Colormaps Are Not All Bad」・「Rainbows Revisited」。検証レポート_20260829。feel-viz README「§カラーマップの使い分け」と同内容（両サイトで揃える）
