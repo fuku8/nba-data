@@ -1,5 +1,7 @@
 "use client";
 
+import { PhaseSwitch } from "@/components/phase-switch";
+import type { Phase } from "@/lib/phase";
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -84,7 +86,7 @@ const HUSTLE_AXES: { key: keyof NonNullable<ComparePlayer["hustle2"]>; label: st
   { key: "avgSpeed", label: "平均スピード" },
 ];
 
-export function CompareClient({ players, initialIds }: { players: ComparePlayer[]; initialIds?: number[] }) {
+export function CompareClient({ players, initialIds, phase, poAvailable }: { players: ComparePlayer[]; initialIds?: number[]; phase: Phase; poAvailable: boolean }) {
   const [selectedIds, setSelectedIds] = useState<number[]>(initialIds ?? []);
   const [search, setSearch] = useState("");
 
@@ -154,7 +156,10 @@ export function CompareClient({ players, initialIds }: { players: ComparePlayer[
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">検索</h1>
+      <div className="flex items-center gap-3 flex-wrap">
+        <h1 className="text-3xl font-bold tracking-tight">検索</h1>
+        <PhaseSwitch phase={phase} poAvailable={poAvailable} pathname="/compare" params={{ ids: selectedIds.length > 0 ? selectedIds.join(",") : undefined }} />
+      </div>
       <p className="text-muted-foreground mt-1">
         選手を追加すると比較表・レーダーチャート・得点の作り方が表示されます（1名から可、最大{MAX_PLAYERS}名で比較）。
       </p>

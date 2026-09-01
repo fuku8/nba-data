@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import "./globals.css";
 import { Navigation } from "@/components/layout/navigation";
-import { isPlayoffDataAvailable } from "@/lib/data/playoffs";
 import { currentSeason } from "@/lib/season";
 
 export const revalidate = 3600;
@@ -17,7 +16,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const isPlayoffSeason = isPlayoffDataAvailable();
   return (
     <html lang="ja" className="dark">
       <body className="min-h-screen bg-background font-sans text-foreground antialiased">
@@ -31,7 +29,7 @@ export default function RootLayout({
           gtag('js', new Date());
           gtag('config', 'G-W51Q1TQCNV');`}
         </Script>
-        <Navigation isPlayoffSeason={isPlayoffSeason} season={currentSeason()} />
+        <Navigation season={currentSeason()} />
         <main className="container mx-auto px-4 py-6">{children}</main>
       </body>
     </html>

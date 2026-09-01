@@ -25,11 +25,16 @@ import { SortableHeader } from "@/components/sortable-header";
 import { QuadrantMap, type QuadrantDot } from "@/components/quadrant-map";
 import { getTeamColor } from "@/lib/constants/teams";
 import type { PlayerPerGame, PlayerAdvanced, SortConfig } from "@/lib/types";
+import { PhaseSwitch } from "@/components/phase-switch";
+import type { Phase } from "@/lib/phase";
 
-const MIN_GAMES_OPTIONS = [0, 10, 20, 30, 40, 50];
+// GP下限の選択肢。POは最長でも28試合なので刻みを小さくする
+const MIN_GAMES_OPTIONS: Record<Phase, number[]> = { rs: [0, 10, 20, 30, 40, 50], po: [0, 4, 8, 12, 16, 20] };
 const PAGE_SIZE = 50;
 
 export function PlayersClient({
+  phase,
+  poAvailable,
   perGame,
   advanced,
   usageEfficiencyDots,
@@ -37,6 +42,8 @@ export function PlayersClient({
   minGp,
   shooterMin3pa,
 }: {
+  phase: Phase;
+  poAvailable: boolean;
   perGame: PlayerPerGame[];
   advanced: PlayerAdvanced[];
   usageEfficiencyDots: QuadrantDot[];
@@ -45,7 +52,7 @@ export function PlayersClient({
   shooterMin3pa: number;
 }) {
   const [search, setSearch] = useState("");
-  const [minGames, setMinGames] = useState(20);
+  const [minGames, setMinGames] = useState(minGp); // 既定＝サイト共通のローテ選手下限（RS20/PO4）
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "pts", direction: "desc" });
   const [advSortConfig, setAdvSortConfig] = useState<SortConfig>({ key: "offRating", direction: "desc" });
   const [page, setPage] = useState(0);
@@ -117,7 +124,10 @@ export function PlayersClient({
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">選手一覧</h1>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-3xl font-bold tracking-tight">選手一覧</h1>
+            <PhaseSwitch phase={phase} poAvailable={poAvailable} pathname="/players" />
+          </div>
           <p className="text-muted-foreground">
             <Badge variant="outline">{activeTab === "advanced" ? filteredAdvanced.length : filteredPerGame.length}</Badge> players
           </p>
@@ -129,12 +139,12 @@ export function PlayersClient({
             onChange={(e) => { setSearch(e.target.value); setPage(0); }}
             className="w-48"
           />
-          <Select value={String(minGames)} onValueChange={(v) => { setMinGames(Number(v ?? "20")); setPage(0); }}>
+          <Select value={String(minGames)} onValueChange={(v) => { setMinGames(Number(v ?? String(minGp))); setPage(0); }}>
             <SelectTrigger className="w-32">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {MIN_GAMES_OPTIONS.map((g) => (
+              {MIN_GAMES_OPTIONS[phase].map((g) => (
                 <SelectItem key={g} value={String(g)}>Min {g} GP</SelectItem>
               ))}
             </SelectContent>

@@ -95,7 +95,7 @@ export function PlayoffsTopClient({ series, players, updatedAt, season }: { seri
       <section>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold">スタッツリーダー</h2>
-          <Link href="/playoffs/leaders" className="text-sm text-muted-foreground hover:underline">すべて見る →</Link>
+          <Link href="/leaders?phase=po" className="text-sm text-muted-foreground hover:underline">すべて見る →</Link>
         </div>
         <div className="grid gap-3 sm:grid-cols-3">
           <StatLeaders players={players} label="得点 (PTS)" getValue={(p) => p.pts} />

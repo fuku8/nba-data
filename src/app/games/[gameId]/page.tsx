@@ -3,6 +3,8 @@ import path from "path";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getTeamColor } from "@/lib/constants/teams";
+import { currentSeason, seasonDir } from "@/lib/season";
+import { PhaseBadge } from "@/components/phase-switch";
 
 export const revalidate = 3600;
 
@@ -82,7 +84,7 @@ interface BoxScore {
 // ─── Data loader ────────────────────────────────────────────
 
 function getBoxScore(gameId: string): BoxScore | null {
-  const p = path.join(process.cwd(), "data", "boxscores", `${gameId}.json`);
+  const p = path.join(seasonDir(currentSeason()), "boxscores", `${gameId}.json`);
   if (!fs.existsSync(p)) return null;
   try {
     return JSON.parse(fs.readFileSync(p, "utf-8")) as BoxScore;
@@ -107,7 +109,7 @@ function ScoreHeader({ away, home }: { away: TeamScore; home: TeamScore }) {
       <div className="flex items-center justify-between gap-4">
         {/* Away */}
         <div className={`flex-1 text-center ${awayWin ? "" : "opacity-50"}`}>
-          <Link href={`/playoffs/teams/${away.tricode}`}>
+          <Link href={`/teams/${away.tricode}`}>
             <div className="h-16 w-16 rounded-full mx-auto mb-2 flex items-center justify-center text-white text-xl font-bold" style={{ backgroundColor: getTeamColor(away.tricode) }}>
               {away.tricode}
             </div>
@@ -125,7 +127,7 @@ function ScoreHeader({ away, home }: { away: TeamScore; home: TeamScore }) {
 
         {/* Home */}
         <div className={`flex-1 text-center ${homeWin ? "" : "opacity-50"}`}>
-          <Link href={`/playoffs/teams/${home.tricode}`}>
+          <Link href={`/teams/${home.tricode}`}>
             <div className="h-16 w-16 rounded-full mx-auto mb-2 flex items-center justify-center text-white text-xl font-bold" style={{ backgroundColor: getTeamColor(home.tricode) }}>
               {home.tricode}
             </div>
@@ -167,7 +169,7 @@ function QuarterScores({ away, home }: { away: TeamScore; home: TeamScore }) {
             return (
               <tr key={team.tricode} className="border-b last:border-0">
                 <td className="py-3 px-4">
-                  <Link href={`/playoffs/teams/${team.tricode}`} className="flex items-center gap-2 hover:underline font-medium">
+                  <Link href={`/teams/${team.tricode}`} className="flex items-center gap-2 hover:underline font-medium">
                     <div className="h-3 w-3 rounded-full" style={{ backgroundColor: getTeamColor(team.tricode) }} />
                     {team.tricode}
                     {team.isHome && <span className="text-xs text-muted-foreground">H</span>}
@@ -319,7 +321,8 @@ export default async function GameDetailPage({
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Link href="/playoffs/games" className="hover:underline">← 試合一覧</Link>
+        <Link href="/games?phase=po" className="hover:underline">← 試合一覧</Link>
+        <PhaseBadge phase="po" />
         {gameDate && <span>· {gameDate} (ET)</span>}
         <span>· {box.gameStatusText}</span>
       </div>

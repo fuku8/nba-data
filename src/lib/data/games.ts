@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { readCsvFile, csvToObjects, num, phaseFile, type DataCtx } from "./csv-utils";
+import { currentSeason, seasonDir } from "../season.ts";
 
 export interface GameResult {
   gameId: string;
@@ -92,6 +93,28 @@ export function getTeamMargins(abbr: string, ctx: DataCtx = {}): TeamGameMargin[
         oppFg3Pct: isHome ? g.awayFg3Pct : g.homeFg3Pct,
       };
     });
+}
+
+// 熱戦指数: leadChanges + timesTied − 最終点差。boxscore JSON（現状POのみ取得）がある試合だけ
+export function getDramaScores(season?: string): Map<string, number> {
+  const map = new Map<string, number>();
+  const dir = path.join(seasonDir(season ?? currentSeason()), "boxscores");
+  if (!fs.existsSync(dir)) return map;
+  for (const file of fs.readdirSync(dir)) {
+    if (!file.endsWith(".json")) continue;
+    try {
+      const d = JSON.parse(fs.readFileSync(path.join(dir, file), "utf-8"));
+      if (d.gameStatus !== 3) continue; // 試合中に保存されたboxscoreは統計が途中値のため除外
+      const ts = d.teamStats?.[0];
+      const [a, b] = d.teams ?? [];
+      if (!ts || !a || !b) continue;
+      const margin = Math.abs((a.score ?? 0) - (b.score ?? 0));
+      map.set(d.gameId, (ts.leadChanges ?? 0) + (ts.timesTied ?? 0) - margin);
+    } catch {
+      // 壊れたboxscoreはスキップ
+    }
+  }
+  return map;
 }
 
 export function getLatestGameDate(): string {

@@ -1,6 +1,8 @@
 import { getPlayerPerGame, getPlayerAdvanced, getPlayerTotals } from "@/lib/data/players";
+import { isPlayoffDataAvailable } from "@/lib/data/playoffs";
 import { getPlayerHustle, getPlayerSpeed } from "@/lib/data/tracking";
-import { MIN_GP } from "@/lib/data/player-types";
+import { MIN_GP, PO_MIN_GP } from "@/lib/data/player-types";
+import { resolvePhase } from "@/lib/phase";
 import { CompareClient, type ComparePlayer } from "./client";
 
 export const revalidate = 3600;
@@ -10,23 +12,30 @@ const maxOf = <T,>(pool: T[], get: (x: T) => number) => Math.max(...pool.map(get
 export default async function ComparePage({
   searchParams,
 }: {
-  searchParams: Promise<{ ids?: string }>;
+  searchParams: Promise<{ ids?: string; phase?: string }>;
 }) {
-  const perGame = getPlayerPerGame().filter((p) => p.team !== "TOT" && p.gp >= 10);
+  const { ids, phase: phaseParam } = await searchParams;
+  const poAvailable = isPlayoffDataAvailable();
+  const phase = resolvePhase(phaseParam, poAvailable);
+  const ctx = { phase };
+  // 検索対象のGP下限（RS10・PO4）。レーダー母集団はサイト共通のローテ選手下限（RS20・PO4）
+  const listMinGp = phase === "po" ? PO_MIN_GP : 10;
+  const poolMinGp = phase === "po" ? PO_MIN_GP : MIN_GP;
+  const perGame = getPlayerPerGame(ctx).filter((p) => p.team !== "TOT" && p.gp >= listMinGp);
   const advById = new Map(
-    getPlayerAdvanced()
-      .filter((p) => p.team !== "TOT" && p.gp >= 10)
+    getPlayerAdvanced(ctx)
+      .filter((p) => p.team !== "TOT" && p.gp >= listMinGp)
       .map((p) => [p.playerId, p])
   );
   const totalsById = new Map(
-    getPlayerTotals()
-      .filter((p) => p.team !== "TOT" && p.gp >= 10)
+    getPlayerTotals(ctx)
+      .filter((p) => p.team !== "TOT" && p.gp >= listMinGp)
       .map((p) => [p.playerId, p])
   );
 
   // ハッスル・運動量（第2レーダー用）: 選手ページと同じGP下限で母集団を絞り、リーグ最大値比で正規化する
-  const hustlePool = getPlayerHustle().filter((h) => h.gp >= MIN_GP);
-  const speedPool = getPlayerSpeed().filter((s) => s.gp >= MIN_GP && s.distMiles > 0);
+  const hustlePool = getPlayerHustle(ctx).filter((h) => h.gp >= poolMinGp);
+  const speedPool = getPlayerSpeed(ctx).filter((s) => s.gp >= poolMinGp && s.distMiles > 0);
   const hustleById = new Map(hustlePool.map((h) => [h.playerId, h]));
   const speedById = new Map(speedPool.map((s) => [s.playerId, s]));
   const hustleMax = {
@@ -82,12 +91,11 @@ export default async function ComparePage({
     };
   });
 
-  const { ids } = await searchParams;
   const initialIds = ids
     ?.split(",")
     .map((s) => parseInt(s, 10))
     .filter((id, i, arr) => !isNaN(id) && arr.indexOf(id) === i && players.some((p) => p.playerId === id))
     .slice(0, 4); // MAX_PLAYERS（client.tsx）と同じ上限
 
-  return <CompareClient players={players} initialIds={initialIds} />;
+  return <CompareClient key={phase} players={players} initialIds={initialIds} phase={phase} poAvailable={poAvailable} />;
 }
