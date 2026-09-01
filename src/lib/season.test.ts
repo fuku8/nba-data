@@ -2,12 +2,17 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import path from "path";
 
-import { currentSeason, allSeasons, seasonDir, poYear } from "./season.ts";
+import { currentSeason, allSeasons, archivedSeasons, seasonDir, poYear } from "./season.ts";
 import { readCsvFile } from "./data/csv-utils.ts";
 
 test("currentSeason: data/season.txt の値を返す（YYYY-YY形式）", () => {
   assert.match(currentSeason(), /^\d{4}-\d{2}$/);
   assert.equal(allSeasons()[0], currentSeason());
+});
+
+test("archivedSeasons: 現シーズンと同名のスナップショットは過去季に含めない", () => {
+  assert.ok(!archivedSeasons().includes(currentSeason()));
+  assert.equal(new Set(allSeasons()).size, allSeasons().length);
 });
 
 test("seasonDir: 現シーズンは data/、過去は data/<season>/", () => {

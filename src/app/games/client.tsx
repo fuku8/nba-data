@@ -84,6 +84,7 @@ export function GamesClient({
   poAvailable,
   drama,
   series,
+  withBox,
 }: {
   games: GameResult[];
   dates: string[];
@@ -91,6 +92,7 @@ export function GamesClient({
   poAvailable: boolean;
   drama: Record<string, number>; // PO: 熱戦指数（boxscoreがある試合のみ）
   series: PlayoffSeries[]; // PO: シリーズ状況
+  withBox: string[]; // PO: ボックススコアがある gameId
 }) {
   const [selectedDate, setSelectedDate] = useState(dates[0] || "");
 
@@ -139,7 +141,7 @@ export function GamesClient({
               key={game.gameId}
               game={game}
               drama={drama[game.gameId]}
-              detailHref={phase === "po" ? `/games/${game.gameId}` : null}
+              detailHref={withBox.includes(game.gameId) ? `/games/${game.gameId}` : null}
             />
           ))}
         </div>

@@ -12,20 +12,21 @@ export function currentSeason(): string {
   return s;
 }
 
-// 過去シーズン（data/<season>/ が存在するもの）。新しい順
+// 過去シーズン（data/<season>/ が存在するもの）。新しい順。
+// 現シーズンと同名のディレクトリ（確定後のスナップショット。繰越前に一時的に共存する）は除外する
 export function archivedSeasons(): string[] {
+  const cur = currentSeason();
   return fs
     .readdirSync(DATA_DIR, { withFileTypes: true })
-    .filter((d) => d.isDirectory() && SEASON_RE.test(d.name))
+    .filter((d) => d.isDirectory() && SEASON_RE.test(d.name) && d.name !== cur)
     .map((d) => d.name)
     .sort()
     .reverse();
 }
 
-// 現シーズン＋過去シーズン（新しい順・重複なし）
+// 現シーズン＋過去シーズン（新しい順）
 export function allSeasons(): string[] {
-  const cur = currentSeason();
-  return [cur, ...archivedSeasons().filter((s) => s !== cur)];
+  return [currentSeason(), ...archivedSeasons()];
 }
 
 export function seasonDir(season: string): string {
