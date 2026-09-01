@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PHASE_LABEL, phasePath, type Phase } from "@/lib/phase";
 
 // 数字の横に置く文脈ラベル。RS/POはグローバルな「モード」ではなくデータ側に付く（plan.md §12-2）
@@ -67,5 +68,18 @@ export function PreSeasonNotice() {
       <h1 className="text-2xl font-bold mb-2">プレーオフ開幕前</h1>
       <p className="text-muted-foreground">プレーオフが開始されるとデータが表示されます。</p>
     </div>
+  );
+}
+
+// RS｜PO のタブ見出し（トップとチーム詳細で共用）。<Tabs> の中で使う
+export function PhaseTabsList() {
+  return (
+    <TabsList>
+      <TabsTrigger value="rs" className="px-3">Regular Season</TabsTrigger>
+      <TabsTrigger value="po" className="px-3 data-active:bg-orange-500 data-active:text-white dark:data-active:bg-orange-500 dark:data-active:text-white">
+        <Trophy />
+        Playoffs
+      </TabsTrigger>
+    </TabsList>
   );
 }

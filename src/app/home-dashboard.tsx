@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Trophy } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { PhaseTabsList } from "@/components/phase-switch";
 import { getStandings } from "@/lib/data/teams";
 import { getPlayerPerGame } from "@/lib/data/players";
 import { getLatestGameDate, getPoLastGameDate } from "@/lib/data/csv-utils";
@@ -88,13 +88,7 @@ export function HomeDashboard({ defaultTab }: { defaultTab: "rs" | "po" }) {
   const players = getPlayoffPlayerPerGame().filter((p) => p.team !== "TOT");
   return (
     <Tabs defaultValue={defaultTab} className="gap-6">
-      <TabsList>
-        <TabsTrigger value="rs" className="px-3">Regular Season</TabsTrigger>
-        <TabsTrigger value="po" className="px-3 data-active:bg-orange-500 data-active:text-white dark:data-active:bg-orange-500 dark:data-active:text-white">
-          <Trophy />
-          Playoffs
-        </TabsTrigger>
-      </TabsList>
+      <PhaseTabsList />
       <TabsContent value="rs" className="text-base">
         <RegularSeason season={season} />
       </TabsContent>

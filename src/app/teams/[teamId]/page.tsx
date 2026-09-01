@@ -15,7 +15,8 @@ import { NBA_TEAMS, getTeamAbbr, getTeamColor } from "@/lib/constants/teams";
 import { TeamRosterTable } from "./roster-table";
 import { getPlayoffSeries, getPlayoffPlayerPerGame, getPlayoffPlayerAdvanced, getPlayoffTeamStats, isPlayoffDataAvailable } from "@/lib/data/playoffs";
 import { RosterClient } from "./po-roster-client";
-import { PhaseBadge } from "@/components/phase-switch";
+import { PhaseTabsList } from "@/components/phase-switch";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { SeasonTitle } from "@/components/season-title";
 import { currentSeason } from "@/lib/season";
 
@@ -116,7 +117,7 @@ export default async function TeamDetailPage({
     };
   });
 
-  // プレーオフ（出場チームのみ）。当該シーズンの進行中フェーズを上に置く（plan.md §12-3）
+  // プレーオフ（出場チームのみ）。トップと同じ RS｜PO タブで出す（既定 RS・時期で変えない plan.md §12-2）
   const poAvailable = isPlayoffDataAvailable();
   const teamSeries = poAvailable
     ? getPlayoffSeries().filter((s) => getTeamAbbr(s.team1) === abbr || getTeamAbbr(s.team2) === abbr)
@@ -132,12 +133,8 @@ export default async function TeamDetailPage({
         })
     : [];
 
-  const playoffSection = teamSeries.length > 0 && (
-    <section className="space-y-4 rounded-xl border border-orange-500/30 p-4">
-      <div className="flex items-center gap-2">
-        <h2 className="text-lg font-semibold">プレーオフ</h2>
-        <PhaseBadge phase="po" />
-      </div>
+  const playoffSection = (
+    <div className="space-y-6">
       <div className="grid gap-3 sm:grid-cols-2">
         {teamSeries.map((s) => {
           const isTeam1 = getTeamAbbr(s.team1) === abbr;
@@ -189,7 +186,145 @@ export default async function TeamDetailPage({
         <h3 className="text-sm font-medium text-muted-foreground mb-2">ロスター — プレーオフ スタッツ</h3>
         <RosterClient players={poPlayers} />
       </div>
-    </section>
+    </div>
+  );
+
+  const regularSeason = (
+    <div className="space-y-6">
+        <div className="grid gap-4 sm:grid-cols-5">
+          <StatCard
+            label="ORtg"
+            value={adv?.offRating.toFixed(1) ?? "-"}
+            sub="Offensive Rating"
+          />
+          <StatCard
+            label="DRtg"
+            value={adv?.defRating.toFixed(1) ?? "-"}
+            sub="Defensive Rating"
+          />
+          <StatCard
+            label="NRtg"
+            value={
+              adv ? `${adv.netRating > 0 ? "+" : ""}${adv.netRating.toFixed(1)}` : "-"
+            }
+            sub="Net Rating"
+          />
+          <StatCard
+            label="Pace"
+            value={adv?.pace.toFixed(1) ?? "-"}
+            sub="Possessions/48min"
+          />
+          <StatCard
+            label="PIE"
+            value={adv?.pie != null ? (adv.pie * 100).toFixed(1) + "%" : "-"}
+            sub="Player Impact Estimate"
+          />
+        </div>
+
+        {/* シーズン心電図 & ワンマン度（PCでは横並び） */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          {margins.length > 0 && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <CardTitle>Season Heartbeat</CardTitle>
+                  <MetricLink anchor="heartbeat" />
+                </div>
+                <p className="text-xs text-muted-foreground">全{margins.length}試合の点差 · 上=勝ち / 下=負け · バーをクリックすると詳細と「試合詳細」ボタン（NBA.comへ）が表示されます</p>
+              </CardHeader>
+              <CardContent>
+                <SeasonHeartbeat games={margins} />
+              </CardContent>
+            </Card>
+          )}
+
+          {teamGini && teamScorers.length >= 3 && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <CardTitle>
+                    ワンマン度 {teamGini.gini.toFixed(3)} · 偏り NBA{giniRank}位 / {giniByTeam.length}チーム
+                  </CardTitle>
+                  <MetricLink anchor="one-man" />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  得点分布の偏り（Gini係数・MIN{GINI_MIN_MP}以上、1位=最も偏っている） · 最多得点者
+                  {teamScorers[0].player}がチーム得点の{(topShare * 100).toFixed(1)}%
+                  · トレード選手はシーズン通算を現所属に計上
+                </p>
+              </CardHeader>
+              <CardContent className="flex justify-center">
+                <LorenzCurve values={teamScorers.map((p) => p.pts)} />
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* ボール支配の帯 */}
+        {possSegments.length > 0 && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <CardTitle>ボール支配</CardTitle>
+                <MetricLink anchor="possession" />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                シーズン総タッチ数のチーム内シェア（上位{TOP_N}人＋その他） · ボールが誰の手を経由するか · トレード選手はシーズン通算を現所属に計上
+              </p>
+            </CardHeader>
+            <CardContent>
+              <PossessionBand segments={possSegments} color={teamInfo.primaryColor} />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* チームスタッツ */}
+        {pg && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Team Stats (Per Game)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-3 gap-4 sm:grid-cols-5 lg:grid-cols-7">
+                {[
+                  { label: "PTS", value: pg.pts },
+                  { label: "REB", value: pg.reb },
+                  { label: "AST", value: pg.ast },
+                  { label: "STL", value: pg.stl },
+                  { label: "BLK", value: pg.blk },
+                  { label: "TOV", value: pg.tov },
+                  { label: "FG%", value: pg.fgPct, pct: true },
+                  { label: "3P%", value: pg.fg3Pct, pct: true },
+                  { label: "FT%", value: pg.ftPct, pct: true },
+                  { label: "ORB", value: pg.oreb },
+                  { label: "DRB", value: pg.dreb },
+                ].map((stat) => (
+                  <div key={stat.label} className="text-center">
+                    <div className="text-xs text-muted-foreground">{stat.label}</div>
+                    <div className="text-lg font-semibold font-mono">
+                      {stat.pct
+                        ? (stat.value * 100).toFixed(1) + "%"
+                        : stat.value.toFixed(1)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <Separator />
+
+        {/* ロスター */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Roster ({rosterRows.length} players)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TeamRosterTable rows={rosterRows} />
+          </CardContent>
+        </Card>
+    </div>
   );
 
   return (
@@ -218,146 +353,15 @@ export default async function TeamDetailPage({
         </div>
       </div>
 
-      {playoffSection}
-
-      {/* レーティング */}
-      <div className="flex items-center gap-2">
-        <h2 className="text-lg font-semibold">レギュラーシーズン</h2>
-        <PhaseBadge phase="rs" />
-      </div>
-      <div className="grid gap-4 sm:grid-cols-5">
-        <StatCard
-          label="ORtg"
-          value={adv?.offRating.toFixed(1) ?? "-"}
-          sub="Offensive Rating"
-        />
-        <StatCard
-          label="DRtg"
-          value={adv?.defRating.toFixed(1) ?? "-"}
-          sub="Defensive Rating"
-        />
-        <StatCard
-          label="NRtg"
-          value={
-            adv ? `${adv.netRating > 0 ? "+" : ""}${adv.netRating.toFixed(1)}` : "-"
-          }
-          sub="Net Rating"
-        />
-        <StatCard
-          label="Pace"
-          value={adv?.pace.toFixed(1) ?? "-"}
-          sub="Possessions/48min"
-        />
-        <StatCard
-          label="PIE"
-          value={adv?.pie != null ? (adv.pie * 100).toFixed(1) + "%" : "-"}
-          sub="Player Impact Estimate"
-        />
-      </div>
-
-      {/* シーズン心電図 & ワンマン度（PCでは横並び） */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {margins.length > 0 && (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <CardTitle>Season Heartbeat</CardTitle>
-                <MetricLink anchor="heartbeat" />
-              </div>
-              <p className="text-xs text-muted-foreground">全{margins.length}試合の点差 · 上=勝ち / 下=負け · バーをクリックすると詳細と「試合詳細」ボタン（NBA.comへ）が表示されます</p>
-            </CardHeader>
-            <CardContent>
-              <SeasonHeartbeat games={margins} />
-            </CardContent>
-          </Card>
-        )}
-
-        {teamGini && teamScorers.length >= 3 && (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <CardTitle>
-                  ワンマン度 {teamGini.gini.toFixed(3)} · 偏り NBA{giniRank}位 / {giniByTeam.length}チーム
-                </CardTitle>
-                <MetricLink anchor="one-man" />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                得点分布の偏り（Gini係数・MIN{GINI_MIN_MP}以上、1位=最も偏っている） · 最多得点者
-                {teamScorers[0].player}がチーム得点の{(topShare * 100).toFixed(1)}%
-                · トレード選手はシーズン通算を現所属に計上
-              </p>
-            </CardHeader>
-            <CardContent className="flex justify-center">
-              <LorenzCurve values={teamScorers.map((p) => p.pts)} />
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {/* ボール支配の帯 */}
-      {possSegments.length > 0 && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <CardTitle>ボール支配</CardTitle>
-              <MetricLink anchor="possession" />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              シーズン総タッチ数のチーム内シェア（上位{TOP_N}人＋その他） · ボールが誰の手を経由するか · トレード選手はシーズン通算を現所属に計上
-            </p>
-          </CardHeader>
-          <CardContent>
-            <PossessionBand segments={possSegments} color={teamInfo.primaryColor} />
-          </CardContent>
-        </Card>
+      {teamSeries.length > 0 ? (
+        <Tabs defaultValue="rs" className="gap-6">
+          <PhaseTabsList />
+          <TabsContent value="rs">{regularSeason}</TabsContent>
+          <TabsContent value="po">{playoffSection}</TabsContent>
+        </Tabs>
+      ) : (
+        regularSeason
       )}
-
-      {/* チームスタッツ */}
-      {pg && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Team Stats (Per Game)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-4 sm:grid-cols-5 lg:grid-cols-7">
-              {[
-                { label: "PTS", value: pg.pts },
-                { label: "REB", value: pg.reb },
-                { label: "AST", value: pg.ast },
-                { label: "STL", value: pg.stl },
-                { label: "BLK", value: pg.blk },
-                { label: "TOV", value: pg.tov },
-                { label: "FG%", value: pg.fgPct, pct: true },
-                { label: "3P%", value: pg.fg3Pct, pct: true },
-                { label: "FT%", value: pg.ftPct, pct: true },
-                { label: "ORB", value: pg.oreb },
-                { label: "DRB", value: pg.dreb },
-              ].map((stat) => (
-                <div key={stat.label} className="text-center">
-                  <div className="text-xs text-muted-foreground">{stat.label}</div>
-                  <div className="text-lg font-semibold font-mono">
-                    {stat.pct
-                      ? (stat.value * 100).toFixed(1) + "%"
-                      : stat.value.toFixed(1)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      <Separator />
-
-      {/* ロスター */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Roster ({rosterRows.length} players)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <TeamRosterTable rows={rosterRows} />
-        </CardContent>
-      </Card>
     </div>
   );
 }
