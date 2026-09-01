@@ -49,6 +49,48 @@ export function getTeamInfo(abbr: string): TeamInfo | undefined {
   return NBA_TEAMS[abbr];
 }
 
+// ── チーム色の暗背景対策（plan.md §12-12） ──────────────────────────
+// html.dark の --background は oklch(0.145 0 0) ≒ #0a0a0a。30チーム中16チームのプライマリ色は
+// この背景に対して非テキストマークの自前基準 3:1（feel-viz README §アクセシビリティ）を割る（PHX/DEN/MIN は1.2台）。
+// 規則: primary が 3:1 以上ならそのまま → secondary が 3:1 以上なら secondary → 両方NGなら primary を白と混ぜて 3:1 に達する最小明度
+const DARK_BG = "#0a0a0a";
+const MIN_CONTRAST = 3;
+
+const hexToRgb = (hex: string): [number, number, number] =>
+  [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)) as [number, number, number];
+const rgbToHex = (rgb: number[]) => "#" + rgb.map((v) => Math.round(v).toString(16).padStart(2, "0")).join("");
+
+function luminance(hex: string): number {
+  const f = (c: number) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  const [r, g, b] = hexToRgb(hex).map((v) => f(v / 255));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+// WCAG コントラスト比（1〜21）
+export function contrastRatio(a: string, b: string): number {
+  const la = luminance(a);
+  const lb = luminance(b);
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+
+// 暗背景で見える色に解決する。色相は保ち、明度だけを最小限上げる
+export function onDarkColor(primary: string, secondary: string, bg = DARK_BG): string {
+  if (contrastRatio(primary, bg) >= MIN_CONTRAST) return primary;
+  if (contrastRatio(secondary, bg) >= MIN_CONTRAST) return secondary;
+  const base = hexToRgb(primary);
+  for (let t = 0.05; t <= 1; t += 0.05) {
+    const mixed = rgbToHex(base.map((v) => v + (255 - v) * t));
+    if (contrastRatio(mixed, bg) >= MIN_CONTRAST) return mixed;
+  }
+  return "#ffffff";
+}
+
+// 30チーム分をモジュール読み込み時に1回だけ解決（静的ビルドなので実行時コストなし）
+const TEAM_COLOR_ON_DARK: Record<string, string> = Object.fromEntries(
+  Object.entries(NBA_TEAMS).map(([abbr, t]) => [abbr, onDarkColor(t.primaryColor, t.secondaryColor)]),
+);
+
+// チーム色（暗背景で 3:1 以上になるよう解決済み）。生のプライマリ色が要る場合は NBA_TEAMS[abbr].primaryColor
 export function getTeamColor(abbr: string): string {
-  return NBA_TEAMS[abbr]?.primaryColor || "#666666";
+  return TEAM_COLOR_ON_DARK[abbr] || "#666666";
 }
