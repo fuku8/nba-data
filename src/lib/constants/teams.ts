@@ -38,6 +38,7 @@ const teamNameToAbbr: Record<string, string> = {};
 for (const [abbr, info] of Object.entries(NBA_TEAMS)) {
   teamNameToAbbr[info.name] = abbr;
 }
+teamNameToAbbr["LA Clippers"] = "LAC"; // NBA.com API の表記。standings.csv では略称欄も空で、この逆引きだけが頼り
 
 export function getTeamAbbr(teamName: string): string {
   // "(2)" 等の順位番号を除去

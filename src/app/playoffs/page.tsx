@@ -1,21 +1,9 @@
-import { getPlayoffSeries, getPlayoffPlayerPerGame, isPlayoffDataAvailable, getPlayoffBracket } from "@/lib/data/playoffs";
-import { getPoLastGameDate } from "@/lib/data/csv-utils";
-import { PlayoffsTopClient } from "./client";
-import { currentSeason } from "@/lib/season";
+import { isPlayoffDataAvailable } from "@/lib/data/playoffs";
+import { PreSeasonNotice } from "@/components/phase-switch";
+import { HomeDashboard } from "@/app/home-dashboard";
 
+// トップと同じダッシュボードを Playoffs タブで開く（plan.md §12-6）
 export default function PlayoffsPage() {
-  if (!isPlayoffDataAvailable()) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <h1 className="text-2xl font-bold mb-2">プレーオフ開幕前</h1>
-        <p className="text-muted-foreground">プレーオフが開始されるとデータが表示されます。</p>
-      </div>
-    );
-  }
-
-  const series = getPlayoffSeries();
-  const players = getPlayoffPlayerPerGame().filter((p) => p.team !== "TOT");
-  const updatedAt = getPoLastGameDate();
-
-  return <PlayoffsTopClient series={series} bracket={getPlayoffBracket()} players={players} updatedAt={updatedAt} season={currentSeason()} />;
+  if (!isPlayoffDataAvailable()) return <PreSeasonNotice />;
+  return <HomeDashboard defaultTab="po" />;
 }

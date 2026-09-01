@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { NBA_TEAMS, getTeamColor, contrastRatio, onDarkColor } from "./teams.ts";
+import { NBA_TEAMS, getTeamColor, getTeamAbbr, contrastRatio, onDarkColor } from "./teams.ts";
 
 const BG = "#0a0a0a";
 
@@ -41,4 +41,9 @@ test("onDarkColor: 両方NG（UTA・CLE・DAL）は primary を明るくした�
 
 test("getTeamColor: 不明な略称はフォールバック", () => {
   assert.equal(getTeamColor("XXX"), "#666666");
+});
+
+test("getTeamAbbr: NBA.com 表記の LA Clippers も LAC に解決する", () => {
+  assert.equal(getTeamAbbr("LA Clippers"), "LAC");
+  assert.equal(getTeamAbbr("Los Angeles Clippers (5)"), "LAC");
 });

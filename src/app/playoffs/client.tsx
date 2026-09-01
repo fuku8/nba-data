@@ -111,30 +111,78 @@ function SeriesCard({ s }: { s: PlayoffSeries }) {
   );
 }
 
-function BracketList({ series }: { series: PlayoffSeries[] }) {
-  // 木を持たない縦リストでは「いま何が起きているか」を先に出す＝最新ラウンドが先（plan.md §12-2）
+// 1行表示「NYK 4-1 SAS」。勝者太字・敗者薄く・進行中は橙枠
+function SeriesRow({ s }: { s: PlayoffSeries }) {
+  const inProgress = !s.winner;
+  const side = (name: string, right: boolean) => {
+    const won = !inProgress && s.winner === name;
+    return (
+      <Link
+        href={`/teams/${getTeamAbbr(name)}`}
+        className={`flex items-center gap-1.5 hover:underline ${right ? "flex-row-reverse" : ""} ${won ? "font-bold" : ""} ${!inProgress && !won ? "opacity-50" : ""}`}
+      >
+        <span className="h-2.5 w-2.5 rounded-full shrink-0 inline-block" style={{ backgroundColor: getTeamColor(name) }} />
+        {getTeamAbbr(name)}
+      </Link>
+    );
+  };
   return (
-    <div className="space-y-6 lg:hidden">
-      {[4, 3, 2, 1].map((round) => {
-        const roundSeries = series.filter((s) => s.round === round);
-        if (roundSeries.length === 0) return null;
-        return (
-          <section key={round}>
-            <h2 className="text-lg font-semibold mb-3">{ROUND_NAME[round]}</h2>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {roundSeries.map((s) => (
-                <SeriesCard key={`${s.team1}-${s.team2}`} s={s} />
-              ))}
-            </div>
-          </section>
-        );
-      })}
+    <div className={`grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-md border bg-card px-3 py-2 text-sm ${inProgress ? "border-orange-500/60" : ""}`}>
+      <div className="flex justify-end">{side(s.team1, false)}</div>
+      <span className={`font-mono font-semibold tabular-nums ${inProgress ? "text-orange-500" : ""}`}>{s.team1Wins}-{s.team2Wins}</span>
+      <div className="flex justify-start">{side(s.team2, true)}</div>
     </div>
   );
 }
 
-function StatLeaders({ players, label, getValue }: { players: PlayoffPlayerPerGame[]; label: string; getValue: (p: PlayoffPlayerPerGame) => number }) {
-  const top3 = [...players].sort((a, b) => getValue(b) - getValue(a)).slice(0, 3);
+function LeadersGrid({ players }: { players: PlayoffPlayerPerGame[] }) {
+  return (
+    <div className="grid gap-3 sm:grid-cols-3">
+      <StatLeaders players={players} label="得点 (PTS)" stat="pts" />
+      <StatLeaders players={players} label="リバウンド (REB)" stat="trb" />
+      <StatLeaders players={players} label="アシスト (AST)" stat="ast" />
+    </div>
+  );
+}
+
+const SUMMARY_CLASS = "cursor-pointer text-sm font-semibold text-muted-foreground mb-1.5 select-none";
+
+function BracketList({ series, players }: { series: PlayoffSeries[]; players: PlayoffPlayerPerGame[] }) {
+  // 木を持たない縦リストでは「いま何が起きているか」を先に出す＝最新ラウンドが先（plan.md §12-2）
+  // ファイナル・カンファレンス決勝と進行中のラウンドは開き、終わった1・2回戦とリーダーは畳む（スマホの縦長対策）
+  return (
+    <div className="space-y-4 lg:hidden">
+      {[4, 3, 2, 1].map((round) => {
+        const roundSeries = series.filter((s) => s.round === round);
+        if (roundSeries.length === 0) return null;
+        const open = round >= 3 || roundSeries.some((s) => !s.winner);
+        return (
+          <details key={round} open={open}>
+            <summary className={SUMMARY_CLASS}>{ROUND_NAME[round]}（{roundSeries.length}）</summary>
+            <div className="space-y-1.5">
+              {roundSeries.map((s) => (
+                <SeriesRow key={`${s.team1}-${s.team2}`} s={s} />
+              ))}
+            </div>
+          </details>
+        );
+      })}
+      <details>
+        <summary className={SUMMARY_CLASS}>スタッツリーダー</summary>
+        <LeadersGrid players={players} />
+        <Link href="/leaders/po" className="block text-right text-sm text-muted-foreground hover:underline mt-2">すべて見る →</Link>
+      </details>
+    </div>
+  );
+}
+
+type LeaderStat = "pts" | "trb" | "ast";
+type LeaderRow = { playerId: number; player: string; team: string } & Record<LeaderStat, number>;
+
+// トップ3のカード。RS/PO どちらの per-game 行でも使う（トップのRSタブと共用）。
+// サーバー側からも呼ぶので関数ではなく統計キーを受け取る
+export function StatLeaders({ players, label, stat }: { players: LeaderRow[]; label: string; stat: LeaderStat }) {
+  const top3 = [...players].sort((a, b) => b[stat] - a[stat]).slice(0, 3);
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -148,7 +196,7 @@ function StatLeaders({ players, label, getValue }: { players: PlayoffPlayerPerGa
               <Link href={`/players/${p.playerId}`} className="hover:underline font-medium truncate max-w-[120px]">{p.player}</Link>
               <Badge variant="outline" className="text-xs shrink-0" style={{ borderColor: getTeamColor(p.team) }}>{p.team}</Badge>
             </div>
-            <span className="font-mono font-semibold">{getValue(p).toFixed(1)}</span>
+            <span className="font-mono font-semibold">{p[stat].toFixed(1)}</span>
           </div>
         ))}
       </CardContent>
@@ -180,7 +228,7 @@ export function PlayoffsTopClient({
       </div>
 
       <BracketTree bracket={bracket} />
-      <BracketList series={series} />
+      <BracketList series={series} players={players} />
       {bracket.unplaced.length > 0 && (
         <section className="hidden lg:block">
           <h2 className="text-lg font-semibold mb-3">その他のシリーズ</h2>
@@ -192,16 +240,12 @@ export function PlayoffsTopClient({
         </section>
       )}
 
-      <section>
+      <section className="hidden lg:block">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold">スタッツリーダー</h2>
           <Link href="/leaders/po" className="text-sm text-muted-foreground hover:underline">すべて見る →</Link>
         </div>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <StatLeaders players={players} label="得点 (PTS)" getValue={(p) => p.pts} />
-          <StatLeaders players={players} label="リバウンド (REB)" getValue={(p) => p.trb} />
-          <StatLeaders players={players} label="アシスト (AST)" getValue={(p) => p.ast} />
-        </div>
+        <LeadersGrid players={players} />
       </section>
     </div>
   );
