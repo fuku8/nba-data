@@ -154,9 +154,9 @@ export default async function TeamDetailPage({
                   {!s.winner && <Badge variant="secondary" className="text-xs">進行中</Badge>}
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold" style={{ color: getTeamColor(abbr) }}>{abbr}</span>
+                  <span className="font-semibold flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full shrink-0 inline-block" style={{ backgroundColor: getTeamColor(abbr) }} />{abbr}</span>
                   <span className="text-xl font-bold mx-3">{myWins} - {oppWins}</span>
-                  <Link href={`/teams/${oppAbbr}`} className="font-semibold hover:underline" style={{ color: getTeamColor(oppAbbr) }}>{oppAbbr}</Link>
+                  <Link href={`/teams/${oppAbbr}`} className="font-semibold flex items-center gap-1.5 hover:underline"><span className="h-2.5 w-2.5 rounded-full shrink-0 inline-block" style={{ backgroundColor: getTeamColor(oppAbbr) }} />{oppAbbr}</Link>
                 </div>
               </CardContent>
             </Card>

@@ -248,7 +248,7 @@ function PlayerTable({ players, tricode, teamStats }: { players: PlayerStats[]; 
         <tbody>
           {teamStats && (
             <tr className="border-b bg-primary/10 font-semibold">
-              <td className="py-2.5 px-3" style={{ color: getTeamColor(tricode) }}>
+              <td className="py-2.5 px-3">
                 <span className="inline-flex items-center gap-1.5">
                   <span className="h-2 w-2 rounded-full" style={{ backgroundColor: getTeamColor(tricode) }} />
                   チーム合計

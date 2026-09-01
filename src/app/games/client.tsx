@@ -155,11 +155,11 @@ export function GamesClient({
               <Card key={`${s.team1}-${s.team2}`} className="text-sm">
                 <CardContent className="pt-3 pb-3">
                   <div className="flex items-center justify-between">
-                    <span style={{ color: getTeamColor(s.team1) }}>{s.team1}</span>
+                    <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full shrink-0 inline-block" style={{ backgroundColor: getTeamColor(s.team1) }} />{s.team1}</span>
                     <Badge variant={s.winner ? "default" : "secondary"} className="text-xs mx-1">
                       {s.seriesStatus}
                     </Badge>
-                    <span style={{ color: getTeamColor(s.team2) }}>{s.team2}</span>
+                    <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full shrink-0 inline-block" style={{ backgroundColor: getTeamColor(s.team2) }} />{s.team2}</span>
                   </div>
                   {s.winner && <p className="text-xs text-muted-foreground mt-1 text-center">Winner: {s.winner}</p>}
                 </CardContent>

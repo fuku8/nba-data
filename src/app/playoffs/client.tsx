@@ -31,7 +31,8 @@ function BracketSlot({ s }: { s: PlayoffSeries | null }) {
         const lost = !inProgress && !won;
         return (
           <div key={t.name} className={`flex items-center justify-between gap-2 ${lost ? "opacity-50" : ""}`}>
-            <Link href={`/teams/${abbr}`} className={`truncate hover:underline ${won ? "font-bold" : ""}`} style={{ color: getTeamColor(t.name) }}>
+            <Link href={`/teams/${abbr}`} className={`flex items-center gap-1.5 truncate hover:underline ${won ? "font-bold" : ""}`}>
+              <span className="h-2.5 w-2.5 rounded-full shrink-0 inline-block" style={{ backgroundColor: getTeamColor(t.name) }} />
               {abbr}
             </Link>
             <span className={`font-mono ${won ? "font-bold" : ""}`}>{t.wins}</span>
@@ -80,15 +81,13 @@ function BracketTree({ bracket }: { bracket: Bracket }) {
 // ── 縦リスト（モバイル幅）。最新ラウンドが先 ──────────────────────
 function SeriesCard({ s }: { s: PlayoffSeries }) {
   const inProgress = !s.winner;
-  const t1Color = getTeamColor(s.team1);
-  const t2Color = getTeamColor(s.team2);
 
   return (
     <Card className="relative overflow-hidden">
       <CardContent className="pt-4 pb-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex flex-col items-center flex-1 min-w-0">
-            <Link href={`/teams/${getTeamAbbr(s.team1)}`} className="text-sm font-semibold truncate w-full text-center hover:underline" style={{ color: t1Color }}>{s.team1}</Link>
+            <Link href={`/teams/${getTeamAbbr(s.team1)}`} className="text-sm font-semibold truncate w-full flex items-center justify-center gap-1.5 hover:underline"><span className="h-2.5 w-2.5 rounded-full shrink-0 inline-block" style={{ backgroundColor: getTeamColor(s.team1) }} />{s.team1}</Link>
             <span className="text-3xl font-bold mt-1">{s.team1Wins}</span>
           </div>
           <div className="flex flex-col items-center px-2">
@@ -100,7 +99,7 @@ function SeriesCard({ s }: { s: PlayoffSeries }) {
             <span className="text-xs text-muted-foreground mt-1">{s.seriesStatus}</span>
           </div>
           <div className="flex flex-col items-center flex-1 min-w-0">
-            <Link href={`/teams/${getTeamAbbr(s.team2)}`} className="text-sm font-semibold truncate w-full text-center hover:underline" style={{ color: t2Color }}>{s.team2}</Link>
+            <Link href={`/teams/${getTeamAbbr(s.team2)}`} className="text-sm font-semibold truncate w-full flex items-center justify-center gap-1.5 hover:underline"><span className="h-2.5 w-2.5 rounded-full shrink-0 inline-block" style={{ backgroundColor: getTeamColor(s.team2) }} />{s.team2}</Link>
             <span className="text-3xl font-bold mt-1">{s.team2Wins}</span>
           </div>
         </div>
