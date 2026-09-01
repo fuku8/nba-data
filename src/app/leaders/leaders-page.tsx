@@ -3,7 +3,7 @@ import { getPlayerPerGame, getPlayerAdvanced, getPlayerTotals } from "@/lib/data
 import { isPlayoffDataAvailable } from "@/lib/data/playoffs";
 import { PO_MIN_GP } from "@/lib/data/player-types";
 import type { Phase } from "@/lib/phase";
-import { PreSeasonNotice } from "@/components/phase-switch";
+import { PreSeasonNotice, PhaseSwitch } from "@/components/phase-switch";
 import { QuadrantMap, type QuadrantDot, type AxisFormat } from "@/components/quadrant-map";
 import { MetricLink } from "@/components/metric-link";
 import { LeadersClient } from "./client";
@@ -71,6 +71,11 @@ export function renderLeaders(phase: Phase) {
 
   return (
     <div className="space-y-6">
+      {/* 見出しは図の上に置く（他ページと同じ並び。RS｜PO 切替も最上部に） */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <h1 className="text-3xl font-bold tracking-tight">League Leaders</h1>
+        <PhaseSwitch phase={phase} poAvailable={poAvailable} basePath="/leaders" />
+      </div>
       <div className="grid gap-4 lg:grid-cols-2">
         <MapCard
           title="USG% × TS% 四象限マップ"
@@ -98,7 +103,7 @@ export function renderLeaders(phase: Phase) {
           clipTop={1}
         />
       </div>
-      <LeadersClient key={phase} phase={phase} poAvailable={poAvailable} minGp={minGp} perGame={perGame} advanced={advanced} />
+      <LeadersClient key={phase} minGp={minGp} perGame={perGame} advanced={advanced} />
     </div>
   );
 }

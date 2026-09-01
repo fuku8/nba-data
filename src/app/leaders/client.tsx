@@ -7,8 +7,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { getTeamColor } from "@/lib/constants/teams";
 import type { PlayerPerGame, PlayerAdvanced } from "@/lib/types";
-import { PhaseSwitch } from "@/components/phase-switch";
-import type { Phase } from "@/lib/phase";
 
 const TOP_N = 20;
 
@@ -71,24 +69,16 @@ function makeLeaders<T extends { playerId: number; player: string; team: string 
 }
 
 export function LeadersClient({
-  phase,
-  poAvailable,
   minGp,
   perGame,
   advanced,
 }: {
-  phase: Phase;
-  poAvailable: boolean;
   minGp: number;
   perGame: PlayerPerGame[];
   advanced: PlayerAdvanced[];
 }) {
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3 flex-wrap">
-        <h1 className="text-3xl font-bold tracking-tight">League Leaders</h1>
-        <PhaseSwitch phase={phase} poAvailable={poAvailable} basePath="/leaders" />
-      </div>
       <p className="text-muted-foreground">Minimum {minGp} games played</p>
 
       <Tabs defaultValue="basic">
