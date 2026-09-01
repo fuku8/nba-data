@@ -4,8 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTypeLeaderboard } from "@/lib/data/player-types";
 import { MetricLink } from "@/components/metric-link";
 
-export const revalidate = 3600;
-
 export const metadata: Metadata = {
   title: "選手タイプ | NBA Data",
   description: "スタイルから判定した7つの選手タイプと、タイプ別のリーグ内評価点ランキング",

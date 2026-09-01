@@ -1,8 +1,6 @@
 import { getStandings, getTeamAdvanced } from "@/lib/data/teams";
 import { StandingsClient } from "./client";
 
-export const revalidate = 3600;
-
 export default function StandingsPage() {
   const standings = getStandings();
   const advanced = getTeamAdvanced();

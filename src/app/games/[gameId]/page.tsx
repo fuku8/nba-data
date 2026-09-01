@@ -6,7 +6,14 @@ import { getTeamColor } from "@/lib/constants/teams";
 import { currentSeason, seasonDir } from "@/lib/season";
 import { PhaseBadge } from "@/components/phase-switch";
 
-export const revalidate = 3600;
+export const dynamicParams = false;
+
+// data/boxscores/{gameId}.json がある試合（現季）
+export function generateStaticParams() {
+  const dir = path.join(seasonDir(currentSeason()), "boxscores");
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir).filter((f) => f.endsWith(".json")).map((f) => ({ gameId: f.replace(/\.json$/, "") }));
+}
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -321,7 +328,7 @@ export default async function GameDetailPage({
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Link href="/games?phase=po" className="hover:underline">← 試合一覧</Link>
+        <Link href="/games/po" className="hover:underline">← 試合一覧</Link>
         <PhaseBadge phase="po" />
         {gameDate && <span>· {gameDate} (ET)</span>}
         <span>· {box.gameStatusText}</span>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PHASE_LABEL, type Phase } from "@/lib/phase";
+import { PHASE_LABEL, phasePath, type Phase } from "@/lib/phase";
 
 // 数字の横に置く文脈ラベル。RS/POはグローバルな「モード」ではなくデータ側に付く（plan.md §12-2）
 export function PhaseBadge({ phase, className }: { phase: Phase; className?: string }) {
@@ -19,26 +19,25 @@ export function PhaseBadge({ phase, className }: { phase: Phase; className?: str
   );
 }
 
-// ページ見出し横の RS｜PO セグメント。URLの ?phase=po で切り替える（既定は常にRS）。
-// POデータが無いときは切替先が無いのでバッジだけを出す
+// ページ見出し横の RS｜PO セグメント。/players ⇔ /players/po のパスで切り替える（既定は常にRS）。
+// POデータが無いときは切替先が無いのでバッジだけを出す。params はクライアント側だけが読むクエリ（例: 比較の ids）
 export function PhaseSwitch({
   phase,
   poAvailable,
-  pathname,
+  basePath,
   params = {},
 }: {
   phase: Phase;
   poAvailable: boolean;
-  pathname: string;
+  basePath: string;
   params?: Record<string, string | undefined>;
 }) {
   if (!poAvailable) return <PhaseBadge phase="rs" />;
   const href = (p: Phase) => {
     const q = new URLSearchParams();
-    for (const [k, v] of Object.entries(params)) if (v && k !== "phase") q.set(k, v);
-    if (p === "po") q.set("phase", "po");
+    for (const [k, v] of Object.entries(params)) if (v) q.set(k, v);
     const s = q.toString();
-    return s ? `${pathname}?${s}` : pathname;
+    return s ? `${phasePath(basePath, p)}?${s}` : phasePath(basePath, p);
   };
   return (
     <div role="group" aria-label="期間" className="inline-flex items-center rounded-lg border overflow-hidden text-sm font-semibold">
@@ -57,6 +56,16 @@ export function PhaseSwitch({
         <Trophy className="h-3.5 w-3.5" />
         Playoffs
       </Link>
+    </div>
+  );
+}
+
+// POデータが無いシーズンの /po ページ
+export function PreSeasonNotice() {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 text-center">
+      <h1 className="text-2xl font-bold mb-2">プレーオフ開幕前</h1>
+      <p className="text-muted-foreground">プレーオフが開始されるとデータが表示されます。</p>
     </div>
   );
 }

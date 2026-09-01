@@ -1,0 +1,8 @@
+# RS/PO統合（plan.md §12-2・§12-11）で移動した旧URL。Cloudflare Pages が解釈する
+/playoffs/players /players/po 301
+/playoffs/leaders /leaders/po 301
+/playoffs/compare /compare/po 301
+/playoffs/games /games/po 301
+/playoffs/games/* /games/:splat 301
+/playoffs/teams /teams/po 301
+/playoffs/teams/* /teams/:splat 301

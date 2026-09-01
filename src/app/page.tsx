@@ -9,8 +9,6 @@ import { isPlayoffDataAvailable, getPlayoffSeries, getPlayoffPlayerPerGame, getP
 import { PlayoffsTopClient } from "@/app/playoffs/client";
 import { currentSeason } from "@/lib/season";
 
-export const revalidate = 3600;
-
 function LeaderCard({ title, players }: { title: string; players: { playerId: number; name: string; team: string; value: number }[] }) {
   return (
     <Card>

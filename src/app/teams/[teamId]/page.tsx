@@ -17,7 +17,7 @@ import { getPlayoffSeries, getPlayoffPlayerPerGame, getPlayoffPlayerAdvanced, ge
 import { RosterClient } from "./po-roster-client";
 import { PhaseBadge } from "@/components/phase-switch";
 
-export const revalidate = 3600;
+export const dynamicParams = false;
 
 export function generateStaticParams() {
   return Object.keys(NBA_TEAMS).map((teamId) => ({ teamId }));

@@ -105,7 +105,7 @@ export function GamesClient({
         <div>
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-3xl font-bold tracking-tight">試合結果</h1>
-            <PhaseSwitch phase={phase} poAvailable={poAvailable} pathname="/games" />
+            <PhaseSwitch phase={phase} poAvailable={poAvailable} basePath="/games" />
           </div>
           <p className="text-muted-foreground text-sm">
             {games.length} 試合 · 日付は米国東部時間(ET)基準 ·{" "}

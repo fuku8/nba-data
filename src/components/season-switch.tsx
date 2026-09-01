@@ -2,18 +2,13 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { allSeasons, currentSeason } from "@/lib/season";
 
-// シーズン切替（?season=）。過去シーズンが1つも無い間は何も出さない。サーバーコンポーネント専用（fsを読む）
-export function SeasonSwitch({ season, pathname, params = {} }: { season: string; pathname: string; params?: Record<string, string | undefined> }) {
+// シーズン切替。パス区分（/players/[id] ⇔ /players/[id]/2025-26。plan.md §12-11）。
+// 過去シーズンが1つも無い間は何も出さない。サーバーコンポーネント専用（fsを読む）
+export function SeasonSwitch({ season, basePath }: { season: string; basePath: string }) {
   const seasons = allSeasons();
   if (seasons.length < 2) return null;
   const cur = currentSeason();
-  const href = (s: string) => {
-    const q = new URLSearchParams();
-    for (const [k, v] of Object.entries(params)) if (v && k !== "season") q.set(k, v);
-    if (s !== cur) q.set("season", s);
-    const qs = q.toString();
-    return qs ? `${pathname}?${qs}` : pathname;
-  };
+  const href = (s: string) => (s === cur ? basePath : `${basePath}/${s}`);
   return (
     <div role="group" aria-label="シーズン" className="inline-flex items-center rounded-lg border overflow-hidden text-xs font-semibold">
       {seasons.map((s, i) => (

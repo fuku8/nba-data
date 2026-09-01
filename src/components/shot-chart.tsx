@@ -33,6 +33,11 @@ function CourtLines() {
   );
 }
 
+const R = 3.2;
+// 各点を半径Rの円弧2つで描くサブパスにして連結する（座標は整数0.1ft単位なので小数は出ない）
+const dotsPath = (pts: Shot[]) =>
+  pts.map(([x, y]) => `M${sx(x) - R},${sy(y)}a${R},${R} 0 1,0 ${R * 2},0a${R},${R} 0 1,0 -${R * 2},0`).join("");
+
 export function ShotChart({ shots }: { shots: Shot[] }) {
   if (shots.length === 0) return null;
   // 凡例の成功/失敗/FG%は全試投（バックコートのヒーブ含む）で集計する
@@ -47,12 +52,9 @@ export function ShotChart({ shots }: { shots: Shot[] }) {
     <div className="space-y-2">
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[440px]" role="img" aria-label="ショットチャート">
         <CourtLines />
-        {drawnMissed.map(([x, y], i) => (
-          <circle key={`m${i}`} cx={sx(x)} cy={sy(y)} r={3.2} fill="#64748b" fillOpacity={0.4} />
-        ))}
-        {drawnMade.map(([x, y], i) => (
-          <circle key={`o${i}`} cx={sx(x)} cy={sy(y)} r={3.2} fill="#10b981" fillOpacity={0.65} />
-        ))}
+        {/* 点は成功/失敗それぞれ1本の <path> にまとめる（1,000個超の <circle> だと静的HTMLとRSCペイロードで二重に太る。plan.md §12-11） */}
+        <path d={dotsPath(drawnMissed)} fill="#64748b" fillOpacity={0.4} />
+        <path d={dotsPath(drawnMade)} fill="#10b981" fillOpacity={0.65} />
       </svg>
       <div className="flex gap-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">

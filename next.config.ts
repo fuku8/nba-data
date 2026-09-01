@@ -1,19 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // 完全静的エクスポート（Cloudflare Pages で配信。plan.md §12-11）。
+  // 旧 /playoffs/* → 新URL のリダイレクトは public/_redirects（Cloudflare 側）。
+  // 本番ビルドだけ有効にする（kokkai-data と同じ。dev で有効にすると動的ルートが壊れる実測あり）
+  output: process.env.NODE_ENV === "production" ? "export" : undefined,
   allowedDevOrigins: ["192.168.0.138"],
-  // RS/PO統合（plan.md §12-2）で移動した旧URL。src/app/playoffs/ 配下の対応ページは削除待ち
-  async redirects() {
-    return [
-      { source: "/playoffs/players", destination: "/players?phase=po", permanent: true },
-      { source: "/playoffs/leaders", destination: "/leaders?phase=po", permanent: true },
-      { source: "/playoffs/compare", destination: "/compare?phase=po", permanent: true },
-      { source: "/playoffs/games", destination: "/games?phase=po", permanent: true },
-      { source: "/playoffs/games/:gameId", destination: "/games/:gameId", permanent: true },
-      { source: "/playoffs/teams", destination: "/teams?phase=po", permanent: true },
-      { source: "/playoffs/teams/:teamId", destination: "/teams/:teamId", permanent: true },
-    ];
-  },
 };
 
 export default nextConfig;

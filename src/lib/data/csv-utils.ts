@@ -53,23 +53,12 @@ export function num(val: string | undefined): number {
   return isNaN(n) ? 0 : n;
 }
 
-export function getPoDataTimestamp(season?: string): string {
-  try {
-    const filepath = path.join(seasonDir(season ?? currentSeason()), "po_player_per_game.csv");
-    if (!fs.existsSync(filepath)) return "";
-    const mtime = fs.statSync(filepath).mtime;
-    return mtime.toLocaleString("en-US", {
-      timeZone: "America/New_York",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    }) + " ET";
-  } catch {
-    return "";
-  }
+// POの最終試合日（po_games.csv の末尾行）。ファイルの mtime は Cloudflare Pages のビルドでは checkout 時刻になるため使わない
+export function getPoLastGameDate(season?: string): string {
+  const rows = readCsvFile("po_games.csv", season);
+  if (rows.length < 2) return "";
+  const dateIdx = rows[0].indexOf("GAME_DATE");
+  return dateIdx >= 0 ? rows[rows.length - 1][dateIdx] ?? "" : "";
 }
 
 // データCSVのmtimeスタンプ。モジュールレベルキャッシュの無効化判定に使う（ローカルでCSV差し替え時の再起動不要化）

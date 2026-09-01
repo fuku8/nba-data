@@ -126,7 +126,7 @@ export function PlayersClient({
         <div>
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-3xl font-bold tracking-tight">選手一覧</h1>
-            <PhaseSwitch phase={phase} poAvailable={poAvailable} pathname="/players" />
+            <PhaseSwitch phase={phase} poAvailable={poAvailable} basePath="/players" />
           </div>
           <p className="text-muted-foreground">
             <Badge variant="outline">{activeTab === "advanced" ? filteredAdvanced.length : filteredPerGame.length}</Badge> players

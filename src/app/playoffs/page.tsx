@@ -1,9 +1,7 @@
 import { getPlayoffSeries, getPlayoffPlayerPerGame, isPlayoffDataAvailable, getPlayoffBracket } from "@/lib/data/playoffs";
-import { getPoDataTimestamp } from "@/lib/data/csv-utils";
+import { getPoLastGameDate } from "@/lib/data/csv-utils";
 import { PlayoffsTopClient } from "./client";
 import { currentSeason } from "@/lib/season";
-
-export const revalidate = 3600;
 
 export default function PlayoffsPage() {
   if (!isPlayoffDataAvailable()) {
@@ -17,7 +15,7 @@ export default function PlayoffsPage() {
 
   const series = getPlayoffSeries();
   const players = getPlayoffPlayerPerGame().filter((p) => p.team !== "TOT");
-  const updatedAt = getPoDataTimestamp();
+  const updatedAt = getPoLastGameDate();
 
   return <PlayoffsTopClient series={series} bracket={getPlayoffBracket()} players={players} updatedAt={updatedAt} season={currentSeason()} />;
 }

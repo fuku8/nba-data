@@ -65,7 +65,7 @@ export function TeamsClient({ teams, poAvailable }: { teams: TeamSummary[]; poAv
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 flex-wrap">
           <h1 className="text-3xl font-bold tracking-tight">チーム一覧</h1>
-          <PhaseSwitch phase="rs" poAvailable={poAvailable} pathname="/teams" />
+          <PhaseSwitch phase="rs" poAvailable={poAvailable} basePath="/teams" />
         </div>
         <Select value={confFilter} onValueChange={(v) => setConfFilter(v ?? "all")}>
           <SelectTrigger className="w-48">

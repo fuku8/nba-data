@@ -63,7 +63,7 @@ export function PlayoffTeamsClient({
       <div>
         <div className="flex items-center gap-3 flex-wrap">
           <h1 className="text-3xl font-bold tracking-tight">チーム</h1>
-          <PhaseSwitch phase="po" poAvailable pathname="/teams" />
+          <PhaseSwitch phase="po" poAvailable basePath="/teams" />
         </div>
         <p className="text-muted-foreground mt-1">プレーオフ参加{teamStats.length}チームのスタッツ（Per Game）· W-L はシリーズ勝敗</p>
       </div>

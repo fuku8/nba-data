@@ -87,7 +87,7 @@ export function LeadersClient({
     <div className="space-y-6">
       <div className="flex items-center gap-3 flex-wrap">
         <h1 className="text-3xl font-bold tracking-tight">League Leaders</h1>
-        <PhaseSwitch phase={phase} poAvailable={poAvailable} pathname="/leaders" />
+        <PhaseSwitch phase={phase} poAvailable={poAvailable} basePath="/leaders" />
       </div>
       <p className="text-muted-foreground">Minimum {minGp} games played</p>
 

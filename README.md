@@ -4,25 +4,25 @@
 
 ## Features
 
-RS（レギュラーシーズン）と PO（プレーオフ）は「モード」ではなく、各ページ内の `?phase=po` 切替と文脈バッジで示す（`plan.md` §12-2）。
+RS（レギュラーシーズン）と PO（プレーオフ）は「モード」ではなく、各ページ内の `/po` 切替と文脈バッジで示す（`plan.md` §12-2・§12-11）。
 
 - トップ（順位・リーダー。PO期間中はブラケット）
 - チーム順位表（カンファレンス別・Net Rating表示）
-- チーム一覧（`/teams`、`?phase=po` でプレーオフ参加チームのスタッツ）
+- チーム一覧（`/teams`、`/teams/po` でプレーオフ参加チームのスタッツ）
 - チーム詳細（`/teams/[abbr]`: プレーオフ節（出場時）・ロスター・Per Game/Advanced・Season Heartbeat・ワンマン度Gini・ボール支配タッチシェア）
-- 選手一覧（`/players`、`?phase=po`。Per Game / Advanced、使われ方×効率マップ・シューターマップ）
-- 選手個人ページ（`/players/[id]`、`?season=` で過去シーズン。進行中フェーズを上に表示、シーズン積み重ね表、プロフィール）
+- 選手一覧（`/players`、`/players/po`。Per Game / Advanced、使われ方×効率マップ・シューターマップ）
+- 選手個人ページ（`/players/[id]`、`/players/[id]/2025-26` で過去シーズン。進行中フェーズを上に表示、シーズン積み重ね表、プロフィール）
   - League Percentile・オールラウンド度レーダー・得点の作り方（ワッフル）
   - ショットチャート・縁の下の力持ち度（ハッスルレーダー）・運動量（走行距離/タッチ/保持時間）
   - プレイヤータイプ（7タイプ判定＋評価点）・PO 昇温/降温
-- 試合結果（`/games`、`?phase=po` で熱戦指数🔥とボックススコア `/games/[gameId]`）
-- スタッツリーダーボード（`/leaders`、`?phase=po`。USG% × TS% 四象限マップ）
-- 選手検索・選手比較（`/compare`、`?phase=po`。レーダーチャート・優劣ハイライト）
+- 試合結果（`/games`、`/games/po` で熱戦指数🔥とボックススコア `/games/[gameId]`）
+- スタッツリーダーボード（`/leaders`、`/leaders/po`。USG% × TS% 四象限マップ）
+- 選手検索・選手比較（`/compare`、`/compare/po`。レーダーチャート・優劣ハイライト）
 - プレーオフ（`/playoffs`: トーナメント木ブラケット（PCは West-Finals-East、モバイルは最新ラウンド先の縦リスト）＋POリーダー）
 - プレイヤータイプ別リーダーボード（`/types`）
 - 指標解説ページ（`/metrics`）
 
-旧URL `/playoffs/{players,leaders,compare,games,teams}` は `next.config.ts` の redirects で新URLへ308。
+旧URL `/playoffs/{players,leaders,compare,games,teams}` は `public/_redirects`（Cloudflare Pages）で新URLへ301。
 
 ## Tech Stack
 
@@ -30,14 +30,14 @@ RS（レギュラーシーズン）と PO（プレーオフ）は「モード」
 - **UI**: React 19, Tailwind CSS 4, shadcn/ui
 - **Charts**: Recharts
 - **Data**: CSV / JSON files (nba_api)
-- **Deploy**: Vercel
+- **Deploy**: Cloudflare Pages（静的エクスポート）
 
 ## Data Pipeline
 
 1. ローカル macOS の launchd が毎日 JST 16:00 に `scripts/local-update.sh` を実行
 2. NBA.com 公式 API（nba_api）からデータ取得（`fetch-nba-data.py` 毎日・`fetch-hustle-tracking.py` 毎日・`fetch-shotcharts.py` 日曜のみ）
 3. `data/` ディレクトリに CSV / JSON として保存・push
-4. Vercel が ISR（1時間キャッシュ）でサーブ
+4. Cloudflare Pages が push をトリガーに `next build`（静的エクスポート）して配信
 
 ### シーズンの持ち方
 
@@ -109,4 +109,6 @@ python3 scripts/fetch-shotcharts.py        # 選手別ショット座標（RS/PO
 
 ## Deploy
 
-Vercel にリポジトリを接続するだけで自動デプロイされます。データはローカル launchd が毎日 JST 16:00 に自動更新します（`scripts/local-update.sh`）。
+**Cloudflare Pages（静的エクスポート）**。`next.config.ts` の `output: "export"`（本番ビルドのみ）で `out/` を生成し、GitHub `main` 連携で push ごとに Pages がビルドする（データ更新の launchd push も同じ経路）。設定: Build command `npm run build` / Build output `out` / 環境変数 `NODE_VERSION=22`。旧URLのリダイレクトは `public/_redirects`。詳細と制限（20,000ファイル上限・過去シーズンの増え方）は `plan.md` §12-11。
+
+RS/PO・シーズンはパス区分（`/players/po`・`/players/[id]/2025-26`）。静的エクスポートではクエリでビルド結果を変えられないため、`?phase=` `?season=` は使わない（`/compare?ids=` だけはクライアント側が読む）。

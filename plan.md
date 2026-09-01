@@ -772,4 +772,6 @@ sumo-data `src/lib/midokoro.ts` の型（ビルド時に最大3枚を決定論�
 
 **Cloudflare 側（ふくたろう作業・コードが整った後）**: Pages プロジェクト作成 → GitHub `main` 連携 → Build command `npm run build`・Output `out`・環境変数 `NODE_VERSION`（ローカルは v25、Pages 既定は古いので明示）→ `*.pages.dev` で表示確認 → `_redirects` の301確認 → 必要なら独自ドメイン → Vercel プロジェクト削除。launchd の次回 push で Pages が自動ビルドすることを Deployments で確認。
 
+**実測（2026-09-01・初回ビルド）**: `out/` は 808MB・12,271ファイル（選手ページ1人あたり HTML 465KB＋RSC `.txt`＋セグメント用ディレクトリ7ファイル≒9ファイル/人、583人分で759MB）。kokkai-data は 346MB・7,851ファイルで稼働中。Cloudflare Pages の上限は **1デプロイ 20,000ファイル・1ファイル 25MiB**。過去シーズンが増えるごとに `/players/[id]/[season]` が約5,200ファイル増えるので、**3季目（2028年）で上限に当たる**。そのときの手は (a) 過去季ページをローテ選手（GP≥MIN_GP）に絞る (b) 最古の季を落とす。セグメント `.txt` の出力を止める設定は Next 16.2.6 には無い（`config-shared.js` に `clientSegmentCache` のキー無し・同梱ドキュメントにも無し）。サイズ側はショットチャートを点ごとの `<circle>` から成功/失敗2本の `<path>` に変えて圧縮（下記）。
+
 **やらないこと**: Workers＋OpenNext（SSR維持）。Workers にはファイルシステムが無く `src/lib/data/*.ts` の `fs.readFileSync` が全て動かないため、CSV のバンドル化か R2 移行が要り、静的エクスポートより大きい。

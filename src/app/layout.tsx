@@ -4,8 +4,6 @@ import "./globals.css";
 import { Navigation } from "@/components/layout/navigation";
 import { currentSeason } from "@/lib/season";
 
-export const revalidate = 3600;
-
 export const metadata: Metadata = {
   title: "NBA Data Dashboard",
   description: "NBA チーム・選手スタッツダッシュボード",

@@ -176,7 +176,7 @@ export function PlayoffsTopClient({
         <h1 className="text-3xl font-bold tracking-tight">NBA {season} Playoffs</h1>
         <p className="text-muted-foreground mt-1">
           プレーオフ ブラケット・スタッツ
-          {updatedAt && <span className="ml-3 text-xs">データ更新: {updatedAt}</span>}
+          {updatedAt && <span className="ml-3 text-xs">最終試合: {updatedAt} (ET)</span>}
         </p>
       </div>
 
@@ -196,7 +196,7 @@ export function PlayoffsTopClient({
       <section>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold">スタッツリーダー</h2>
-          <Link href="/leaders?phase=po" className="text-sm text-muted-foreground hover:underline">すべて見る →</Link>
+          <Link href="/leaders/po" className="text-sm text-muted-foreground hover:underline">すべて見る →</Link>
         </div>
         <div className="grid gap-3 sm:grid-cols-3">
           <StatLeaders players={players} label="得点 (PTS)" getValue={(p) => p.pts} />

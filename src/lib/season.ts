@@ -28,12 +28,6 @@ export function allSeasons(): string[] {
   return [cur, ...archivedSeasons().filter((s) => s !== cur)];
 }
 
-// ?season= の値を既知のシーズンに解決する。不明・未指定は現シーズン
-export function resolveSeason(param?: string | null): string {
-  if (param && allSeasons().includes(param)) return param;
-  return currentSeason();
-}
-
 export function seasonDir(season: string): string {
   return season === currentSeason() ? DATA_DIR : path.join(DATA_DIR, season);
 }
