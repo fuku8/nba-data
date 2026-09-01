@@ -149,7 +149,7 @@ const SUMMARY_CLASS = "cursor-pointer text-sm font-semibold text-muted-foregroun
 
 function BracketList({ series, players }: { series: PlayoffSeries[]; players: PlayoffPlayerPerGame[] }) {
   // 木を持たない縦リストでは「いま何が起きているか」を先に出す＝最新ラウンドが先（plan.md §12-2）
-  // ファイナル・カンファレンス決勝と進行中のラウンドは開き、終わった1・2回戦とリーダーは畳む（スマホの縦長対策）
+  // ファイナル・カンファレンス決勝と進行中のラウンドは開き、終わった1・2回戦は畳む（スマホの縦長対策）。リーダーは RS タブと同じく常に開く
   return (
     <div className="space-y-4 lg:hidden">
       {[4, 3, 2, 1].map((round) => {
@@ -167,11 +167,13 @@ function BracketList({ series, players }: { series: PlayoffSeries[]; players: Pl
           </details>
         );
       })}
-      <details>
-        <summary className={SUMMARY_CLASS}>スタッツリーダー</summary>
+      <section>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold">スタッツリーダー</h2>
+          <Link href="/leaders/po" className="text-sm text-muted-foreground hover:underline">すべて見る →</Link>
+        </div>
         <LeadersGrid players={players} />
-        <Link href="/leaders/po" className="block text-right text-sm text-muted-foreground hover:underline mt-2">すべて見る →</Link>
-      </details>
+      </section>
     </div>
   );
 }
