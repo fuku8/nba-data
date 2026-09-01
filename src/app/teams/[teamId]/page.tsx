@@ -11,8 +11,11 @@ import { LorenzCurve } from "@/components/lorenz-curve";
 import { PossessionBand } from "@/components/possession-band";
 import { getPlayerPossessions } from "@/lib/data/tracking";
 import { MetricLink } from "@/components/metric-link";
-import { NBA_TEAMS, getTeamAbbr } from "@/lib/constants/teams";
+import { NBA_TEAMS, getTeamAbbr, getTeamColor } from "@/lib/constants/teams";
 import { TeamRosterTable } from "./roster-table";
+import { getPlayoffSeries, getPlayoffPlayerPerGame, getPlayoffPlayerAdvanced, getPlayoffTeamStats, isPlayoffDataAvailable } from "@/lib/data/playoffs";
+import { RosterClient } from "./po-roster-client";
+import { PhaseBadge } from "@/components/phase-switch";
 
 export const revalidate = 3600;
 
@@ -111,6 +114,82 @@ export default async function TeamDetailPage({
     };
   });
 
+  // プレーオフ（出場チームのみ）。当該シーズンの進行中フェーズを上に置く（plan.md §12-3）
+  const poAvailable = isPlayoffDataAvailable();
+  const teamSeries = poAvailable
+    ? getPlayoffSeries().filter((s) => getTeamAbbr(s.team1) === abbr || getTeamAbbr(s.team2) === abbr)
+    : [];
+  const poTeamStats = teamSeries.length > 0 ? getPlayoffTeamStats().find((t) => t.team === abbr) : undefined;
+  const poAdvById = new Map(getPlayoffPlayerAdvanced().filter((p) => p.team === abbr).map((p) => [p.playerId, p]));
+  const poPlayers = teamSeries.length > 0
+    ? getPlayoffPlayerPerGame()
+        .filter((p) => p.team === abbr)
+        .map((p) => {
+          const a = poAdvById.get(p.playerId);
+          return { ...p, offRating: a?.offRating ?? null, defRating: a?.defRating ?? null, netRating: a?.netRating ?? null };
+        })
+    : [];
+
+  const playoffSection = teamSeries.length > 0 && (
+    <section className="space-y-4 rounded-xl border border-orange-500/30 p-4">
+      <div className="flex items-center gap-2">
+        <h2 className="text-lg font-semibold">プレーオフ</h2>
+        <PhaseBadge phase="po" />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {teamSeries.map((s) => {
+          const isTeam1 = getTeamAbbr(s.team1) === abbr;
+          const myWins = isTeam1 ? s.team1Wins : s.team2Wins;
+          const oppWins = isTeam1 ? s.team2Wins : s.team1Wins;
+          const oppAbbr = getTeamAbbr(isTeam1 ? s.team2 : s.team1);
+          const won = s.winner && getTeamAbbr(s.winner) === abbr;
+          const lost = s.winner && getTeamAbbr(s.winner) !== abbr;
+          return (
+            <Card key={`${s.team1}-${s.team2}`}>
+              <CardContent className="pt-4 pb-3">
+                <div className="flex items-center justify-between mb-2">
+                  <Badge variant="outline" className="text-xs">{s.roundName}</Badge>
+                  {won && <Badge className="text-xs bg-green-600 text-white border-0">勝利</Badge>}
+                  {lost && <Badge variant="destructive" className="text-xs">敗退</Badge>}
+                  {!s.winner && <Badge variant="secondary" className="text-xs">進行中</Badge>}
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold" style={{ color: getTeamColor(abbr) }}>{abbr}</span>
+                  <span className="text-xl font-bold mx-3">{myWins} - {oppWins}</span>
+                  <Link href={`/teams/${oppAbbr}`} className="font-semibold hover:underline" style={{ color: getTeamColor(oppAbbr) }}>{oppAbbr}</Link>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+      {poTeamStats && (
+        <div className="grid grid-cols-3 gap-4 sm:grid-cols-5 lg:grid-cols-9">
+          {[
+            { label: "PTS", value: poTeamStats.pts },
+            { label: "REB", value: poTeamStats.reb },
+            { label: "AST", value: poTeamStats.ast },
+            { label: "STL", value: poTeamStats.stl },
+            { label: "BLK", value: poTeamStats.blk },
+            { label: "TOV", value: poTeamStats.tov },
+            { label: "FG%", value: poTeamStats.fgPct, pct: true },
+            { label: "3P%", value: poTeamStats.fg3Pct, pct: true },
+            { label: "FT%", value: poTeamStats.ftPct, pct: true },
+          ].map((stat) => (
+            <div key={stat.label} className="text-center">
+              <div className="text-xs text-muted-foreground">{stat.label}</div>
+              <div className="text-lg font-semibold font-mono">{stat.pct ? (stat.value * 100).toFixed(1) + "%" : stat.value.toFixed(1)}</div>
+            </div>
+          ))}
+        </div>
+      )}
+      <div>
+        <h3 className="text-sm font-medium text-muted-foreground mb-2">ロスター — プレーオフ スタッツ</h3>
+        <RosterClient players={poPlayers} />
+      </div>
+    </section>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -136,7 +215,13 @@ export default async function TeamDetailPage({
         </div>
       </div>
 
+      {playoffSection}
+
       {/* レーティング */}
+      <div className="flex items-center gap-2">
+        <h2 className="text-lg font-semibold">レギュラーシーズン</h2>
+        <PhaseBadge phase="rs" />
+      </div>
       <div className="grid gap-4 sm:grid-cols-5">
         <StatCard
           label="ORtg"

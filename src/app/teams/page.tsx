@@ -1,9 +1,19 @@
 import { getStandings, getTeamAdvanced, getTeamPerGame } from "@/lib/data/teams";
+import { getPlayoffTeamStats, getPlayoffSeries, isPlayoffDataAvailable } from "@/lib/data/playoffs";
+import { resolvePhase } from "@/lib/phase";
 import { TeamsClient } from "./client";
+import { PlayoffTeamsClient } from "./po-teams-client";
 
 export const revalidate = 3600;
 
-export default function TeamsPage() {
+export default async function TeamsPage({ searchParams }: { searchParams: Promise<{ phase?: string }> }) {
+  const { phase: phaseParam } = await searchParams;
+  const poAvailable = isPlayoffDataAvailable();
+  const phase = resolvePhase(phaseParam, poAvailable);
+  if (phase === "po") {
+    return <PlayoffTeamsClient teamStats={getPlayoffTeamStats()} series={getPlayoffSeries()} />;
+  }
+
   const standings = getStandings();
   const advanced = getTeamAdvanced();
   const perGame = getTeamPerGame();
@@ -31,5 +41,5 @@ export default function TeamsPage() {
     };
   });
 
-  return <TeamsClient teams={teams} />;
+  return <TeamsClient teams={teams} poAvailable={poAvailable} />;
 }

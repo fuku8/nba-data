@@ -1,15 +1,6 @@
-import { getPlayoffTeamStats, getPlayoffSeries, isPlayoffDataAvailable } from "@/lib/data/playoffs";
-import { PlayoffTeamsClient } from "./teams-client";
+import { permanentRedirect } from "next/navigation";
 
-export const revalidate = 3600;
-
-export default function PlayoffTeamsPage() {
-  if (!isPlayoffDataAvailable()) {
-    return <div className="py-20 text-center text-muted-foreground">プレーオフデータがありません</div>;
-  }
-
-  const teamStats = getPlayoffTeamStats();
-  const series = getPlayoffSeries();
-
-  return <PlayoffTeamsClient teamStats={teamStats} series={series} />;
+// 旧URL。RS/PO統合（plan.md §12-2）で /teams?phase=po に移動
+export default function LegacyPlayoffPage() {
+  permanentRedirect("/teams?phase=po");
 }

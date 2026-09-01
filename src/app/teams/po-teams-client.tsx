@@ -5,6 +5,7 @@ import Link from "next/link";
 import { SortableHeader } from "@/components/sortable-header";
 import { getTeamColor, getTeamAbbr, NBA_TEAMS } from "@/lib/constants/teams";
 import type { PlayoffTeamStats, PlayoffSeries, SortConfig } from "@/lib/types";
+import { PhaseSwitch } from "@/components/phase-switch";
 
 const COLS = [
   { key: "pts", label: "PTS" },
@@ -60,8 +61,11 @@ export function PlayoffTeamsClient({
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">PO チームスタッツ</h1>
-        <p className="text-muted-foreground mt-1">プレーオフ参加チーム スタッツ</p>
+        <div className="flex items-center gap-3 flex-wrap">
+          <h1 className="text-3xl font-bold tracking-tight">チーム</h1>
+          <PhaseSwitch phase="po" poAvailable pathname="/teams" />
+        </div>
+        <p className="text-muted-foreground mt-1">プレーオフ参加{teamStats.length}チームのスタッツ（Per Game）· W-L はシリーズ勝敗</p>
       </div>
 
       <div className="rounded-md border overflow-x-auto">
@@ -84,7 +88,7 @@ export function PlayoffTeamsClient({
               return (
                 <tr key={t.team} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
                   <td className="py-2 px-3">
-                    <Link href={`/playoffs/teams/${t.team}`} className="flex items-center gap-2 hover:underline font-medium">
+                    <Link href={`/teams/${t.team}`} className="flex items-center gap-2 hover:underline font-medium">
                       <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: getTeamColor(t.team) }} />
                       <span>{teamInfo?.name ?? t.team}</span>
                       <span className="text-muted-foreground text-xs">{t.team}</span>

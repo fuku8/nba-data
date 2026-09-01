@@ -1,15 +1,6 @@
-import { getPlayoffPlayerPerGame, isPlayoffDataAvailable } from "@/lib/data/playoffs";
-import { PlayoffLeadersClient } from "./client";
+import { permanentRedirect } from "next/navigation";
 
-export const revalidate = 3600;
-
-export default function PlayoffLeadersPage() {
-  if (!isPlayoffDataAvailable()) {
-    return (
-      <div className="py-20 text-center text-muted-foreground">プレーオフデータがありません</div>
-    );
-  }
-
-  const players = getPlayoffPlayerPerGame().filter((p) => p.team !== "TOT");
-  return <PlayoffLeadersClient players={players} />;
+// 旧URL。RS/PO統合（plan.md §12-2）で /leaders?phase=po に移動
+export default function LegacyPlayoffPage() {
+  permanentRedirect("/leaders?phase=po");
 }
