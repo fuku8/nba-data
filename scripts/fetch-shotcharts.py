@@ -25,7 +25,10 @@ SHOTS_DIR = os.path.join(fetcher.DATA_DIR, "shots")
 
 
 def team_ids(csv_name: str) -> list[int]:
-    with open(os.path.join(fetcher.DATA_DIR, csv_name)) as f:
+    path = os.path.join(fetcher.DATA_DIR, csv_name)
+    if not os.path.exists(path):  # 繰越直後〜PO開幕前は po_player_per_game.csv が無い
+        return []
+    with open(path) as f:
         return sorted({int(r["TEAM_ID"]) for r in csv.DictReader(f) if r.get("TEAM_ID")})
 
 

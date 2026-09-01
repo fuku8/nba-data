@@ -11,6 +11,7 @@ OLD="${1:?old season (e.g. 2025-26)}"
 NEW="${2:?new season (e.g. 2026-27)}"
 cd "$(dirname "$0")/.."
 
+[[ "${OLD}" =~ ^[0-9]{4}-[0-9]{2}$ ]] || { echo "old season の形式が不正: ${OLD}"; exit 1; }
 [[ "${NEW}" =~ ^[0-9]{4}-[0-9]{2}$ ]] || { echo "new season の形式が不正: ${NEW}"; exit 1; }
 [[ "$(cat data/season.txt)" == "${OLD}" ]] || { echo "data/season.txt は ${OLD} ではない: $(cat data/season.txt)"; exit 1; }
 [[ -d "data/${OLD}" ]] || { echo "data/${OLD}/ が無い。先にスナップショットを保存する: mkdir data/${OLD} && cp -R data/*.csv data/shots data/boxscores data/${OLD}/"; exit 1; }

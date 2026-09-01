@@ -697,7 +697,7 @@ sumo-data `src/lib/midokoro.ts` の型（ビルド時に最大3枚を決定論�
 
 開幕（例年10月下旬）までに Phase 0・1 を終える。**Phase 1 は PO データが手元にある9月中に**（§12-2の検証理由）。
 
-**Phase 0: シーズン基盤（ブロッカー・最初に）** — ✅ 2026-09-01 実装・検証済み（下記1〜5）。判明事項: `~/Library/LaunchAgents/com.nba-data.update.plist` が**存在しなかった**（`logs/update.log` の最終実行は 2026-06-14）。plist を再作成したが `launchctl load` は未実施 → 開幕前に `launchctl load ~/Library/LaunchAgents/com.nba-data.update.plist` を手で実行する。旧 `getLatestGameDate` は `games.ts:96` にも重複定義があり未使用（削除は依頼があれば）
+**Phase 0: シーズン基盤（ブロッカー・最初に）** — ✅ 2026-09-01 実装・検証済み（下記1〜5）。判明事項: `~/Library/LaunchAgents/com.nba-data.update.plist` が**存在しなかった**（`logs/update.log` の最終実行は 2026-06-14）。plist を再作成したが `launchctl load` は未実施 → 開幕前に `launchctl load ~/Library/LaunchAgents/com.nba-data.update.plist` を手で実行する。旧 `getLatestGameDate` は `games.ts:96` にも重複定義があり未使用（削除は依頼があれば）。Codexレビュー3件（rollover の OLD 未検証・hustle/shots 部分失敗の混在コミット）は修正済み（次コミット）。**開幕後の初回取得で要確認**: PO開幕前に `LeagueDashPlayerStats(Playoffs)` が空フレームを返して `po_player_per_game.csv` がヘッダーのみで書かれるか（例外なら旧ファイルは無いので `isPlayoffDataAvailable()` は false のまま＝表示は正しいが、`logs/update.log` に失敗が毎日出る）
 1. `data/season.txt`＋`src/lib/season.ts`＋`readCsvFile(filename, season?)` の読み分け → 検証: `resolveSeason` のテスト（不正値→現季・既知値→そのまま）、`/players/203999?season=2025-26` で現行と同じ数値
 2. `fetch-nba-data.py` の `SEASON` を `season.txt` から読む → 検証: `python3 -c` で値表示。hustle/shots スクリプトが連動することを `grep fetcher.SEASON` で確認
 3. `scripts/rollover.sh` → 検証: 一時ディレクトリにコピーしたリポジトリで実行し、削除対象が消え・スナップショットが残り・`season.txt` が更新されること。差分がある状態で実行すると中断すること
