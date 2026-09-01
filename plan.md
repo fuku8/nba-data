@@ -774,4 +774,6 @@ sumo-data `src/lib/midokoro.ts` の型（ビルド時に最大3枚を決定論�
 
 **実測（2026-09-01）**: 初回ビルドは 808MB・12,271ファイルだったが、半分は `data/2025-26/`（現季と同名のスナップショット）が過去季扱いされて `/players/[id]/2025-26` が583ページ重複生成されたもの（Codexレビューで検出→`archivedSeasons()` が現季を除外）。修正後は **377MB・6,451ファイル**（選手ページ1人あたり HTML 349KB＋RSC `.txt`＋セグメント用ディレクトリ7ファイル≒9ファイル/人）。選手ページのルートは `/players/[...slug]` 1本（`[id]` と `[id, season]`）。2階層 `[playerId]/[season]` にすると過去季が無い間 `generateStaticParams` が空になり、Next 16 は「未定義」と扱ってビルドを止める。kokkai-data は 346MB・7,851ファイルで稼働中。Cloudflare Pages の上限は **1デプロイ 20,000ファイル・1ファイル 25MiB**。過去シーズンが増えるごとに `/players/[id]/[season]` が約5,200ファイル増えるので、**過去季3つ目（2029年春・4シーズン分）で上限に当たる**（6,451＋5,200×3≒22,000）。そのときの手は (a) 過去季ページをローテ選手（GP≥MIN_GP）に絞る (b) 最古の季を落とす。セグメント `.txt` の出力を止める設定は Next 16.2.6 には無い（`config-shared.js` に `clientSegmentCache` のキー無し・同梱ドキュメントにも無し）。サイズ側はショットチャートを点ごとの `<circle>` から成功/失敗2本の `<path>` に変えて圧縮（下記）。
 
+**接続結果（2026-09-01）**: https://nba-data.pages.dev/ で稼働。`_redirects` の旧URL7本が301、新パス・ブラケット木・GA4タグ・可視テキスト（選手/チーム/PO）が Vercel 版と一致。残: 次回の launchd push で自動ビルドを確認 → Vercel 削除。独自ドメインは後付け可（コードにホスト名なし。付けたら kokkai-data の `site.ts` 型を移植して canonical を固定）。
+
 **やらないこと**: Workers＋OpenNext（SSR維持）。Workers にはファイルシステムが無く `src/lib/data/*.ts` の `fs.readFileSync` が全て動かないため、CSV のバンドル化か R2 移行が要り、静的エクスポートより大きい。
