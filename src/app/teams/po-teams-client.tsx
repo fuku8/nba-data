@@ -6,6 +6,7 @@ import { SortableHeader } from "@/components/sortable-header";
 import { getTeamColor, getTeamAbbr, NBA_TEAMS } from "@/lib/constants/teams";
 import type { PlayoffTeamStats, PlayoffSeries, SortConfig } from "@/lib/types";
 import { PhaseSwitch } from "@/components/phase-switch";
+import { SeasonTitle } from "@/components/season-title";
 
 const COLS = [
   { key: "pts", label: "PTS" },
@@ -22,9 +23,11 @@ const COLS = [
 export function PlayoffTeamsClient({
   teamStats,
   series,
+  season,
 }: {
   teamStats: PlayoffTeamStats[];
   series: PlayoffSeries[];
+  season: string;
 }) {
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "pts", direction: "desc" });
 
@@ -61,6 +64,7 @@ export function PlayoffTeamsClient({
   return (
     <div className="space-y-4">
       <div>
+        <SeasonTitle season={season} phase="po" />
         <div className="flex items-center gap-3 flex-wrap">
           <h1 className="text-3xl font-bold tracking-tight">チーム</h1>
           <PhaseSwitch phase="po" poAvailable basePath="/teams" />

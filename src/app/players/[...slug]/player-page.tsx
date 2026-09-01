@@ -16,6 +16,7 @@ import { getPlayerTypes, getPoSwing, MIN_GP, PO_MIN_GP, type TypeBadge, type PoS
 import { getSimilarPlayers } from "@/lib/data/similar";
 import { currentSeason, allSeasons, poYear } from "@/lib/season";
 import { SeasonSwitch } from "@/components/season-switch";
+import { SeasonTitle } from "@/components/season-title";
 
 function fmtHeight(h: string): string {
   const [ft, inch] = h.split("-").map(Number);
@@ -390,6 +391,7 @@ export async function renderPlayer(playerId: string, season: string) {
   return (
     <div className="space-y-6">
       {/* Header */}
+      <SeasonTitle season={season} />
       <div className="flex items-center gap-4">
         <div
           className="h-16 w-16 rounded-xl flex items-center justify-center text-white text-xl font-bold"

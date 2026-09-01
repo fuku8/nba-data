@@ -27,6 +27,7 @@ import { getTeamColor } from "@/lib/constants/teams";
 import type { PlayerPerGame, PlayerAdvanced, SortConfig } from "@/lib/types";
 import { PhaseSwitch } from "@/components/phase-switch";
 import type { Phase } from "@/lib/phase";
+import { SeasonTitle } from "@/components/season-title";
 
 // GP下限の選択肢。POは最長でも28試合なので刻みを小さくする
 const MIN_GAMES_OPTIONS: Record<Phase, number[]> = { rs: [0, 10, 20, 30, 40, 50], po: [0, 4, 8, 12, 16, 20] };
@@ -34,6 +35,7 @@ const PAGE_SIZE = 50;
 
 export function PlayersClient({
   phase,
+  season,
   poAvailable,
   perGame,
   advanced,
@@ -43,6 +45,7 @@ export function PlayersClient({
   shooterMin3pa,
 }: {
   phase: Phase;
+  season: string;
   poAvailable: boolean;
   perGame: PlayerPerGame[];
   advanced: PlayerAdvanced[];
@@ -124,6 +127,7 @@ export function PlayersClient({
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
+          <SeasonTitle season={season} phase={phase} />
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-3xl font-bold tracking-tight">選手一覧</h1>
             <PhaseSwitch phase={phase} poAvailable={poAvailable} basePath="/players" />

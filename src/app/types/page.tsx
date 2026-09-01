@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTypeLeaderboard } from "@/lib/data/player-types";
 import { MetricLink } from "@/components/metric-link";
+import { SeasonTitle } from "@/components/season-title";
+import { currentSeason } from "@/lib/season";
 
 export const metadata: Metadata = {
   title: "選手タイプ | NBA Data",
@@ -33,6 +35,7 @@ export default function TypesPage() {
   return (
     <div className="space-y-6">
       <div>
+        <SeasonTitle season={currentSeason()} />
         <div className="flex items-center gap-2">
           <h1 className="text-3xl font-bold tracking-tight">選手タイプ</h1>
           <MetricLink anchor="player-type" />

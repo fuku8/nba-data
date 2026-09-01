@@ -2,6 +2,7 @@ import { getPlayerPerGame, getPlayerAdvanced } from "@/lib/data/players";
 import { isPlayoffDataAvailable } from "@/lib/data/playoffs";
 import { MIN_GP, PO_MIN_GP } from "@/lib/data/player-types";
 import type { Phase } from "@/lib/phase";
+import { currentSeason } from "@/lib/season";
 import { PreSeasonNotice } from "@/components/phase-switch";
 import { PlayersClient } from "./client";
 import type { QuadrantDot } from "@/components/quadrant-map";
@@ -28,6 +29,7 @@ export function renderPlayers(phase: Phase) {
     <PlayersClient
       key={phase}
       phase={phase}
+      season={currentSeason()}
       poAvailable={poAvailable}
       perGame={perGame}
       advanced={advanced}

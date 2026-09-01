@@ -19,5 +19,5 @@ export function renderGames(phase: Phase) {
   // ボックススコアがある試合だけ詳細リンクを出す（取得失敗で po_games.csv にだけある試合は /games/[gameId] が生成されない）
   const boxDir = path.join(seasonDir(currentSeason()), "boxscores");
   const withBox = phase === "po" && fs.existsSync(boxDir) ? fs.readdirSync(boxDir).filter((f) => f.endsWith(".json")).map((f) => f.replace(/\.json$/, "")) : [];
-  return <GamesClient key={phase} games={games} dates={dates} phase={phase} poAvailable={poAvailable} drama={drama} series={series} withBox={withBox} />;
+  return <GamesClient key={phase} games={games} dates={dates} phase={phase} season={currentSeason()} poAvailable={poAvailable} drama={drama} series={series} withBox={withBox} />;
 }

@@ -17,6 +17,7 @@ import type { PlayoffSeries } from "@/lib/types";
 import { gameDetailUrl } from "@/lib/game-url";
 import { PhaseSwitch } from "@/components/phase-switch";
 import type { Phase } from "@/lib/phase";
+import { SeasonTitle } from "@/components/season-title";
 
 // 熱戦指数(leadChanges + timesTied − 点差)を🔥の数に変換
 function dramaFlames(drama: number | undefined): string {
@@ -81,6 +82,7 @@ export function GamesClient({
   games,
   dates,
   phase,
+  season,
   poAvailable,
   drama,
   series,
@@ -89,6 +91,7 @@ export function GamesClient({
   games: GameResult[];
   dates: string[];
   phase: Phase;
+  season: string;
   poAvailable: boolean;
   drama: Record<string, number>; // PO: 熱戦指数（boxscoreがある試合のみ）
   series: PlayoffSeries[]; // PO: シリーズ状況
@@ -105,6 +108,7 @@ export function GamesClient({
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
+          <SeasonTitle season={season} phase={phase} />
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-3xl font-bold tracking-tight">試合結果</h1>
             <PhaseSwitch phase={phase} poAvailable={poAvailable} basePath="/games" />

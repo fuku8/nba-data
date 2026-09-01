@@ -16,6 +16,8 @@ import { TeamRosterTable } from "./roster-table";
 import { getPlayoffSeries, getPlayoffPlayerPerGame, getPlayoffPlayerAdvanced, getPlayoffTeamStats, isPlayoffDataAvailable } from "@/lib/data/playoffs";
 import { RosterClient } from "./po-roster-client";
 import { PhaseBadge } from "@/components/phase-switch";
+import { SeasonTitle } from "@/components/season-title";
+import { currentSeason } from "@/lib/season";
 
 export const dynamicParams = false;
 
@@ -192,6 +194,7 @@ export default async function TeamDetailPage({
 
   return (
     <div className="space-y-6">
+      <SeasonTitle season={currentSeason()} />
       <div className="flex items-center gap-4">
         <div
           className="h-12 w-12 rounded-lg"

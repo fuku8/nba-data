@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { getTeamColor } from "@/lib/constants/teams";
 import { SortableHeader } from "@/components/sortable-header";
 import type { SortConfig } from "@/lib/types";
+import { SeasonTitle } from "@/components/season-title";
 
 interface EnrichedStanding {
   teamName: string;
@@ -39,7 +40,7 @@ function getRankBadge(rank: number) {
   return null;
 }
 
-export function StandingsClient({ standings }: { standings: EnrichedStanding[] }) {
+export function StandingsClient({ standings, season }: { standings: EnrichedStanding[]; season: string }) {
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     key: "winPct",
     direction: "desc",
@@ -136,7 +137,10 @@ export function StandingsClient({ standings }: { standings: EnrichedStanding[] }
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">順位表</h1>
+      <div>
+        <SeasonTitle season={season} phase="rs" />
+        <h1 className="text-3xl font-bold tracking-tight">順位表</h1>
+      </div>
       <Tabs defaultValue="east">
         <TabsList>
           <TabsTrigger value="east">Eastern Conference</TabsTrigger>

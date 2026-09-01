@@ -1,4 +1,5 @@
 import { getStandings, getTeamAdvanced } from "@/lib/data/teams";
+import { currentSeason } from "@/lib/season";
 import { StandingsClient } from "./client";
 
 export default function StandingsPage() {
@@ -20,5 +21,5 @@ export default function StandingsPage() {
     };
   });
 
-  return <StandingsClient standings={enriched} />;
+  return <StandingsClient standings={enriched} season={currentSeason()} />;
 }

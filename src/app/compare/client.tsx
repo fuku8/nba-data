@@ -21,6 +21,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { SeasonTitle } from "@/components/season-title";
 
 // 同時比較できる選手数の上限。変更する場合はここだけ直せばよい
 const MAX_PLAYERS = 4;
@@ -97,7 +98,7 @@ const HUSTLE_AXES: { key: keyof NonNullable<ComparePlayer["hustle2"]>; label: st
   { key: "avgSpeed", label: "平均スピード" },
 ];
 
-export function CompareClient({ players, phase, poAvailable }: { players: ComparePlayer[]; phase: Phase; poAvailable: boolean }) {
+export function CompareClient({ players, phase, season, poAvailable }: { players: ComparePlayer[]; phase: Phase; season: string; poAvailable: boolean }) {
   const searchParams = useSearchParams();
   const [selectedIds, setSelectedIds] = useState<number[]>(() => parseIds(searchParams.get("ids"), players));
   const [search, setSearch] = useState("");
@@ -168,9 +169,12 @@ export function CompareClient({ players, phase, poAvailable }: { players: Compar
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3 flex-wrap">
-        <h1 className="text-3xl font-bold tracking-tight">検索</h1>
-        <PhaseSwitch phase={phase} poAvailable={poAvailable} basePath="/compare" params={{ ids: selectedIds.length > 0 ? selectedIds.join(",") : undefined }} />
+      <div>
+        <SeasonTitle season={season} phase={phase} />
+        <div className="flex items-center gap-3 flex-wrap">
+          <h1 className="text-3xl font-bold tracking-tight">検索</h1>
+          <PhaseSwitch phase={phase} poAvailable={poAvailable} basePath="/compare" params={{ ids: selectedIds.length > 0 ? selectedIds.join(",") : undefined }} />
+        </div>
       </div>
       <p className="text-muted-foreground mt-1">
         選手を追加すると比較表・レーダーチャート・得点の作り方が表示されます（1名から可、最大{MAX_PLAYERS}名で比較）。

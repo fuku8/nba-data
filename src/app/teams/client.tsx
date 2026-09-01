@@ -22,6 +22,7 @@ import { SortableHeader } from "@/components/sortable-header";
 import { getTeamColor } from "@/lib/constants/teams";
 import type { SortConfig } from "@/lib/types";
 import { PhaseSwitch } from "@/components/phase-switch";
+import { SeasonTitle } from "@/components/season-title";
 
 interface TeamSummary {
   name: string;
@@ -39,7 +40,7 @@ interface TeamSummary {
   pace: number;
 }
 
-export function TeamsClient({ teams, poAvailable }: { teams: TeamSummary[]; poAvailable: boolean }) {
+export function TeamsClient({ teams, poAvailable, season }: { teams: TeamSummary[]; poAvailable: boolean; season: string }) {
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "winPct", direction: "desc" });
   const [confFilter, setConfFilter] = useState<string>("all");
 
@@ -63,9 +64,12 @@ export function TeamsClient({ teams, poAvailable }: { teams: TeamSummary[]; poAv
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3 flex-wrap">
-          <h1 className="text-3xl font-bold tracking-tight">チーム一覧</h1>
-          <PhaseSwitch phase="rs" poAvailable={poAvailable} basePath="/teams" />
+        <div>
+          <SeasonTitle season={season} phase="rs" />
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-3xl font-bold tracking-tight">チーム一覧</h1>
+            <PhaseSwitch phase="rs" poAvailable={poAvailable} basePath="/teams" />
+          </div>
         </div>
         <Select value={confFilter} onValueChange={(v) => setConfFilter(v ?? "all")}>
           <SelectTrigger className="w-48">

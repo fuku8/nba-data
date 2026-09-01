@@ -1,6 +1,7 @@
 import { getStandings, getTeamAdvanced, getTeamPerGame } from "@/lib/data/teams";
 import { getPlayoffTeamStats, getPlayoffSeries, isPlayoffDataAvailable } from "@/lib/data/playoffs";
 import type { Phase } from "@/lib/phase";
+import { currentSeason } from "@/lib/season";
 import { PreSeasonNotice } from "@/components/phase-switch";
 import { TeamsClient } from "./client";
 import { PlayoffTeamsClient } from "./po-teams-client";
@@ -10,7 +11,7 @@ export function renderTeams(phase: Phase) {
   const poAvailable = isPlayoffDataAvailable();
   if (phase === "po" && !poAvailable) return <PreSeasonNotice />;
   if (phase === "po") {
-    return <PlayoffTeamsClient teamStats={getPlayoffTeamStats()} series={getPlayoffSeries()} />;
+    return <PlayoffTeamsClient teamStats={getPlayoffTeamStats()} series={getPlayoffSeries()} season={currentSeason()} />;
   }
 
   const standings = getStandings();
@@ -40,5 +41,5 @@ export function renderTeams(phase: Phase) {
     };
   });
 
-  return <TeamsClient teams={teams} poAvailable={poAvailable} />;
+  return <TeamsClient teams={teams} poAvailable={poAvailable} season={currentSeason()} />;
 }

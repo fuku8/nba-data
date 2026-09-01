@@ -7,6 +7,8 @@ import { PreSeasonNotice, PhaseSwitch } from "@/components/phase-switch";
 import { QuadrantMap, type QuadrantDot, type AxisFormat } from "@/components/quadrant-map";
 import { MetricLink } from "@/components/metric-link";
 import { LeadersClient } from "./client";
+import { SeasonTitle } from "@/components/season-title";
+import { currentSeason } from "@/lib/season";
 
 // リーダーズのGP下限（RS30・PO4）と四象限マップの下限（RS GP40・PO GP8。いずれもMPG25以上）
 const LEADER_MIN_GP = { rs: 30, po: PO_MIN_GP } as const;
@@ -72,9 +74,12 @@ export function renderLeaders(phase: Phase) {
   return (
     <div className="space-y-6">
       {/* 見出しは図の上に置く（他ページと同じ並び。RS｜PO 切替も最上部に） */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <h1 className="text-3xl font-bold tracking-tight">League Leaders</h1>
-        <PhaseSwitch phase={phase} poAvailable={poAvailable} basePath="/leaders" />
+      <div>
+        <SeasonTitle season={currentSeason()} phase={phase} />
+        <div className="flex items-center gap-3 flex-wrap">
+          <h1 className="text-3xl font-bold tracking-tight">League Leaders</h1>
+          <PhaseSwitch phase={phase} poAvailable={poAvailable} basePath="/leaders" />
+        </div>
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
         <MapCard

@@ -3,6 +3,7 @@ import { isPlayoffDataAvailable } from "@/lib/data/playoffs";
 import { getPlayerHustle, getPlayerSpeed } from "@/lib/data/tracking";
 import { MIN_GP, PO_MIN_GP } from "@/lib/data/player-types";
 import type { Phase } from "@/lib/phase";
+import { currentSeason } from "@/lib/season";
 import { PreSeasonNotice } from "@/components/phase-switch";
 import { Suspense } from "react";
 import { CompareClient, type ComparePlayer } from "./client";
@@ -90,7 +91,7 @@ export function renderCompare(phase: Phase) {
   // useSearchParams を使うクライアントは Suspense で包む（静的エクスポートの要件）
   return (
     <Suspense fallback={null}>
-      <CompareClient key={phase} players={players} phase={phase} poAvailable={poAvailable} />
+      <CompareClient key={phase} players={players} phase={phase} season={currentSeason()} poAvailable={poAvailable} />
     </Suspense>
   );
 }
