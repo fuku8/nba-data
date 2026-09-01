@@ -165,8 +165,8 @@ export function PlayersClient({
               dots={usageEfficiencyDots}
               xLabel="USG%"
               yLabel="TS%"
-              xFormat={(v) => `${(v * 100).toFixed(1)}%`}
-              yFormat={(v) => `${(v * 100).toFixed(1)}%`}
+              xFormat="pct"
+              yFormat="pct"
             />
           </CardContent>
         </Card>
@@ -182,8 +182,8 @@ export function PlayersClient({
               dots={shooterDots}
               xLabel="3PA/G"
               yLabel="3P%"
-              xFormat={(v) => v.toFixed(1)}
-              yFormat={(v) => `${(v * 100).toFixed(1)}%`}
+              xFormat="1f"
+              yFormat="pct"
             />
           </CardContent>
         </Card>

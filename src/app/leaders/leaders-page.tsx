@@ -4,7 +4,7 @@ import { isPlayoffDataAvailable } from "@/lib/data/playoffs";
 import { PO_MIN_GP } from "@/lib/data/player-types";
 import type { Phase } from "@/lib/phase";
 import { PreSeasonNotice } from "@/components/phase-switch";
-import { UsageEfficiencyMap } from "@/components/usage-efficiency-map";
+import { QuadrantMap } from "@/components/quadrant-map";
 import { MetricLink } from "@/components/metric-link";
 import { LeadersClient } from "./client";
 
@@ -22,7 +22,7 @@ export function renderLeaders(phase: Phase) {
 
   const dots = advanced
     .filter((p) => p.gp >= MAP_MIN_GP[phase] && p.mp >= 25)
-    .map((p) => ({ name: p.player, team: p.team, usg: p.usgPct, ts: p.tsPct }));
+    .map((p) => ({ playerId: p.playerId, name: p.player, team: p.team, x: p.usgPct, y: p.tsPct }));
 
   return (
     <div className="space-y-6">
@@ -34,11 +34,19 @@ export function renderLeaders(phase: Phase) {
             <MetricLink anchor="usg-ts" />
           </div>
           <p className="text-xs text-muted-foreground">
-            攻撃をどれだけ背負い、どれだけ効率よく決めたか（GP{MAP_MIN_GP[phase]}・MPG25以上の{dots.length}人 · 点線は中央値 · 点にホバーで選手名）
+            攻撃をどれだけ背負い、どれだけ効率よく決めたか（GP{MAP_MIN_GP[phase]}・MPG25以上の{dots.length}人 · 点線は中央値 · 点にホバーで選手名・クリックで固定）
           </p>
         </CardHeader>
         <CardContent>
-          <UsageEfficiencyMap dots={dots} />
+          <QuadrantMap
+            dots={dots}
+            xLabel="USG%"
+            yLabel="TS%"
+            xFormat="pct"
+            yFormat="pct"
+            labelTop={8}
+            quadrantLabels={["重労働 × 高効率", "省エネ × 高効率", "重労働 × 低効率", "省エネ × 低効率"]}
+          />
         </CardContent>
       </Card>
     </div>
