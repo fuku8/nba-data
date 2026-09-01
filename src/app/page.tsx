@@ -5,7 +5,7 @@ import { getStandings, getTeamAdvanced } from "@/lib/data/teams";
 import { getPlayerPerGame } from "@/lib/data/players";
 import { getLatestGameDate } from "@/lib/data/csv-utils";
 import { getTeamAbbr, getTeamColor } from "@/lib/constants/teams";
-import { isPlayoffDataAvailable, getPlayoffSeries, getPlayoffPlayerPerGame } from "@/lib/data/playoffs";
+import { isPlayoffDataAvailable, getPlayoffSeries, getPlayoffPlayerPerGame, getPlayoffBracket } from "@/lib/data/playoffs";
 import { PlayoffsTopClient } from "@/app/playoffs/client";
 import { currentSeason } from "@/lib/season";
 
@@ -156,7 +156,7 @@ export default function HomePage() {
             <Link href="/teams" className="text-sm font-medium hover:underline">チーム</Link>
           </div>
         </div>
-        <PlayoffsTopClient series={series} players={players} season={currentSeason()} />
+        <PlayoffsTopClient series={series} bracket={getPlayoffBracket()} players={players} season={currentSeason()} />
       </div>
     );
   }

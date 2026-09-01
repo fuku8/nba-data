@@ -1,5 +1,8 @@
 import { readCsvFile, csvToObjects, num } from "./csv-utils";
 import { getPlayerPerGame, getPlayerTotals, getPlayerAdvanced } from "./players";
+import { getStandings } from "./teams";
+import { getTeamAbbr } from "@/lib/constants/teams";
+import { buildBracket, type Bracket, type SeedInfo } from "@/lib/bracket";
 import type {
   PlayoffSeries,
   PlayoffTeamStats,
@@ -30,6 +33,14 @@ export function getPlayoffSeries(season?: string): PlayoffSeries[] {
       firstGameDate: d["first_game_date"] || "",
       lastGameDate:  d["last_game_date"] || "",
     }));
+}
+
+// ブラケット木の配置（シードは standings の PLAYOFF_RANK＝RS順位。配置規則は src/lib/bracket.ts）
+export function getPlayoffBracket(season?: string): Bracket {
+  const seeds = new Map<string, SeedInfo>(
+    getStandings(season).map((s) => [s.teamAbbr, { conference: s.conference, seed: s.playoffRank }]),
+  );
+  return buildBracket(getPlayoffSeries(season), seeds, getTeamAbbr);
 }
 
 export function getPlayoffTeamStats(season?: string): PlayoffTeamStats[] {
