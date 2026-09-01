@@ -1,8 +1,8 @@
-import { readCsvFile, csvToObjects, num } from "./csv-utils";
+import { readCsvFile, csvToObjects, num, phaseFile, type DataCtx } from "./csv-utils";
 
-// 共通プロローグ: CSV読み込み＋名前なし行（集計行等）の除外
-const loadRows = (fname: string) =>
-  csvToObjects(readCsvFile(fname)).filter((d) => d["PLAYER_NAME"]);
+// 共通プロローグ: CSV読み込み＋名前なし行（集計行等）の除外。phase:"po" は po_ 接頭辞ファイル
+const loadRows = (fname: string, ctx: DataCtx) =>
+  csvToObjects(readCsvFile(phaseFile(fname, ctx.phase), ctx.season)).filter((d) => d["PLAYER_NAME"]);
 
 // ハッスル統計（per game）。G はトラッキング計測試合数で player_per_game の GP と一致しないことがある
 export interface PlayerHustle {
@@ -35,13 +35,11 @@ function mapHustle(d: Record<string, string>): PlayerHustle {
   };
 }
 
-export function getPlayerHustle(): PlayerHustle[] {
-  return loadRows("player_hustle.csv").map(mapHustle);
+export function getPlayerHustle(ctx: DataCtx = {}): PlayerHustle[] {
+  return loadRows("player_hustle.csv", ctx).map(mapHustle);
 }
 
-export function getPlayoffPlayerHustle(): PlayerHustle[] {
-  return loadRows("po_player_hustle.csv").map(mapHustle);
-}
+export const getPlayoffPlayerHustle = (season?: string): PlayerHustle[] => getPlayerHustle({ season, phase: "po" });
 
 // 走行距離（シーズン合計マイル）と平均速度（mph）
 export interface PlayerSpeed {
@@ -60,13 +58,11 @@ function mapSpeed(d: Record<string, string>): PlayerSpeed {
   };
 }
 
-export function getPlayerSpeed(): PlayerSpeed[] {
-  return loadRows("player_speed.csv").map(mapSpeed);
+export function getPlayerSpeed(ctx: DataCtx = {}): PlayerSpeed[] {
+  return loadRows("player_speed.csv", ctx).map(mapSpeed);
 }
 
-export function getPlayoffPlayerSpeed(): PlayerSpeed[] {
-  return loadRows("po_player_speed.csv").map(mapSpeed);
-}
+export const getPlayoffPlayerSpeed = (season?: string): PlayerSpeed[] => getPlayerSpeed({ season, phase: "po" });
 
 // タッチ数・ボール保持時間（per game・保持時間は分）
 export interface PlayerPossessions {
@@ -89,10 +85,8 @@ function mapPossessions(d: Record<string, string>): PlayerPossessions {
   };
 }
 
-export function getPlayerPossessions(): PlayerPossessions[] {
-  return loadRows("player_possessions.csv").map(mapPossessions);
+export function getPlayerPossessions(ctx: DataCtx = {}): PlayerPossessions[] {
+  return loadRows("player_possessions.csv", ctx).map(mapPossessions);
 }
 
-export function getPlayoffPlayerPossessions(): PlayerPossessions[] {
-  return loadRows("po_player_possessions.csv").map(mapPossessions);
-}
+export const getPlayoffPlayerPossessions = (season?: string): PlayerPossessions[] => getPlayerPossessions({ season, phase: "po" });

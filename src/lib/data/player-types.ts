@@ -4,12 +4,12 @@
 // タイプ評価点 = そのタイプの職務に対応するパーセンタイルの加重平均（0-1）。
 // 「下手なスコアラー型」が正直に低得点になるよう、判定と評価は分離している。
 
-import { readCsvFile, csvToObjects, num, dataStamp } from "./csv-utils";
+import { readCsvFile, csvToObjects, num, dataStamp, type Phase } from "./csv-utils";
 import { percentileOf } from "@/components/percentile-bars";
 import { versatilityScore } from "@/components/versatility-radar";
 import { getPlayerShots } from "./shots";
 
-export type Season = "rs" | "po";
+export type Season = Phase; // 旧名。フェーズ（RS/PO）のこと。年度は season 引数で別に渡す
 
 export interface TypeBadge {
   type: string;
@@ -64,9 +64,9 @@ const FILES: Record<Season, { pg: string; adv: string; hustle: string; poss: str
   po: { pg: "po_player_per_game.csv", adv: "po_player_advanced.csv", hustle: "po_player_hustle.csv", poss: "po_player_possessions.csv", minGp: PO_MIN_GP, minShots: 25 },
 };
 
-function loadCsv(fname: string): Map<number, Record<string, string>> {
+function loadCsv(fname: string, season?: string): Map<number, Record<string, string>> {
   const m = new Map<number, Record<string, string>>();
-  for (const d of csvToObjects(readCsvFile(fname))) {
+  for (const d of csvToObjects(readCsvFile(fname, season))) {
     if (d["PLAYER_NAME"]) m.set(num(d["PLAYER_ID"]), d);
   }
   return m;
@@ -75,8 +75,8 @@ function loadCsv(fname: string): Map<number, Record<string, string>> {
 // リング8ft未満のシュート比率（ショット座標から）
 // data/shots/ は scripts/fetch-shotcharts.py で別途取得。CSVだけ更新してshotsが古いままだと、
 // その選手はプールから除外され（rim==null）全員のパーセンタイルがずれる
-function rimShare(playerId: number, season: Season, minShots: number): number | null {
-  const arr = getPlayerShots(playerId)?.[season] ?? [];
+function rimShare(playerId: number, phase: Phase, minShots: number, season?: string): number | null {
+  const arr = getPlayerShots(playerId, season)?.[phase] ?? [];
   if (arr.length < minShots) return null;
   return arr.filter(([x, y]) => Math.hypot(x, y) < 80).length / arr.length;
 }
@@ -89,18 +89,19 @@ interface TypedPlayer {
 
 // プロセス生存中キャッシュ。CSVのmtimeで無効化するのでローカルでCSV差し替えても再起動不要
 // （data/shots/ のmtimeは対象外。差し替え後は明示的な再起動が必要）
-const cache: Partial<Record<Season, { stamp: string; value: Map<number, TypedPlayer> }>> = {};
+const cache = new Map<string, { stamp: string; value: Map<number, TypedPlayer> }>();
 
-export function getPlayerTypes(season: Season): Map<number, TypedPlayer> {
-  const f = FILES[season];
-  const stamp = dataStamp([f.pg, f.adv, f.hustle, f.poss]);
-  const hit = cache[season];
+export function getPlayerTypes(phase: Phase, season?: string): Map<number, TypedPlayer> {
+  const f = FILES[phase];
+  const key = `${season ?? ""}|${phase}`;
+  const stamp = dataStamp([f.pg, f.adv, f.hustle, f.poss], season);
+  const hit = cache.get(key);
   if (hit && hit.stamp === stamp) return hit.value;
 
-  const pg = loadCsv(f.pg);
-  const adv = loadCsv(f.adv);
-  const hustle = loadCsv(f.hustle);
-  const poss = loadCsv(f.poss);
+  const pg = loadCsv(f.pg, season);
+  const adv = loadCsv(f.adv, season);
+  const hustle = loadCsv(f.hustle, season);
+  const poss = loadCsv(f.poss, season);
 
   // 全データが揃うローテーション選手のみ
   const raw = new Map<number, Record<FeatKey, number>>();
@@ -109,7 +110,7 @@ export function getPlayerTypes(season: Season): Map<number, TypedPlayer> {
     const a = adv.get(id);
     const h = hustle.get(id);
     const ps = poss.get(id);
-    const rim = rimShare(id, season, f.minShots);
+    const rim = rimShare(id, phase, f.minShots, season);
     if (!a || !h || !ps || rim == null) continue;
     raw.set(id, {
       pts: num(p["PTS"]), reb: num(p["REB"]), ast: num(p["AST"]), stl: num(p["STL"]), blk: num(p["BLK"]),
@@ -161,13 +162,13 @@ export function getPlayerTypes(season: Season): Map<number, TypedPlayer> {
     result.set(id, { id, name: pg.get(id)!["PLAYER_NAME"] || "", badges });
   }
 
-  cache[season] = { stamp, value: result };
+  cache.set(key, { stamp, value: result });
   return result;
 }
 
 // タイプ別リーダーボード（該当者を評価点順に）。fallbackバッジ（z<1.0の参考表示）は対象外
-export function getTypeLeaderboard(season: Season, topN = 10): { type: string; players: { id: number; name: string; score: number }[] }[] {
-  const all = getPlayerTypes(season);
+export function getTypeLeaderboard(phase: Phase, topN = 10, season?: string): { type: string; players: { id: number; name: string; score: number }[] }[] {
+  const all = getPlayerTypes(phase, season);
   return TYPE_NAMES.map((type) => {
     const players = [...all.values()]
       .flatMap((p) => p.badges.filter((b) => b.type === type && !b.fallback).map((b) => ({ id: p.id, name: p.name, score: b.score })))
@@ -181,15 +182,17 @@ export function getTypeLeaderboard(season: Season, topN = 10): { type: string; p
 // 対象は RS GP20+/PO GP8+/PO 20分+ の実質ローテ選手のみ（小標本ノイズと母集団シフトを除外）
 // プロセス生存中キャッシュ。CSVのmtimeで無効化するのでローカルでCSV差し替えても再起動不要
 const SWING_FILES = ["player_per_game.csv", "player_advanced.csv", "po_player_per_game.csv", "po_player_advanced.csv"];
-let swingCache: { stamp: string; value: Map<number, PoSwing> } | null = null;
+const swingCache = new Map<string, { stamp: string; value: Map<number, PoSwing> }>();
 
-export function getPoSwing(): Map<number, PoSwing> {
-  const stamp = dataStamp(SWING_FILES);
-  if (swingCache && swingCache.stamp === stamp) return swingCache.value;
-  const rsPg = loadCsv("player_per_game.csv");
-  const rsAdv = loadCsv("player_advanced.csv");
-  const poPg = loadCsv("po_player_per_game.csv");
-  const poAdv = loadCsv("po_player_advanced.csv");
+export function getPoSwing(season?: string): Map<number, PoSwing> {
+  const key = season ?? "";
+  const stamp = dataStamp(SWING_FILES, season);
+  const hit = swingCache.get(key);
+  if (hit && hit.stamp === stamp) return hit.value;
+  const rsPg = loadCsv("player_per_game.csv", season);
+  const rsAdv = loadCsv("player_advanced.csv", season);
+  const poPg = loadCsv("po_player_per_game.csv", season);
+  const poAdv = loadCsv("po_player_advanced.csv", season);
 
   const deltas = new Map<number, number>();
   for (const [id, rp] of rsPg) {
@@ -202,6 +205,6 @@ export function getPoSwing(): Map<number, PoSwing> {
   }
   const m = mean(...[...deltas.values()]);
   const value = new Map([...deltas.entries()].map(([id, d]) => [id, { delta: d - m }]));
-  swingCache = { stamp, value };
+  swingCache.set(key, { stamp, value });
   return value;
 }

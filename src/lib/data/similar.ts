@@ -5,6 +5,7 @@
 // 特徴量をこの母集団のz-scoreに標準化し、ユークリッド距離が最小の選手を返す。
 
 import { getPlayerPerGame, getPlayerAdvanced } from "./players";
+import type { DataCtx } from "./csv-utils";
 import { MIN_GP } from "./player-types";
 import type { PlayerPerGame, PlayerAdvanced } from "@/lib/types";
 
@@ -50,9 +51,9 @@ function zVector(pg: PlayerPerGame, adv: PlayerAdvanced | undefined, stats: { me
 }
 
 // 指定選手にスタッツが最も近い選手のplayerIdを距離の近い順にcount件返す。計算不能ならnull
-export function getSimilarPlayers(playerId: number, count = 3): number[] | null {
-  const allPerGame = getPlayerPerGame();
-  const allAdvanced = getPlayerAdvanced();
+export function getSimilarPlayers(playerId: number, count = 3, ctx: DataCtx = {}): number[] | null {
+  const allPerGame = getPlayerPerGame(ctx);
+  const allAdvanced = getPlayerAdvanced(ctx);
   const population = allPerGame.filter((p) => p.team !== "TOT" && p.gp >= MIN_GP);
   if (population.length === 0) return null;
 

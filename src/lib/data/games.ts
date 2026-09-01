@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { readCsvFile, csvToObjects, num } from "./csv-utils";
+import { readCsvFile, csvToObjects, num, phaseFile, type DataCtx } from "./csv-utils";
 
 export interface GameResult {
   gameId: string;
@@ -16,8 +16,8 @@ export interface GameResult {
   awayFg3Pct: number;
 }
 
-export function getGames(): GameResult[] {
-  const rows = readCsvFile("games.csv");
+export function getGames(ctx: DataCtx = {}): GameResult[] {
+  const rows = readCsvFile(phaseFile("games.csv", ctx.phase), ctx.season);
   const data = csvToObjects(rows);
   return data
     .filter((d) => d["GAME_ID"] && d["HOME_TEAM"] && d["AWAY_TEAM"])
@@ -36,17 +36,17 @@ export function getGames(): GameResult[] {
     }));
 }
 
-export function getGamesByDate(date: string): GameResult[] {
-  return getGames().filter((g) => g.gameDate === date);
+export function getGamesByDate(date: string, ctx: DataCtx = {}): GameResult[] {
+  return getGames(ctx).filter((g) => g.gameDate === date);
 }
 
-export function getRecentGames(count: number = 30): GameResult[] {
-  const all = getGames();
+export function getRecentGames(count: number = 30, ctx: DataCtx = {}): GameResult[] {
+  const all = getGames(ctx);
   return all.slice(-count).reverse();
 }
 
-export function getGameDates(): string[] {
-  const all = getGames();
+export function getGameDates(ctx: DataCtx = {}): string[] {
+  const all = getGames(ctx);
   const seen = new Set<string>();
   const dates: string[] = [];
   for (const g of all) {
@@ -73,8 +73,8 @@ export interface TeamGameMargin {
 }
 
 // シーズン心電図用: 指定チームの全試合の点差系列（日付順）
-export function getTeamMargins(abbr: string): TeamGameMargin[] {
-  return getGames()
+export function getTeamMargins(abbr: string, ctx: DataCtx = {}): TeamGameMargin[] {
+  return getGames(ctx)
     .filter((g) => g.homeTeam === abbr || g.awayTeam === abbr)
     .map((g) => {
       const isHome = g.homeTeam === abbr;

@@ -2,7 +2,11 @@ import fs from "fs";
 import path from "path";
 import { currentSeason, seasonDir } from "../season.ts";
 
-// season 省略＝現シーズン（data/）。過去シーズンは data/<season>/ を読む
+// データ文脈: season 省略＝現シーズン（data/）、過去は data/<season>/。phase 省略＝RS、"po" は po_ 接頭辞ファイル
+export type Phase = "rs" | "po";
+export interface DataCtx { season?: string; phase?: Phase }
+export const phaseFile = (name: string, phase?: Phase) => (phase === "po" ? `po_${name}` : name);
+
 export function readCsvFile(filename: string, season?: string): string[][] {
   const filepath = path.join(seasonDir(season ?? currentSeason()), filename);
   if (!fs.existsSync(filepath)) return [];

@@ -1,5 +1,5 @@
 import { readCsvFile, csvToObjects, num } from "./csv-utils";
-import { mapPlayerPerGame, mapPlayerTotals, mapPlayerAdvanced } from "./players";
+import { getPlayerPerGame, getPlayerTotals, getPlayerAdvanced } from "./players";
 import type {
   PlayoffSeries,
   PlayoffTeamStats,
@@ -8,13 +8,13 @@ import type {
   PlayoffPlayerAdvanced,
 } from "@/lib/types";
 
-export function isPlayoffDataAvailable(): boolean {
-  const rows = readCsvFile("po_player_per_game.csv");
+export function isPlayoffDataAvailable(season?: string): boolean {
+  const rows = readCsvFile("po_player_per_game.csv", season);
   return rows.length > 1;
 }
 
-export function getPlayoffSeries(): PlayoffSeries[] {
-  const rows = readCsvFile("po_series.csv");
+export function getPlayoffSeries(season?: string): PlayoffSeries[] {
+  const rows = readCsvFile("po_series.csv", season);
   const data = csvToObjects(rows);
   return data
     .filter((d) => d["team1"] && d["team2"])
@@ -32,9 +32,9 @@ export function getPlayoffSeries(): PlayoffSeries[] {
     }));
 }
 
-export function getPlayoffTeamStats(): PlayoffTeamStats[] {
+export function getPlayoffTeamStats(season?: string): PlayoffTeamStats[] {
   // po_team_per_game.csv は現在未生成のため、po_player_totals.csv から集計
-  const players = getPlayoffPlayerTotals();
+  const players = getPlayoffPlayerTotals(season);
   type Acc = { fg: number; fga: number; fg3: number; fg3a: number; ft: number; fta: number; pts: number; trb: number; ast: number; stl: number; blk: number; tov: number; maxGp: number; };
   const teamMap = new Map<string, Acc>();
   for (const p of players) {
@@ -70,26 +70,7 @@ export function getPlayoffTeamStats(): PlayoffTeamStats[] {
   });
 }
 
-export function getPlayoffPlayerPerGame(): PlayoffPlayerPerGame[] {
-  const rows = readCsvFile("po_player_per_game.csv");
-  const data = csvToObjects(rows);
-  return data
-    .filter((d) => d["PLAYER_NAME"])
-    .map(mapPlayerPerGame);
-}
-
-export function getPlayoffPlayerTotals(): PlayoffPlayerTotals[] {
-  const rows = readCsvFile("po_player_totals.csv");
-  const data = csvToObjects(rows);
-  return data
-    .filter((d) => d["PLAYER_NAME"])
-    .map(mapPlayerTotals);
-}
-
-export function getPlayoffPlayerAdvanced(): PlayoffPlayerAdvanced[] {
-  const rows = readCsvFile("po_player_advanced.csv");
-  const data = csvToObjects(rows);
-  return data
-    .filter((d) => d["PLAYER_NAME"])
-    .map(mapPlayerAdvanced);
-}
+// RS版ローダーの phase:"po" 呼び出しと同じ。season 省略＝現シーズン
+export const getPlayoffPlayerPerGame = (season?: string): PlayoffPlayerPerGame[] => getPlayerPerGame({ season, phase: "po" });
+export const getPlayoffPlayerTotals = (season?: string): PlayoffPlayerTotals[] => getPlayerTotals({ season, phase: "po" });
+export const getPlayoffPlayerAdvanced = (season?: string): PlayoffPlayerAdvanced[] => getPlayerAdvanced({ season, phase: "po" });

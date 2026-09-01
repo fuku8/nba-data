@@ -1,4 +1,4 @@
-import { readCsvFile, csvToObjects, num } from "./csv-utils";
+import { readCsvFile, csvToObjects, num, phaseFile, type DataCtx } from "./csv-utils";
 import type { PlayerPerGame, PlayerAdvanced, PlayerTotals, PlayerProfile } from "@/lib/types";
 
 function mapPlayerPerGame(d: Record<string, string>): PlayerPerGame {
@@ -67,8 +67,8 @@ function mapPlayerTotals(d: Record<string, string>): PlayerTotals {
   };
 }
 
-export function getPlayerPerGame(): PlayerPerGame[] {
-  const rows = readCsvFile("player_per_game.csv");
+export function getPlayerPerGame(ctx: DataCtx = {}): PlayerPerGame[] {
+  const rows = readCsvFile(phaseFile("player_per_game.csv", ctx.phase), ctx.season);
   const data = csvToObjects(rows);
   return data
     .filter((d) => d["PLAYER_NAME"])
@@ -103,16 +103,16 @@ function mapPlayerAdvanced(d: Record<string, string>): PlayerAdvanced {
   };
 }
 
-export function getPlayerAdvanced(): PlayerAdvanced[] {
-  const rows = readCsvFile("player_advanced.csv");
+export function getPlayerAdvanced(ctx: DataCtx = {}): PlayerAdvanced[] {
+  const rows = readCsvFile(phaseFile("player_advanced.csv", ctx.phase), ctx.season);
   const data = csvToObjects(rows);
   return data
     .filter((d) => d["PLAYER_NAME"])
     .map(mapPlayerAdvanced);
 }
 
-export function getPlayerTotals(): PlayerTotals[] {
-  const rows = readCsvFile("player_totals.csv");
+export function getPlayerTotals(ctx: DataCtx = {}): PlayerTotals[] {
+  const rows = readCsvFile(phaseFile("player_totals.csv", ctx.phase), ctx.season);
   const data = csvToObjects(rows);
   return data
     .filter((d) => d["PLAYER_NAME"])
@@ -126,9 +126,6 @@ export function searchPlayers(
   const q = query.toLowerCase();
   return players.filter((p) => p.player.toLowerCase().includes(q));
 }
-
-// playoffs.ts でプレーオフ統計の変換に再利用するため export
-export { mapPlayerPerGame, mapPlayerTotals, mapPlayerAdvanced };
 
 // ===== 選手プロフィール =====
 
@@ -154,14 +151,14 @@ function mapPlayerProfile(d: Record<string, string>): PlayerProfile {
   };
 }
 
-export function getAllPlayerProfiles(): PlayerProfile[] {
-  const rows = readCsvFile("player_profiles.csv");
+export function getAllPlayerProfiles(season?: string): PlayerProfile[] {
+  const rows = readCsvFile("player_profiles.csv", season);
   const data = csvToObjects(rows);
   return data
     .filter((d) => d["PLAYER_NAME"])
     .map(mapPlayerProfile);
 }
 
-export function getPlayerProfile(playerId: number): PlayerProfile | undefined {
-  return getAllPlayerProfiles().find((p) => p.playerId === playerId);
+export function getPlayerProfile(playerId: number, season?: string): PlayerProfile | undefined {
+  return getAllPlayerProfiles(season).find((p) => p.playerId === playerId);
 }
