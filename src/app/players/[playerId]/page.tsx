@@ -14,6 +14,7 @@ import { getPlayerHustle, getPlayoffPlayerHustle, getPlayerSpeed, getPlayoffPlay
 import { MetricLink } from "@/components/metric-link";
 import { getPlayerTypes, getPoSwing, MIN_GP, PO_MIN_GP, type TypeBadge, type PoSwing } from "@/lib/data/player-types";
 import { getSimilarPlayers } from "@/lib/data/similar";
+import { currentSeason, poYear } from "@/lib/season";
 
 export const revalidate = 3600;
 
@@ -98,7 +99,7 @@ function VisualGroup({
           {swing && (
             <>
               <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${swingCls}`}>
-                2026 PO {swingLabel}
+                {poYear(currentSeason())} PO {swingLabel}
                 <span className="font-mono font-semibold">
                   {swingPt > 0 ? "+" : ""}{swingPt.toFixed(1)}pt
                 </span>

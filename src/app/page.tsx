@@ -7,6 +7,7 @@ import { getLatestGameDate } from "@/lib/data/csv-utils";
 import { getTeamAbbr, getTeamColor } from "@/lib/constants/teams";
 import { isPlayoffDataAvailable, getPlayoffSeries, getPlayoffPlayerPerGame } from "@/lib/data/playoffs";
 import { PlayoffsTopClient } from "@/app/playoffs/client";
+import { currentSeason } from "@/lib/season";
 
 export const revalidate = 3600;
 
@@ -54,7 +55,7 @@ function RSHomePage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">NBA 2025-26 Dashboard</h1>
+        <h1 className="text-3xl font-bold tracking-tight">NBA {currentSeason()} Dashboard</h1>
         <p className="text-muted-foreground mt-1">データ反映: {latestGameDate} (米国東部時間)</p>
       </div>
 
@@ -155,7 +156,7 @@ export default function HomePage() {
             <Link href="/teams" className="text-sm font-medium hover:underline">チーム</Link>
           </div>
         </div>
-        <PlayoffsTopClient series={series} players={players} />
+        <PlayoffsTopClient series={series} players={players} season={currentSeason()} />
       </div>
     );
   }

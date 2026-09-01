@@ -66,11 +66,11 @@ function StatLeaders({ players, label, getValue }: { players: PlayoffPlayerPerGa
   );
 }
 
-export function PlayoffsTopClient({ series, players, updatedAt }: { series: PlayoffSeries[]; players: PlayoffPlayerPerGame[]; updatedAt?: string }) {
+export function PlayoffsTopClient({ series, players, updatedAt, season }: { series: PlayoffSeries[]; players: PlayoffPlayerPerGame[]; updatedAt?: string; season: string }) {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">NBA 2025-26 Playoffs</h1>
+        <h1 className="text-3xl font-bold tracking-tight">NBA {season} Playoffs</h1>
         <p className="text-muted-foreground mt-1">
           プレーオフ ブラケット・スタッツ
           {updatedAt && <span className="ml-3 text-xs">データ更新: {updatedAt}</span>}

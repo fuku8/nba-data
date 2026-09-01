@@ -1,5 +1,5 @@
 """
-nba_api を使用して NBA 2025-26 シーズンデータを取得・保存するスクリプト。
+nba_api を使用して NBA シーズンデータ（data/season.txt のシーズン）を取得・保存するスクリプト。
 Basketball Reference スクレイピングの完全代替。
 """
 import os
@@ -22,12 +22,14 @@ from nba_api.stats.library.http import NBAStatsHTTP, STATS_HEADERS
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-SEASON = "2025-26"
+DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+# シーズンの単一の真実は data/season.txt（アプリ側 src/lib/season.ts と共有）。繰越は scripts/rollover.sh
+with open(os.path.join(DATA_DIR, "season.txt")) as _f:
+    SEASON = _f.read().strip()
 SLEEP_SEC = 2
 API_RETRIES = int(os.environ.get("NBA_API_RETRIES", "3"))
 API_TIMEOUT_SEC = int(os.environ.get("NBA_API_TIMEOUT_SEC", "30"))
 API_BACKOFF_SEC = int(os.environ.get("NBA_API_BACKOFF_SEC", "5"))
-DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
 BOXSCORE_DIR = os.path.join(DATA_DIR, "boxscores")
 REQUEST_HEADERS = {
     **STATS_HEADERS,

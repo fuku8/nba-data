@@ -65,7 +65,7 @@ function NavLink({
   );
 }
 
-export function Navigation({ isPlayoffSeason = false }: { isPlayoffSeason?: boolean }) {
+export function Navigation({ isPlayoffSeason = false, season }: { isPlayoffSeason?: boolean; season: string }) {
   const pathname = usePathname();
   const isPlayoffs = pathname.startsWith("/playoffs") || (isPlayoffSeason && pathname === "/");
 
@@ -75,7 +75,7 @@ export function Navigation({ isPlayoffSeason = false }: { isPlayoffSeason?: bool
       <div className="container mx-auto flex h-12 items-center justify-between px-4 border-b border-border/40">
         <Link href="/" className="flex items-center space-x-2 shrink-0">
           <span className="text-base font-bold tracking-tight">NBA Data</span>
-          <span className="text-xs text-muted-foreground hidden sm:inline">2025-26</span>
+          <span className="text-xs text-muted-foreground hidden sm:inline">{season}</span>
         </Link>
 
         <div className="flex items-center rounded-lg border overflow-hidden text-sm font-semibold">

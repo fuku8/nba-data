@@ -1,10 +1,10 @@
 import fs from "fs";
 import path from "path";
+import { currentSeason, seasonDir } from "../season.ts";
 
-const DATA_DIR = path.join(process.cwd(), "data");
-
-export function readCsvFile(filename: string): string[][] {
-  const filepath = path.join(DATA_DIR, filename);
+// season 省略＝現シーズン（data/）。過去シーズンは data/<season>/ を読む
+export function readCsvFile(filename: string, season?: string): string[][] {
+  const filepath = path.join(seasonDir(season ?? currentSeason()), filename);
   if (!fs.existsSync(filepath)) return [];
   const content = fs.readFileSync(filepath, "utf-8");
   return parseCsv(content);
@@ -49,9 +49,9 @@ export function num(val: string | undefined): number {
   return isNaN(n) ? 0 : n;
 }
 
-export function getPoDataTimestamp(): string {
+export function getPoDataTimestamp(season?: string): string {
   try {
-    const filepath = path.join(DATA_DIR, "po_player_per_game.csv");
+    const filepath = path.join(seasonDir(season ?? currentSeason()), "po_player_per_game.csv");
     if (!fs.existsSync(filepath)) return "";
     const mtime = fs.statSync(filepath).mtime;
     return mtime.toLocaleString("en-US", {
@@ -69,19 +69,20 @@ export function getPoDataTimestamp(): string {
 }
 
 // データCSVのmtimeスタンプ。モジュールレベルキャッシュの無効化判定に使う（ローカルでCSV差し替え時の再起動不要化）
-export function dataStamp(fnames: string[]): string {
+export function dataStamp(fnames: string[], season?: string): string {
+  const dir = seasonDir(season ?? currentSeason());
   return fnames.map((f) => {
     try {
-      return fs.statSync(path.join(DATA_DIR, f)).mtimeMs;
+      return fs.statSync(path.join(dir, f)).mtimeMs;
     } catch {
       return 0;
     }
   }).join("|");
 }
 
-export function getLatestGameDate(): string {
+export function getLatestGameDate(season?: string): string {
   try {
-    const filepath = path.join(DATA_DIR, "games.csv");
+    const filepath = path.join(seasonDir(season ?? currentSeason()), "games.csv");
     if (!fs.existsSync(filepath)) return "不明";
     const content = fs.readFileSync(filepath, "utf-8");
     const lines = content.trim().split("\n");
