@@ -4,7 +4,7 @@ import { isPlayoffDataAvailable } from "@/lib/data/playoffs";
 import { PO_MIN_GP } from "@/lib/data/player-types";
 import type { Phase } from "@/lib/phase";
 import { PreSeasonNotice, PhaseSwitch } from "@/components/phase-switch";
-import { QuadrantMap, type QuadrantDot, type AxisFormat } from "@/components/quadrant-map";
+import { QuadrantMap, MAP_HELP, type QuadrantDot, type AxisFormat } from "@/components/quadrant-map";
 import { MetricLink } from "@/components/metric-link";
 import { LeadersClient } from "./client";
 import { SeasonTitle } from "@/components/season-title";
@@ -43,7 +43,7 @@ function MapCard({
           <MetricLink anchor={anchor} />
         </div>
         <p className="text-xs text-muted-foreground">
-          {lead}（GP{minGp}・MPG25以上の{dots.length}人 · 点線は中央値 · 点にホバーで選手名・クリックで固定）
+          {lead}（GP{minGp}・MPG25以上の{dots.length}人 · 点線は中央値 · {MAP_HELP}）
         </p>
       </CardHeader>
       <CardContent>

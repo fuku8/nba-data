@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SortableHeader } from "@/components/sortable-header";
-import { QuadrantMap, type QuadrantDot } from "@/components/quadrant-map";
+import { QuadrantMap, MAP_HELP, type QuadrantDot } from "@/components/quadrant-map";
 import { getTeamColor } from "@/lib/constants/teams";
 import type { PlayerPerGame, PlayerAdvanced, SortConfig } from "@/lib/types";
 import { PhaseSwitch } from "@/components/phase-switch";
@@ -161,7 +161,7 @@ export function PlayersClient({
           <CardHeader>
             <CardTitle>使われ方 × 効率マップ</CardTitle>
             <CardDescription>
-              USG%（攻撃をどれだけ背負うか）× TS%（得点効率）・GP{minGp}以上の{usageEfficiencyDots.length}人・点線は中央値
+              USG%（攻撃をどれだけ背負うか）× TS%（得点効率）・GP{minGp}以上の{usageEfficiencyDots.length}人・点線は中央値 · {MAP_HELP}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -178,7 +178,7 @@ export function PlayersClient({
           <CardHeader>
             <CardTitle>シューターマップ</CardTitle>
             <CardDescription>
-              3P試投/G × 3P%・GP{minGp}以上かつ3PA/G {shooterMin3pa.toFixed(1)}以上の{shooterDots.length}人（試投が少ない選手のノイズを除外）・点線は中央値
+              3P試投/G × 3P%・GP{minGp}以上かつ3PA/G {shooterMin3pa.toFixed(1)}以上の{shooterDots.length}人（試投が少ない選手のノイズを除外）・点線は中央値 · {MAP_HELP}
             </CardDescription>
           </CardHeader>
           <CardContent>

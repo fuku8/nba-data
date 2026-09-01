@@ -1,11 +1,15 @@
 "use client";
 
-// 汎用象限マップ: 中央値クロスの散布図。点にホバーで選手名、クリックで固定（タッチ用）→名前クリックで個人ページへ遷移。
+// 汎用象限マップ: 中央値クロスの散布図。点にホバーで選手名、表示中の点をクリックで個人ページへ遷移。
+// タッチはホバーが無いので 1回目のタップで名前を固定表示、2回目（点かラベル）で遷移する。
+// ホバー判定は点ごとの enter/leave ではなく SVG 上のポインタ位置から最寄りの点を取る（点→ラベルへ動く途中の隙間で
+// 隣の点にホバーが移り、別の選手へ飛ぶのを防ぐ。ラベルの枠内にいる間は保持）
 // ブラウザ標準の <title> ツールチップは約1秒静止しないと出ず、タッチでは出ないので使わない
 // 点はキーボード操作の対象にしない（150超の点を全部タブ停止にすると逆に操作性が落ちる。数値は同ページの表で読める）
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { getTeamColor } from "@/lib/constants/teams";
 
 export interface QuadrantDot {
@@ -18,6 +22,9 @@ export interface QuadrantDot {
 
 // サーバーコンポーネントからも渡せるよう、関数ではなく書式キー
 export type AxisFormat = "pct" | "1f" | "2f";
+
+// マップを置くカードの説明文（リーダーズ・選手一覧で同じ文言にする）
+export const MAP_HELP = "点にホバーで選手名 · 点のクリックで選手ページへ（タッチは1回目のタップで名前、2回目で選手ページ）";
 const fmt = (v: number, f: AxisFormat) => (f === "pct" ? `${(v * 100).toFixed(1)}%` : v.toFixed(f === "1f" ? 1 : 2));
 
 const W = 640;
@@ -56,6 +63,8 @@ export function QuadrantMap({
   const idOf = (d: QuadrantDot) => `${d.playerId}-${d.team}`;
   const [selected, setSelected] = useState<string | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
+  const router = useRouter();
+  const svgRef = useRef<SVGSVGElement>(null);
 
   if (dots.length === 0) return null;
 
@@ -104,24 +113,66 @@ export function QuadrantMap({
   const shownId = selected ?? hovered;
   const shownDot = shownId != null ? dots.find((d) => idOf(d) === shownId) : undefined;
 
-  // ラベル位置: ドット近傍からスタートし、viewBoxをはみ出す場合は反対側へクランプ
+  // ラベル位置: 点の右横（縦は点と同じ高さ）。右にはみ出すなら左横。縦にはみ出す分はクランプ
+  // 点の真横に置くのは、点からラベルへ真っ直ぐ動く経路が「点とラベルを結ぶ矩形」に収まり、途中の別の点に取られないようにするため
   let labelX = 0;
   let labelY = 0;
   let labelText = "";
   let labelWidth = 0;
-  const labelHeight = 22;
+  const labelHeight = 26; // タップしやすい高さ
   if (shownDot) {
     labelText = `${shownDot.name} (${shownDot.team})  ${xLabel} ${fmt(shownDot.x, xFormat)} / ${yLabel} ${fmt(shownDot.y, yFormat)}`;
     labelWidth = labelText.length * 6.2 + 16; // ponytail: SVGテキスト幅の概算（getBBox計測はしない）
     const dotX = sx(shownDot.x);
     const dotY = sy(shownDot.y);
-    labelX = dotX + 10;
-    if (labelX + labelWidth > W - PAD.r) labelX = dotX - labelWidth - 10;
+    labelX = dotX + 12;
+    if (labelX + labelWidth > W - PAD.r) labelX = dotX - labelWidth - 12;
     if (labelX < 0) labelX = 2;
-    labelY = dotY - 10;
-    if (labelY - labelHeight < 0) labelY = dotY + labelHeight + 10;
-    if (labelY > H) labelY = H - 4;
+    labelY = dotY + labelHeight / 2;
+    if (labelY - labelHeight < 0) labelY = labelHeight;
+    if (labelY > H) labelY = H;
   }
+
+  // 当たり判定は点ごとの要素ではなく SVG 全体で受け、ポインタ位置から最寄りの点（HIT_R 以内）を選ぶ
+  // （常時表示の名前テキストが点に被ってもクリックが届く。タッチもタップ位置で同じ判定）
+  const HIT_R = 10;
+  const toViewBox = (e: React.PointerEvent<SVGSVGElement> | React.MouseEvent<SVGSVGElement>) => {
+    const ctm = svgRef.current?.getScreenCTM();
+    if (!ctm) return null;
+    // 画面座標 → viewBox 座標（SVG の余白・レターボックスも CTM が吸収する）
+    return new DOMPoint(e.clientX, e.clientY).matrixTransform(ctm.inverse());
+  };
+  const nearest = (px: number, py: number) => {
+    let best: QuadrantDot | null = null;
+    let bestD = HIT_R;
+    for (const d of dots) {
+      const dist = Math.hypot(sx(d.x) - px, sy(d.y) - py);
+      if (dist < bestD) { bestD = dist; best = d; }
+    }
+    return best;
+  };
+  // マウス移動: 表示中の点とラベルを結ぶ矩形の中なら保持、それ以外は最寄りの点
+  const onPointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
+    const pt = e.pointerType === "mouse" ? toViewBox(e) : null;
+    if (!pt) return;
+    if (shownDot) {
+      const dx = sx(shownDot.x);
+      const dy = sy(shownDot.y);
+      const inCorridor =
+        pt.x >= Math.min(labelX, dx) && pt.x <= Math.max(labelX + labelWidth, dx) && pt.y >= Math.min(labelY - labelHeight, dy) && pt.y <= Math.max(labelY, dy);
+      if (inCorridor) return;
+    }
+    const d = nearest(pt.x, pt.y);
+    setHovered(d ? idOf(d) : null);
+  };
+  // クリック/タップ: 表示中の点なら個人ページへ、別の点なら固定表示、点が無ければ解除
+  const onClick = (e: React.MouseEvent<SVGSVGElement>) => {
+    const pt = toViewBox(e);
+    const d = pt ? nearest(pt.x, pt.y) : null;
+    if (!d) setSelected(null);
+    else if (shownId === idOf(d)) router.push(`/players/${d.playerId}`);
+    else setSelected(idOf(d));
+  };
 
   const corners =
     quadrantLabels &&
@@ -136,10 +187,13 @@ export function QuadrantMap({
     <div className="overflow-x-auto">
       <svg
         viewBox={`0 0 ${W} ${H}`}
-        className="w-full min-w-[480px]"
+        className={`w-full min-w-[480px] ${hovered ? "cursor-pointer" : ""}`}
         role="img"
         aria-label={`${xLabel}と${yLabel}の散布図（中央値クロス）`}
-        onClick={() => setSelected(null)}
+        onClick={onClick}
+        onPointerMove={onPointerMove}
+        onPointerLeave={() => setHovered(null)}
+        ref={svgRef}
       >
         <line x1={sx(xMed)} y1={PAD.t} x2={sx(xMed)} y2={H - PAD.b} stroke="currentColor" strokeOpacity={0.25} strokeDasharray="4 3" />
         <line x1={PAD.l} y1={sy(yMed)} x2={W - PAD.r} y2={sy(yMed)} stroke="currentColor" strokeOpacity={0.25} strokeDasharray="4 3" />
@@ -163,24 +217,15 @@ export function QuadrantMap({
                 {d.name}
               </text>
             )}
-            {/* タップしやすいよう透明な当たり判定を重ねる */}
-            <circle
-              cx={sx(d.x)}
-              cy={sy(d.y)}
-              r={10}
-              fill="transparent"
-              className="cursor-pointer"
-              onMouseEnter={() => setHovered(idOf(d))}
-              onMouseLeave={() => setHovered(null)}
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelected((prev) => (prev === idOf(d) ? null : idOf(d)));
-              }}
-            />
           </g>
         ))}
         {shownDot && (
-          <g onClick={(e) => e.stopPropagation()}>
+          /* ラベル全体がリンク（枠内にポインタがある間は onPointerMove が保持する） */
+          <Link
+            href={`/players/${shownDot.playerId}`}
+            className="cursor-pointer [&_text]:hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
             <rect
               x={labelX}
               y={labelY - labelHeight}
@@ -191,12 +236,10 @@ export function QuadrantMap({
               stroke="currentColor"
               strokeOpacity={0.15}
             />
-            <Link href={`/players/${shownDot.playerId}`}>
-              <text x={labelX + 8} y={labelY - 7} fontSize={11} fill="var(--popover-foreground)" className="cursor-pointer hover:underline">
-                {labelText}
-              </text>
-            </Link>
-          </g>
+            <text x={labelX + 8} y={labelY - labelHeight / 2 + 4} fontSize={11} fill="var(--popover-foreground)">
+              {labelText}
+            </text>
+          </Link>
         )}
         <text x={midX} y={H - 8} textAnchor="middle" fontSize={11} fill="currentColor" fillOpacity={0.6}>
           {xLabel}→
