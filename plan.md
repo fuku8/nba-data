@@ -704,7 +704,7 @@ sumo-data `src/lib/midokoro.ts` の型（ビルド時に最大3枚を決定論�
 4. シーズン文字列6箇所を `seasonLabel` に置換 → 検証: `grep -rn "2025-26\|2026 PO" src` が0件
 5. `local-update.sh` に hustle（毎日）・shots（日曜）を追加 → 検証: `launchctl start` で手動実行しログ確認
 
-**Phase 1: RS/PO統合（9月中）**
+**Phase 1: RS/PO統合（9月中）** — ✅ 2026-09-01 実装（手順1〜6・コミット 902fa8f〜）。実装上の判断: (a) 旧 `/playoffs/*` は削除ではなく `next.config.ts` の `redirects()` で新URLへ308（ブックマーク互換。ページファイルは削除待ち＝`git rm -r src/app/playoffs/{players,leaders,compare,games,teams}`。`/playoffs/page.tsx`・`client.tsx`・`layout.tsx` は残す） (b) シーズン切替 `SeasonSwitch` は選手ページのみに置いた（`?season=` を読むページにだけ出す。ナビ上段に置くと読まないページで無視されて迷いの元になる）。他ページへの拡張は前季比（Phase 3）と同時に (c) 選手ページの Stats 表は `allSeasons()` を回すので、ロールオーバー後に自動で2シーズン積み重ねになる。**ロールオーバー直後に `?season=2025-26` でRSが上・POが下になることを実確認する**（現データでは現シーズン＝PO上しか検証できていない）
 1. ローダー統合 `get*({ season, phase })` → 検証: 既存ページの数値が変わらないこと（ビルド後、Jokić/SGA/OKC/HOU の主要値を現行HTMLと突合）
 2. `/players` `/leaders` `/compare` `/games` に `?phase=po` セグメント＋文脈バッジ → 検証: PO切替でPO値、リンク先の選手ページでもバッジ表示
 3. `/teams/[id]` にPOセクション統合、`/games/[gameId]` 移動 → 検証: `/playoffs/teams/OKC` を削除しても内容が `/teams/OKC` に全部ある

@@ -14,7 +14,8 @@ import { getPlayerHustle, getPlayoffPlayerHustle, getPlayerSpeed, getPlayoffPlay
 import { MetricLink } from "@/components/metric-link";
 import { getPlayerTypes, getPoSwing, MIN_GP, PO_MIN_GP, type TypeBadge, type PoSwing } from "@/lib/data/player-types";
 import { getSimilarPlayers } from "@/lib/data/similar";
-import { currentSeason, poYear } from "@/lib/season";
+import { currentSeason, allSeasons, resolveSeason, poYear } from "@/lib/season";
+import { SeasonSwitch } from "@/components/season-switch";
 
 export const revalidate = 3600;
 
@@ -47,8 +48,10 @@ function VisualGroup({
   motion,
   badges,
   swing,
+  season,
 }: {
   title: string;
+  season: string;
   accent?: boolean;
   pctNote: string;
   pctRows: PercentileRow[] | null;
@@ -99,7 +102,7 @@ function VisualGroup({
           {swing && (
             <>
               <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${swingCls}`}>
-                {poYear(currentSeason())} PO {swingLabel}
+                {poYear(season)} PO {swingLabel}
                 <span className="font-mono font-semibold">
                   {swingPt > 0 ? "+" : ""}{swingPt.toFixed(1)}pt
                 </span>
@@ -209,18 +212,24 @@ function VisualGroup({
 
 export default async function PlayerDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ playerId: string }>;
+  searchParams: Promise<{ season?: string }>;
 }) {
   const { playerId } = await params;
+  const { season: seasonParam } = await searchParams;
+  const season = resolveSeason(seasonParam);
+  const ctx = { season };
+  const isCurrent = season === currentSeason();
   const playerIdNum = parseInt(playerId, 10);
   if (isNaN(playerIdNum)) notFound();
 
-  const allPerGame = getPlayerPerGame();
-  const allAdvanced = getPlayerAdvanced();
-  const allPoPerGame = getPlayoffPlayerPerGame();
-  const allPoAdvanced = getPlayoffPlayerAdvanced();
-  const profile = getPlayerProfile(playerIdNum);
+  const allPerGame = getPlayerPerGame(ctx);
+  const allAdvanced = getPlayerAdvanced(ctx);
+  const allPoPerGame = getPlayoffPlayerPerGame(season);
+  const allPoAdvanced = getPlayoffPlayerAdvanced(season);
+  const profile = getPlayerProfile(playerIdNum, season);
 
   const pg = allPerGame.find((p) => p.playerId === playerIdNum && p.team !== "TOT")
     || allPerGame.find((p) => p.playerId === playerIdNum);
@@ -290,26 +299,26 @@ export default async function PlayerDetailPage({
   const poVScore = poRadarItems ? versatilityScore(poRadarItems.map((r) => r.pct)) : null;
   // 得点構成: 3P/2P/FT由来の得点（per game）。整数の生値（totals）から算出し丸め誤差を避ける
   // FG3M*3 + (FGM-FG3M)*2 + FTM = PTS が厳密に成立する
-  const allTotals = getPlayerTotals();
+  const allTotals = getPlayerTotals(ctx);
   const t = allTotals.find((p) => p.playerId === playerIdNum && p.team !== "TOT")
     ?? allTotals.find((p) => p.playerId === playerIdNum);
   const pts3 = t ? (t.threePt * 3) / t.gp : pg.threePt * 3;
   const pts2 = t ? ((t.fg - t.threePt) * 2) / t.gp : (pg.fg - pg.threePt) * 2;
   const ptsFt = t ? t.ft / t.gp : pg.ft;
   // PO版ワッフル（パーセンタイルと同じGP4以上を条件に。少試合のノイズ表示を防ぐ）
-  const allPoTotals = poEligible ? getPlayoffPlayerTotals() : [];
+  const allPoTotals = poEligible ? getPlayoffPlayerTotals(season) : [];
   const poT = allPoTotals.find((p) => p.playerId === playerIdNum && p.team !== "TOT")
     ?? allPoTotals.find((p) => p.playerId === playerIdNum);
   const poPts3 = poT ? (poT.threePt * 3) / poT.gp : 0;
   const poPts2 = poT ? ((poT.fg - poT.threePt) * 2) / poT.gp : 0;
   const poPtsFt = poT ? poT.ft / poT.gp : 0;
   // 選手タイプ＋PO昇温（Phase 5）
-  const rsBadges = getPlayerTypes("rs").get(playerIdNum)?.badges ?? null;
-  const poBadges = poEligible ? getPlayerTypes("po").get(playerIdNum)?.badges ?? null : null;
-  const poSwing = getPoSwing().get(playerIdNum) ?? null;
+  const rsBadges = getPlayerTypes("rs", season).get(playerIdNum)?.badges ?? null;
+  const poBadges = poEligible ? getPlayerTypes("po", season).get(playerIdNum)?.badges ?? null : null;
+  const poSwing = getPoSwing(season).get(playerIdNum) ?? null;
 
   // ショットチャート（Phase 3・ローカル一括取得したdata/shots/があるときのみ表示）
-  const shots = getPlayerShots(playerIdNum);
+  const shots = getPlayerShots(playerIdNum, season);
   const rsShots = shots?.rs ?? [];
   const poShots = poEligible ? shots?.po ?? [] : [];
 
@@ -331,8 +340,8 @@ export default async function PlayerDetailPage({
       pct: percentileOf(pool.map(get), get(row)),
     }));
   };
-  const hustleItems = buildHustle(getPlayerHustle(), MIN_GP);
-  const poHustleItems = poEligible ? buildHustle(getPlayoffPlayerHustle(), PO_MIN_GP) : null;
+  const hustleItems = buildHustle(getPlayerHustle(ctx), MIN_GP);
+  const poHustleItems = poEligible ? buildHustle(getPlayoffPlayerHustle(season), PO_MIN_GP) : null;
 
   // 運動量（Phase 4・RS/PO）。スコアは走行距離/試合と平均速度のパーセンタイル平均。
   // タッチ・保持時間は役割（ハンドラーかどうか）で大きく変わるためスコアには含めず、項目別評点のみ表示する
@@ -360,11 +369,27 @@ export default async function PlayerDetailPage({
       score: (distPct + speedPct) / 2,
     };
   };
-  const motion = buildMotion(getPlayerSpeed(), getPlayerPossessions(), MIN_GP);
-  const poMotion = poEligible ? buildMotion(getPlayoffPlayerSpeed(), getPlayoffPlayerPossessions(), PO_MIN_GP) : null;
+  const motion = buildMotion(getPlayerSpeed(ctx), getPlayerPossessions(ctx), MIN_GP);
+  const poMotion = poEligible ? buildMotion(getPlayoffPlayerSpeed(season), getPlayoffPlayerPossessions(season), PO_MIN_GP) : null;
 
   // 似たタイプの選手: スタッツのユークリッド距離が近い3名へのリンク
-  const similarIds = getSimilarPlayers(playerIdNum);
+  const similarIds = getSimilarPlayers(playerIdNum, 3, ctx);
+
+  // 表示順: 当該シーズンの進行中フェーズを上に置く＝現シーズンにPOデータがあるときだけPOが上（plan.md §12-3）
+  const poFirst = isCurrent && poPg != null;
+
+  // シーズン積み重ね表（新しい順）。各シーズンの RS/PO 行を並べ、現シーズンだけ poFirst の順序に従う
+  const findRow = <T extends { playerId: number; team: string }>(all: T[]) =>
+    all.find((p) => p.playerId === playerIdNum && p.team !== "TOT") ?? all.find((p) => p.playerId === playerIdNum);
+  const statRows = allSeasons().flatMap((s) => {
+    const rs = findRow(getPlayerPerGame({ season: s }));
+    const po = findRow(getPlayoffPlayerPerGame(s));
+    const rows = [
+      ...(rs ? [{ key: `${s}-rs`, season: s, label: `${s} Regular Season`, row: rs, accent: false }] : []),
+      ...(po ? [{ key: `${s}-po`, season: s, label: `${s} Playoffs`, row: po, accent: true }] : []),
+    ];
+    return s === currentSeason() && po ? rows.reverse() : rows;
+  });
 
   return (
     <div className="space-y-6">
@@ -406,14 +431,17 @@ export default async function PlayerDetailPage({
             </div>
           )}
         </div>
+        <div className="ml-auto self-start flex items-center gap-2">
+        <SeasonSwitch season={season} pathname={`/players/${playerIdNum}`} />
         {similarIds && similarIds.length > 0 && (
           <Link
             href={`/compare?ids=${[playerIdNum, ...similarIds].join(",")}`}
-            className="ml-auto self-start inline-flex h-7 items-center gap-1 rounded-md border border-border bg-background px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="inline-flex h-7 items-center gap-1 rounded-md border border-border bg-background px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           >
             似たタイプの選手 ↗
           </Link>
         )}
+        </div>
       </div>
 
       {/* Stats */}
@@ -436,45 +464,34 @@ export default async function PlayerDetailPage({
                 </tr>
               </thead>
               <tbody>
-                {poPg && (
-                  <tr className="border-b">
-                    <td className="py-2 pr-4 font-semibold text-orange-400">Playoffs</td>
-                    <td className="py-2 px-3 text-center font-mono">{poPg.gp}</td>
-                    <td className="py-2 px-3 text-center font-mono font-bold">{poPg.pts.toFixed(1)}</td>
-                    <td className="py-2 px-3 text-center font-mono">{poPg.trb.toFixed(1)}</td>
-                    <td className="py-2 px-3 text-center font-mono">{poPg.ast.toFixed(1)}</td>
-                    <td className="py-2 px-3 text-center font-mono">{poPg.stl.toFixed(1)}</td>
-                    <td className="py-2 px-3 text-center font-mono">{poPg.blk.toFixed(1)}</td>
-                    <td className="py-2 px-3 text-center font-mono">{poPg.tov.toFixed(1)}</td>
-                    <td className="py-2 px-3 text-center font-mono">{fmtPct(poPg.fgPct)}</td>
-                    <td className="py-2 px-3 text-center font-mono">{fmtPct(poPg.threePtPct)}</td>
-                    <td className="py-2 px-3 text-center font-mono">{fmtPct(poPg.ftPct)}</td>
-                    <td className="py-2 px-3 text-center font-mono">{poPg.mpg.toFixed(1)}</td>
+                {statRows.map((r) => (
+                  <tr key={r.key} className={`border-b last:border-0 ${r.season === season ? "" : "opacity-60"}`}>
+                    <td className={`py-2 pr-4 whitespace-nowrap ${r.accent ? "font-semibold text-orange-400" : "font-medium text-muted-foreground"}`}>{r.label}</td>
+                    <td className="py-2 px-3 text-center font-mono">{r.row.gp}</td>
+                    <td className="py-2 px-3 text-center font-mono font-semibold">{r.row.pts.toFixed(1)}</td>
+                    <td className="py-2 px-3 text-center font-mono">{r.row.trb.toFixed(1)}</td>
+                    <td className="py-2 px-3 text-center font-mono">{r.row.ast.toFixed(1)}</td>
+                    <td className="py-2 px-3 text-center font-mono">{r.row.stl.toFixed(1)}</td>
+                    <td className="py-2 px-3 text-center font-mono">{r.row.blk.toFixed(1)}</td>
+                    <td className="py-2 px-3 text-center font-mono">{r.row.tov.toFixed(1)}</td>
+                    <td className="py-2 px-3 text-center font-mono">{fmtPct(r.row.fgPct)}</td>
+                    <td className="py-2 px-3 text-center font-mono">{fmtPct(r.row.threePtPct)}</td>
+                    <td className="py-2 px-3 text-center font-mono">{fmtPct(r.row.ftPct)}</td>
+                    <td className="py-2 px-3 text-center font-mono">{r.row.mpg.toFixed(1)}</td>
                   </tr>
-                )}
-                <tr>
-                  <td className="py-2 pr-4 font-medium text-muted-foreground">Regular Season</td>
-                  <td className="py-2 px-3 text-center font-mono">{pg.gp}</td>
-                  <td className="py-2 px-3 text-center font-mono font-semibold">{pg.pts.toFixed(1)}</td>
-                  <td className="py-2 px-3 text-center font-mono">{pg.trb.toFixed(1)}</td>
-                  <td className="py-2 px-3 text-center font-mono">{pg.ast.toFixed(1)}</td>
-                  <td className="py-2 px-3 text-center font-mono">{pg.stl.toFixed(1)}</td>
-                  <td className="py-2 px-3 text-center font-mono">{pg.blk.toFixed(1)}</td>
-                  <td className="py-2 px-3 text-center font-mono">{pg.tov.toFixed(1)}</td>
-                  <td className="py-2 px-3 text-center font-mono">{fmtPct(pg.fgPct)}</td>
-                  <td className="py-2 px-3 text-center font-mono">{fmtPct(pg.threePtPct)}</td>
-                  <td className="py-2 px-3 text-center font-mono">{fmtPct(pg.ftPct)}</td>
-                  <td className="py-2 px-3 text-center font-mono">{pg.mpg.toFixed(1)}</td>
-                </tr>
+                ))}
               </tbody>
             </table>
           </div>
         </CardContent>
       </Card>
 
-      {/* Playoffs ビジュアル */}
+      {/* ビジュアル: 進行中フェーズを上に（poFirst） */}
+      {poFirst ? (
+        <>
       <VisualGroup
-        title="Playoffs"
+        title={`Playoffs ${poYear(season)}`}
+        season={season}
         accent
         pctNote={`GP${PO_MIN_GP}以上のPO出場選手内での位置（100が最上位）`}
         pctRows={poPctRows}
@@ -490,10 +507,9 @@ export default async function PlayerDetailPage({
         badges={poBadges}
         swing={poSwing}
       />
-
-      {/* Regular Season ビジュアル */}
-      <VisualGroup
-        title="Regular Season"
+          <VisualGroup
+        title={`Regular Season ${season}`}
+        season={season}
         pctNote={`GP${MIN_GP}以上の選手内での位置（100が最上位）`}
         pctRows={pctRows}
         radarItems={radarItems}
@@ -508,6 +524,46 @@ export default async function PlayerDetailPage({
         badges={rsBadges}
         swing={null}
       />
+        </>
+      ) : (
+        <>
+          <VisualGroup
+        title={`Regular Season ${season}`}
+        season={season}
+        pctNote={`GP${MIN_GP}以上の選手内での位置（100が最上位）`}
+        pctRows={pctRows}
+        radarItems={radarItems}
+        vScore={vScore}
+        pts3={pts3}
+        pts2={pts2}
+        ptsFt={ptsFt}
+        ptsAvg={pg.pts}
+        shots={rsShots}
+        hustleItems={hustleItems}
+        motion={motion}
+        badges={rsBadges}
+        swing={null}
+      />
+      <VisualGroup
+        title={`Playoffs ${poYear(season)}`}
+        season={season}
+        accent
+        pctNote={`GP${PO_MIN_GP}以上のPO出場選手内での位置（100が最上位）`}
+        pctRows={poPctRows}
+        radarItems={poRadarItems}
+        vScore={poVScore}
+        pts3={poPts3}
+        pts2={poPts2}
+        ptsFt={poPtsFt}
+        ptsAvg={poPg?.pts ?? 0}
+        shots={poShots}
+        hustleItems={poHustleItems}
+        motion={poMotion}
+        badges={poBadges}
+        swing={poSwing}
+      />
+        </>
+      )}
 
       {/* Advanced Stats */}
       {(adv || poAdv) && (
@@ -516,7 +572,9 @@ export default async function PlayerDetailPage({
             <CardTitle>Advanced Stats</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {poAdv && (
+            {poFirst ? (
+              <>
+                {poAdv && (
               <div>
                 <div className="text-xs font-medium text-orange-400 mb-2">Playoffs</div>
                 <div className="grid grid-cols-3 gap-4 sm:grid-cols-5 lg:grid-cols-9">
@@ -539,7 +597,7 @@ export default async function PlayerDetailPage({
                 </div>
               </div>
             )}
-            {adv && (
+                {adv && (
               <div>
                 {poAdv && <div className="text-xs font-medium text-muted-foreground mb-2">Regular Season</div>}
                 <div className="grid grid-cols-3 gap-4 sm:grid-cols-5 lg:grid-cols-9">
@@ -561,6 +619,57 @@ export default async function PlayerDetailPage({
                   ))}
                 </div>
               </div>
+            )}
+              </>
+            ) : (
+              <>
+                {adv && (
+              <div>
+                {poAdv && <div className="text-xs font-medium text-muted-foreground mb-2">Regular Season</div>}
+                <div className="grid grid-cols-3 gap-4 sm:grid-cols-5 lg:grid-cols-9">
+                  {[
+                    { label: "ORtg", value: adv.offRating.toFixed(1) },
+                    { label: "DRtg", value: adv.defRating.toFixed(1) },
+                    { label: "NRtg", value: (adv.netRating > 0 ? "+" : "") + adv.netRating.toFixed(1) },
+                    { label: "TS%", value: (adv.tsPct * 100).toFixed(1) + "%" },
+                    { label: "eFG%", value: (adv.efgPct * 100).toFixed(1) + "%" },
+                    { label: "USG%", value: (adv.usgPct * 100).toFixed(1) + "%" },
+                    { label: "AST%", value: (adv.astPct * 100).toFixed(1) + "%" },
+                    { label: "REB%", value: (adv.rebPct * 100).toFixed(1) + "%" },
+                    { label: "PIE", value: (adv.pie * 100).toFixed(1) + "%" },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="text-center">
+                      <div className="text-xs text-muted-foreground">{label}</div>
+                      <div className="text-lg font-mono font-semibold">{value}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+                {poAdv && (
+              <div>
+                <div className="text-xs font-medium text-orange-400 mb-2">Playoffs</div>
+                <div className="grid grid-cols-3 gap-4 sm:grid-cols-5 lg:grid-cols-9">
+                  {[
+                    { label: "ORtg", value: poAdv.offRating.toFixed(1) },
+                    { label: "DRtg", value: poAdv.defRating.toFixed(1) },
+                    { label: "NRtg", value: (poAdv.netRating > 0 ? "+" : "") + poAdv.netRating.toFixed(1) },
+                    { label: "TS%", value: (poAdv.tsPct * 100).toFixed(1) + "%" },
+                    { label: "eFG%", value: (poAdv.efgPct * 100).toFixed(1) + "%" },
+                    { label: "USG%", value: (poAdv.usgPct * 100).toFixed(1) + "%" },
+                    { label: "AST%", value: (poAdv.astPct * 100).toFixed(1) + "%" },
+                    { label: "REB%", value: (poAdv.rebPct * 100).toFixed(1) + "%" },
+                    { label: "PIE", value: (poAdv.pie * 100).toFixed(1) + "%" },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="text-center">
+                      <div className="text-xs text-muted-foreground">{label}</div>
+                      <div className="text-lg font-mono font-semibold">{value}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+              </>
             )}
           </CardContent>
         </Card>
