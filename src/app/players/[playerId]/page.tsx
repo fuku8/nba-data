@@ -381,9 +381,10 @@ export default async function PlayerDetailPage({
   // シーズン積み重ね表（新しい順）。各シーズンの RS/PO 行を並べ、現シーズンだけ poFirst の順序に従う
   const findRow = <T extends { playerId: number; team: string }>(all: T[]) =>
     all.find((p) => p.playerId === playerIdNum && p.team !== "TOT") ?? all.find((p) => p.playerId === playerIdNum);
+  // ponytail: 過去シーズン分はリクエストごとにCSVを読み直す（1シーズン=2ファイル）。アーカイブが5季を超えたらローダー側でメモ化する
   const statRows = allSeasons().flatMap((s) => {
-    const rs = findRow(getPlayerPerGame({ season: s }));
-    const po = findRow(getPlayoffPlayerPerGame(s));
+    const rs = findRow(s === season ? allPerGame : getPlayerPerGame({ season: s }));
+    const po = findRow(s === season ? allPoPerGame : getPlayoffPlayerPerGame(s));
     const rows = [
       ...(rs ? [{ key: `${s}-rs`, season: s, label: `${s} Regular Season`, row: rs, accent: false }] : []),
       ...(po ? [{ key: `${s}-po`, season: s, label: `${s} Playoffs`, row: po, accent: true }] : []),
