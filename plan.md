@@ -606,7 +606,7 @@ GP / GS / MIN / PTS / REB (TRB/ORB/DRB) / AST / STL / BLK / TOV / PF / FGM / FGA
 | 上段トグル Regular Season / Playoffs | 削除。上段はロゴ＋**シーズンセレクタ**（§12-4） | |
 | `/playoffs`（ブラケット＋POリーダー） | **残す**。ナビ名「プレーオフ」。PO期間中は目立たせる（例: 🏆バッジ）。開幕前は「開幕前」表示のまま | POは"イベント"としてのハブページ1枚に集約 |
 | `/playoffs/teams`, `/playoffs/teams/[id]` | 削除 → `/teams/[id]` にPOセクション（シリーズ状況＋POロスター）を追加 | チームページのPO版は146行で情報量も少ない |
-| `/playoffs/players`, `/playoffs/leaders`, `/playoffs/compare`, `/playoffs/games` | 削除 → `/players` `/leaders` `/compare` `/games` に `?phase=po` のセグメントコントロール（RS｜PO）をページ見出し直下に置く。**既定は常にRS**。PO期間中はコントロールをオレンジで強調しつつ既定は変えない（既定が時期で変わること自体が迷いの原因） | `compare` はRS版とPO版がほぼ全文コピー（§11に既記）。統合で重複が消える |
+| `/playoffs/players`, `/playoffs/leaders`, `/playoffs/compare`, `/playoffs/games` | 削除 → `/players` `/leaders` `/compare` `/games` に ~~`?phase=po`~~ **`/po` パス（§12-11 で訂正。例 `/players/po`）** のセグメントコントロール（RS｜PO）をページ見出し直下に置く。**既定は常にRS**。PO期間中はコントロールをオレンジで強調しつつ既定は変えない（既定が時期で変わること自体が迷いの原因） | `compare` はRS版とPO版がほぼ全文コピー（§11に既記）。統合で重複が消える |
 | `/playoffs/games/[gameId]`（ボックススコア） | `/games/[gameId]` へ移動（RSボックススコアは未取得なのでPO試合のみ存在。RS試合はNBA.comリンクのまま） | |
 | `/playoffs/layout.tsx`（body class） | 削除 | |
 
@@ -632,7 +632,7 @@ GP / GS / MIN / PTS / REB (TRB/ORB/DRB) / AST / STL / BLK / TOV / PF / FGM / FGA
 
 ### 12-4. 設計判断③: シーズンの持ち方は `?season=` クエリ、データは `data/<season>/` に読み分け
 
-**URL**: `?season=2025-26`（省略＝現シーズン）。mlb-data の `seasonOrDefault`（`src/lib/data/normalizers.ts:19`）と同型。パス方式（`/2025-26/teams/OKC`）は全ルートに `[season]` ラッパーが要り、ページ数が倍になる。クエリ方式の代償は `searchParams` を読むページが動的レンダリングになることだが、CSVは583行規模で `compare` が既に `searchParams` で動いており実害なし。**bleague plan §7-3 は「`/2025-26/...` 例」と書いてあるので、この決定に合わせて修正する**（両サイトで揃える、§10備考）。
+**URL**: ~~`?season=2025-26`（省略＝現シーズン）~~ → **2026-09-01 訂正（§12-11）: パス区分 `/players/[id]/2025-26`（省略＝現シーズン）。** Cloudflare Pages への静的エクスポートではクエリでビルド結果を変えられないため。以下の「クエリ方式の代償」の段落は訂正前の検討記録として残す。mlb-data の `seasonOrDefault`（`src/lib/data/normalizers.ts:19`）と同型。パス方式（`/2025-26/teams/OKC`）は全ルートに `[season]` ラッパーが要り、ページ数が倍になる。クエリ方式の代償は `searchParams` を読むページが動的レンダリングになることだが、CSVは583行規模で `compare` が既に `searchParams` で動いており実害なし。**bleague plan §7-3 は「`/2025-26/...` 例」と書いてあるので、この決定に合わせて修正する**（両サイトで揃える、§10備考）。
 
 **ファイル配置**: 現シーズン＝`data/`（fetchスクリプトの書き先を変えない）、過去＝`data/<season>/`。`readCsvFile(filename, season?)` が `season === CURRENT ? data/ : data/<season>/` に解決。`shots.ts` `games.ts:96`（`getLatestGameDate` の直接パス）も同じ解決関数を通す。
 
@@ -745,3 +745,31 @@ sumo-data `src/lib/midokoro.ts` の型（ビルド時に最大3枚を決定論�
 - 比較ページの複数シーズン混在（§12-5）
 - RSボックススコア全取得（§12-7保留）
 - サイト全体のアートディレクション変更（テーマバンク `data-impact` 附則のNBA×ディザ等）。図表の種類と入口を直すのが先で、質感は別テーマとして扱う
+
+### 12-11. Cloudflare Pages 移行（静的エクスポート）— 2026-09-01 追加・Phase 1 の直後に実施
+
+**目的**: ホスティングを kokkai-data と同じ Cloudflare Pages（静的エクスポート）に揃える。動機は無料枠の大きさとドメイン運用の統一で、Vercel の枠が逼迫しているわけではない（ふくたろう 2026-09-01）。**自動化は失わない**: 毎日の launchd → push → Pages がビルド、という経路は Vercel と同じ。むしろ現状は Phase 1 で `?phase=` `?season=` を読む5ページが動的（毎閲覧でサーバー関数）になっており、静的化はそれを消す方向。
+
+**Phase 2 の前にやる理由**: 移行の本体は「クエリで表示を変える設計」の解消で、ページが増える前が一番安い。トップの「見どころ」（§12-6）もビルド時計算で成立する（sumo-data と同型）。
+
+**Next 16 同梱ドキュメント（`node_modules/next/dist/docs/01-app/02-guides/static-exports.md` §Unsupported Features）で確認した非対応**: `generateStaticParams` 無しの動的ルート・`dynamicParams: true`・`redirects()`/`rewrites()`/`headers()`・ISR（`revalidate`）・Proxy・Server Actions・Route Handlers（Request依存）・Image最適化（既定 loader）。nba-data で該当するのは動的ルート2つ・`redirects()`・`revalidate` 14箇所。
+
+**変更（コード側）**:
+
+| # | 項目 | 変更 |
+|---|---|---|
+| 1 | フェーズのURL | `?phase=po` → `/players/po` `/leaders/po` `/compare/po` `/games/po` `/teams/po`。各ページは `page.tsx`（RS）と `po/page.tsx`（PO）の薄いラッパーから共通の描画関数を呼ぶ。POデータが無いシーズンの `/po` は「開幕前」表示（静的） |
+| 2 | シーズンのURL | `?season=` → `/players/[playerId]/[season]`（省略＝現シーズン）。`generateStaticParams` は過去シーズン×その季の選手 |
+| 3 | 比較の初期選択 | `/compare?ids=` はページが読まず、クライアントの `useSearchParams`（`Suspense` で包む）で読む。静的HTMLは同じで、クエリはブラウザ側だけが解釈する |
+| 4 | `generateStaticParams` | `/players/[playerId]`（現季の per_game＋PO の全選手）・`/games/[gameId]`（`data/boxscores/` の一覧）に追加。`dynamicParams = false`（kokkai-data と同じ） |
+| 5 | `revalidate` | 14箇所を削除（ISRは非対応。更新は push ごとのビルド） |
+| 6 | リダイレクト | `next.config.ts` の `redirects()` を廃止し `public/_redirects`（Cloudflare 形式）へ。旧 `/playoffs/*` 7本 |
+| 7 | 更新時刻 | `getPoDataTimestamp`（ファイル mtime）を廃止し、`po_games.csv` の最終試合日に置換。Pages のビルドでは checkout 時刻が mtime になり誤表示するため |
+| 8 | `next.config.ts` | `output: process.env.NODE_ENV === "production" ? "export" : undefined`（kokkai-data と同じ本番限定。dev で有効化すると動的ルートが壊れる実測あり） |
+| 9 | 切替UI | `PhaseSwitch` / `SeasonSwitch` の href をパス生成に変更。見た目と文脈バッジは不変 |
+
+**検証**: `npm run build` で `out/` に `players/203999.html`・`players/po.html`・`games/0042500405.html`・`teams/po.html` 等が生成されること（動的ルートの漏れはビルドエラーで検出）。`out/` の可視テキストを Phase 1 のHTMLと突合（トップ・チーム・選手・PO）。`node --test` 19件。旧URLの301は Pages 上でしか検証できないので、接続後に `curl -I` で確認。
+
+**Cloudflare 側（ふくたろう作業・コードが整った後）**: Pages プロジェクト作成 → GitHub `main` 連携 → Build command `npm run build`・Output `out`・環境変数 `NODE_VERSION`（ローカルは v25、Pages 既定は古いので明示）→ `*.pages.dev` で表示確認 → `_redirects` の301確認 → 必要なら独自ドメイン → Vercel プロジェクト削除。launchd の次回 push で Pages が自動ビルドすることを Deployments で確認。
+
+**やらないこと**: Workers＋OpenNext（SSR維持）。Workers にはファイルシステムが無く `src/lib/data/*.ts` の `fs.readFileSync` が全て動かないため、CSV のバンドル化か R2 移行が要り、静的エクスポートより大きい。
