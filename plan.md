@@ -569,7 +569,7 @@ GP / GS / MIN / PTS / REB (TRB/ORB/DRB) / AST / STL / BLK / TOV / PF / FGM / FGA
 | ②相対的差異の露出 | 絶対値でなく差・乖離を主題化 | 部分的（パーセンタイル基軸・中央値クロス・Gini・PO昇温/降温バッジ=数少ない明示的差分は強い。**/compareの比較表は生値並置で差分・優劣表示ゼロ**が最大のギャップ。順位表もGB生値のみ） |
 | ③軌跡 | 方向性・トレンド | 部分的（SeasonHeartbeatのみ。折れ線・移動平均・トレンド表現なし。Recharts導入済みだがLineChart未使用） |
 | ④シーズン構造の動的表現 | 節目・リスクと機会 | 部分的（po_seriesの静的カードのみ。**残り日程データ自体が存在しない**=LeagueGameFinderは結果のみ取得。着手するならScheduleLeagueV2等の追加取得が前提で、npb-dataより一段手前から） |
-| ⑤プレースタイル署名 | スタイルの定性ラベル化 | ある（player-types 7タイプ+z標準化・/types・ワッフル・ショットチャート・similar。5類型で最も充実） |
+| ⑤プレースタイル署名 | スタイルの定性ラベル化 | ある（player-types 7タイプ+z標準化・/types・ワッフル・ショットチャート・similar。5類型で最も充実）。2026-09-01 追加: リーダーズに守備版の STL×BLK マップ（USG×TS の対）。**リーダーズの図はそのページのリストにあるスタッツだけで組む**（ふくたろう指摘。hustle 系は個人ページの領域）。座標は per-game の丸めで重なる（156人中58点が先に置かれた点と同一座標になり隠れる）ため totals/GP で計算 |
 
 ②のギャップ（/compare差分・優劣表示）は **実装済み（2026-08-16・104daa4）**: npb-data の方式（`compare-diff.ts` の bestIndexes/formatDiff/diffFavors + 行定義への value/better/digits 拡張、npb `71a5f61` 時点）が**そのまま移植できる**: nba の比較表は npb と同じ向き（選手=行・スタッツ=列）で、`{label, get}` 行定義パターンも共通。実装は `src/lib/compare-diff.ts`（純ロジック+テスト5件）+ `src/components/compare-stats-table.tsx`（RS/PO両compareの表を共通化）。nba 固有事項は (a) better方向: DRtg のみ low・NRtg/ORtg/PTS 等は high・GP/MPG は向きなし、(b) RS版とPO版（/playoffs/compare）がほぼ全文コピーの2枚あるため両方に適用、(c) スタイリングは Tailwind クラスで。
 

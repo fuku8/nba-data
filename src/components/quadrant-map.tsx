@@ -38,6 +38,7 @@ export function QuadrantMap({
   yFormat = "2f",
   quadrantLabels,
   labelTop = 0,
+  clipTop = 0,
 }: {
   dots: QuadrantDot[];
   xLabel: string;
@@ -46,11 +47,15 @@ export function QuadrantMap({
   yFormat?: AxisFormat;
   /** 四隅の説明（右上・左上・右下・左下） */
   quadrantLabels?: [string, string, string, string];
-  /** x 上位 N 人に常時名前を出す */
+  /** x 上位 N 人と y 上位 N 人に常時名前を出す（両軸のリーダーが端に散るので重なりにくい） */
   labelTop?: number;
+  /** y の上位 N 人を上端の余白帯に置き、N+1 番目の値を軸の上限にする。外れ値1人で全体が潰れる図の見栄え用（ホバー値は実値） */
+  clipTop?: number;
 }) {
-  const [selected, setSelected] = useState<number | null>(null);
-  const [hovered, setHovered] = useState<number | null>(null);
+  // 識別子は playerId-team（移籍で同一選手が2チーム分の点になり得るため）
+  const idOf = (d: QuadrantDot) => `${d.playerId}-${d.team}`;
+  const [selected, setSelected] = useState<string | null>(null);
+  const [hovered, setHovered] = useState<string | null>(null);
 
   if (dots.length === 0) return null;
 
@@ -63,17 +68,41 @@ export function QuadrantMap({
   const x0 = xs[0] - xPad;
   const x1 = xs[xs.length - 1] + xPad;
   const y0 = ys[0] - yPad;
-  const y1 = ys[ys.length - 1] + yPad;
+  // clipTop 時は上限を N+1 番目の値で切り、切った点は上端の余白帯に置く。余白は広め（15%）にして通常の点が上端に張り付かないようにする
+  // 最大値が同値で並ぶと誰も切られない（totals/GP の実数では実質起きず、起きても軸が伸びるだけなので対処しない）
+  const clip = clipTop > 0 && ys.length > clipTop;
+  const yTop = clip ? ys[ys.length - 1 - clipTop] : ys[ys.length - 1];
+  const y1 = yTop + (clip ? (yTop - ys[0]) * 0.15 : yPad);
 
   const sx = (v: number) => PAD.l + ((v - x0) / (x1 - x0)) * (W - PAD.l - PAD.r);
-  const sy = (v: number) => H - PAD.b - ((v - y0) / (y1 - y0)) * (H - PAD.t - PAD.b);
+  const sy = (v: number) => H - PAD.b - (((v > yTop ? y1 : v) - y0) / (y1 - y0)) * (H - PAD.t - PAD.b);
   const midX = (PAD.l + W - PAD.r) / 2;
 
-  const alwaysLabeled = new Set([...dots].sort((a, b) => b.x - a.x).slice(0, labelTop).map((d) => d.playerId));
+  const topBy = (key: "x" | "y") => [...dots].sort((a, b) => b[key] - a[key]).slice(0, labelTop).map(idOf);
+  const alwaysLabeled = new Set([...topBy("x"), ...topBy("y")]);
+  // 常時ラベルの重なり回避: 下から順に置き、先に置いたラベルと x が重なり y が近ければ 11px ずつ上へ逃がす（上端に届いたら下へ）
+  const LABEL_H = 11;
+  const placed: { x0: number; x1: number; y: number }[] = [];
+  const nameLabels = new Map<string, { x: number; y: number; end: boolean }>();
+  for (const d of [...dots].filter((d) => alwaysLabeled.has(idOf(d))).sort((a, b) => sy(b.y) - sy(a.y))) {
+    const cx = sx(d.x);
+    const end = cx > midX;
+    const w = d.name.length * 5.5;
+    const x0 = end ? cx - 6 - w : cx + 6;
+    const collides = (yy: number) => placed.some((p) => p.x0 < x0 + w && x0 < p.x1 && Math.abs(p.y - yy) < LABEL_H);
+    let y = sy(d.y) - 5;
+    while (collides(y) && y - LABEL_H >= 10) y -= LABEL_H; // 上へ（文字の上端が viewBox 内に残る範囲で）
+    if (collides(y)) {
+      y = sy(d.y) + LABEL_H + 4; // 上に余地が無ければ点の下へ
+      while (collides(y)) y += LABEL_H;
+    }
+    placed.push({ x0, x1: x0 + w, y });
+    nameLabels.set(idOf(d), { x: end ? cx - 6 : cx + 6, y, end });
+  }
 
   // 固定（クリック）を優先し、無ければホバー中の点
   const shownId = selected ?? hovered;
-  const shownDot = shownId != null ? dots.find((d) => d.playerId === shownId) : undefined;
+  const shownDot = shownId != null ? dots.find((d) => idOf(d) === shownId) : undefined;
 
   // ラベル位置: ドット近傍からスタートし、viewBoxをはみ出す場合は反対側へクランプ
   let labelX = 0;
@@ -120,13 +149,13 @@ export function QuadrantMap({
           </text>
         ))}
         {dots.map((d) => (
-          <g key={`${d.playerId}-${d.team}`}>
+          <g key={idOf(d)}>
             <circle cx={sx(d.x)} cy={sy(d.y)} r={4} fill={getTeamColor(d.team)} fillOpacity={0.85} />
-            {alwaysLabeled.has(d.playerId) && (
+            {nameLabels.has(idOf(d)) && (
               <text
-                x={sx(d.x) + (sx(d.x) > midX ? -6 : 6)}
-                y={sy(d.y) - 5}
-                textAnchor={sx(d.x) > midX ? "end" : "start"}
+                x={nameLabels.get(idOf(d))!.x}
+                y={nameLabels.get(idOf(d))!.y}
+                textAnchor={nameLabels.get(idOf(d))!.end ? "end" : "start"}
                 fontSize={10}
                 fill="currentColor"
                 fillOpacity={0.85}
@@ -141,11 +170,11 @@ export function QuadrantMap({
               r={10}
               fill="transparent"
               className="cursor-pointer"
-              onMouseEnter={() => setHovered(d.playerId)}
+              onMouseEnter={() => setHovered(idOf(d))}
               onMouseLeave={() => setHovered(null)}
               onClick={(e) => {
                 e.stopPropagation();
-                setSelected((prev) => (prev === d.playerId ? null : d.playerId));
+                setSelected((prev) => (prev === idOf(d) ? null : idOf(d)));
               }}
             />
           </g>
