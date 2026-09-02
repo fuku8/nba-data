@@ -6,15 +6,15 @@ export const SITE_URL = "https://nba-data.pages.dev";
 export const SITE_NAME = "NBA Data";
 
 // ページごとの title / description / OG。title は layout の template で「… | NBA Data」になる
-// ponytail: OG 画像は用意していない（og:image なし）。必要になったら public/og.png を置いて images に足す
-export function pageMeta({ title, description, path }: { title: string; description: string; path: string }): Metadata {
+export function pageMeta({ title, description, path, image }: { title: string; description: string; path: string; image?: string }): Metadata {
   return {
     // ルート layout と同じ階層の page（トップ）には template が効かないので、トップだけ絶対指定
     title: path === "/" ? { absolute: `${title} | ${SITE_NAME}` } : title,
     description,
     alternates: { canonical: path },
-    openGraph: { title, description, url: path, siteName: SITE_NAME, type: "website", locale: "ja_JP" },
-    twitter: { card: "summary", title, description },
+    // 画像は各セグメントの opengraph-image.tsx が自動で付く。catch-all 配下（選手）だけ Route Handler の URL を渡す
+    openGraph: { title, description, url: path, siteName: SITE_NAME, type: "website", locale: "ja_JP", ...(image ? { images: [image] } : {}) },
+    twitter: { card: "summary_large_image", title, description, ...(image ? { images: [image] } : {}) },
   };
 }
 

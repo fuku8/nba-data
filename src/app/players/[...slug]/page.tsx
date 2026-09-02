@@ -21,6 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title: `${pg.player} · NBA ${season}`,
     description: `${pg.player}（${pg.team}）の NBA ${season} スタッツ: ${pg.gp}試合 ${pg.pts.toFixed(1)} PTS / ${pg.trb.toFixed(1)} REB / ${pg.ast.toFixed(1)} AST。リーグ内パーセンタイル・レーダー・得点の作り方・ショットチャート${po ? "・プレーオフ成績" : ""}。`,
     path: s ? `/players/${playerId}/${s}` : `/players/${playerId}`,
+    image: `/og/players/${slug.join("/")}`,
   });
 }
 
