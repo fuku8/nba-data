@@ -160,7 +160,7 @@ export function QuadrantMap({
 
   // 当たり判定は点ごとの要素ではなく SVG 全体で受け、ポインタ位置から最寄りの点（HIT_R 以内）を選ぶ
   // （常時表示の名前テキストが点に被ってもクリックが届く。タッチもタップ位置で同じ判定）
-  const HIT_R = 10;
+  const HIT_R = narrow ? 15 : 10; // スマホ幅は直径 約24px（PC は約16px）。判定は「半径内の最寄りの点」なので広げても隣の点に取られない
   const toViewBox = (e: React.PointerEvent<SVGSVGElement> | React.MouseEvent<SVGSVGElement>) => {
     const ctm = svgRef.current?.getScreenCTM();
     if (!ctm) return null;
