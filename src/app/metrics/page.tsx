@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { currentSeason, poYear } from "@/lib/season";
 
 export const metadata: Metadata = {
-  title: "指標解説 | NBA Data",
+  title: "指標解説",
   description: "このサイトの視覚化指標（パーセンタイル・オールラウンド度・熱戦指数など）の意味と計算方法",
 };
 

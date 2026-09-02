@@ -1,6 +1,14 @@
 import { getStandings, getTeamAdvanced } from "@/lib/data/teams";
 import { currentSeason } from "@/lib/season";
 import { StandingsClient } from "./client";
+import { pageMeta, phaseTitle } from "@/lib/metadata";
+
+export const metadata = pageMeta({
+  title: `順位表 · ${phaseTitle("rs")}`,
+  description: `${phaseTitle("rs")} の東西カンファレンス順位表。勝敗・勝率・ゲーム差に加え、ORtg・DRtg・NRtg・Pace を並べる。`,
+  path: "/standings",
+});
+
 
 export default function StandingsPage() {
   const standings = getStandings();

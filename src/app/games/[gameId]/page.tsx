@@ -1,12 +1,30 @@
 import fs from "fs";
 import path from "path";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { pageMeta, phaseTitle } from "@/lib/metadata";
 import Link from "next/link";
 import { getTeamColor } from "@/lib/constants/teams";
 import { currentSeason, seasonDir } from "@/lib/season";
 import { PhaseBadge } from "@/components/phase-switch";
 
 export const dynamicParams = false;
+
+export async function generateMetadata({ params }: { params: Promise<{ gameId: string }> }): Promise<Metadata> {
+  const { gameId } = await params;
+  const box = getBoxScore(gameId);
+  const away = box?.teams.find((t) => !t.isHome);
+  const home = box?.teams.find((t) => t.isHome);
+  if (!box || !away || !home) return {};
+  const date = box.gameTimeUTC
+    ? new Date(box.gameTimeUTC).toLocaleDateString("ja-JP", { timeZone: "America/New_York", year: "numeric", month: "long", day: "numeric" })
+    : "";
+  return pageMeta({
+    title: `${away.tricode} ${away.score} - ${home.score} ${home.tricode} · ${phaseTitle("po")}`,
+    description: `${date} ${away.tricode} @ ${home.tricode} のボックススコア。クォーター別スコアとチーム・選手スタッツ。`,
+    path: `/games/${gameId}`,
+  });
+}
 
 // data/boxscores/{gameId}.json がある試合（現季）
 export function generateStaticParams() {

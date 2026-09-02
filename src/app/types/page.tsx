@@ -7,7 +7,7 @@ import { SeasonTitle } from "@/components/season-title";
 import { currentSeason } from "@/lib/season";
 
 export const metadata: Metadata = {
-  title: "選手タイプ | NBA Data",
+  title: "選手タイプ",
   description: "スタイルから判定した7つの選手タイプと、タイプ別のリーグ内評価点ランキング",
 };
 

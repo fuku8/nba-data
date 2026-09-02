@@ -3,10 +3,12 @@ import Script from "next/script";
 import "./globals.css";
 import { Navigation } from "@/components/layout/navigation";
 import { currentSeason } from "@/lib/season";
+import { SITE_URL, SITE_NAME } from "@/lib/metadata";
 
 export const metadata: Metadata = {
-  title: "NBA Data Dashboard",
-  description: "NBA チーム・選手スタッツダッシュボード",
+  metadataBase: new URL(SITE_URL),
+  title: { default: SITE_NAME, template: `%s | ${SITE_NAME}` },
+  description: "NBA のチーム・選手スタッツを、順位表・リーダーズ・散布図・パーセンタイルで見るダッシュボード",
 };
 
 export default function RootLayout({

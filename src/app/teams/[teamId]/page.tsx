@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { pageMeta } from "@/lib/metadata";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +23,20 @@ import { SeasonTitle } from "@/components/season-title";
 import { currentSeason } from "@/lib/season";
 
 export const dynamicParams = false;
+
+export async function generateMetadata({ params }: { params: Promise<{ teamId: string }> }): Promise<Metadata> {
+  const { teamId } = await params;
+  const abbr = teamId.toUpperCase();
+  const info = NBA_TEAMS[abbr];
+  if (!info) return {};
+  const st = getStandings().find((s) => s.teamAbbr === abbr);
+  const rec = st ? `成績 ${st.wins}-${st.losses}、` : "";
+  return pageMeta({
+    title: `${info.name} · NBA ${currentSeason()}`,
+    description: `${info.name} の NBA ${currentSeason()} シーズン。${rec}レーティング・Season Heartbeat・ワンマン度・ボール支配・チームスタッツ・ロスター${isPlayoffDataAvailable() ? "・プレーオフ成績" : ""}。`,
+    path: `/teams/${abbr}`,
+  });
+}
 
 export function generateStaticParams() {
   return Object.keys(NBA_TEAMS).map((teamId) => ({ teamId }));
