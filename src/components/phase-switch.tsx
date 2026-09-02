@@ -72,7 +72,7 @@ export function PreSeasonNotice() {
 }
 
 // RS｜PO のタブ見出し（トップとチーム詳細で共用）。<Tabs> の中で使う
-export function PhaseTabsList() {
+export function PhaseTabsList({ compare = false }: { compare?: boolean }) {
   return (
     <TabsList>
       <TabsTrigger value="rs" className="px-3">Regular Season</TabsTrigger>
@@ -80,6 +80,7 @@ export function PhaseTabsList() {
         <Trophy />
         Playoffs
       </TabsTrigger>
+      {compare && <TabsTrigger value="compare" className="px-3">RS vs PO</TabsTrigger>}
     </TabsList>
   );
 }

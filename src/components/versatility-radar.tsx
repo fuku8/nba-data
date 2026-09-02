@@ -22,10 +22,12 @@ function pt(i: number, n: number, r: number): [number, number] {
   return [CX + r * Math.cos(a), CY + r * Math.sin(a)];
 }
 
-export function VersatilityRadar({ items }: { items: RadarItem[] }) {
+// base を渡すと base（灰）の上に items（橙）を重ねる（RS vs PO 比較用。軸の並びは同じ前提）
+export function VersatilityRadar({ items, base }: { items: RadarItem[]; base?: RadarItem[] }) {
   const n = items.length;
   const ring = (frac: number) => items.map((_, i) => pt(i, n, R * frac).join(",")).join(" ");
-  const shape = items.map((it, i) => pt(i, n, R * Math.max(0.02, it.pct)).join(",")).join(" ");
+  const shapeOf = (xs: RadarItem[]) => xs.map((it, i) => pt(i, n, R * Math.max(0.02, it.pct)).join(",")).join(" ");
+  const shape = shapeOf(items);
 
   return (
     <svg viewBox="0 0 260 220" className="w-full max-w-[260px]" role="img" aria-label={`${n}部門パーセンタイルのレーダーチャート`}>
@@ -36,6 +38,7 @@ export function VersatilityRadar({ items }: { items: RadarItem[] }) {
         const [x, y] = pt(i, n, R);
         return <line key={i} x1={CX} y1={CY} x2={x} y2={y} stroke="currentColor" strokeOpacity={0.15} />;
       })}
+      {base && <polygon points={shapeOf(base)} fill="#94a3b8" fillOpacity={0.3} stroke="#94a3b8" strokeWidth={1.5} />}
       <polygon points={shape} fill="#f97316" fillOpacity={0.35} stroke="#f97316" strokeWidth={1.5} />
       {items.map((it, i) => {
         const [x, y] = pt(i, n, R + 18);

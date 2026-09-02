@@ -18,6 +18,7 @@ import { allSeasons, poYear } from "@/lib/season";
 import { SeasonSwitch } from "@/components/season-switch";
 import { SeasonTitle } from "@/components/season-title";
 import { PhaseTabsList } from "@/components/phase-switch";
+import { PhaseCompareBars, RS_COLOR, PO_COLOR } from "@/components/phase-compare-bars";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 
 function fmtHeight(h: string): string {
@@ -212,6 +213,127 @@ function VisualGroup({
 }
 
 // 指定シーズンに RS か PO の成績がある選手ID（generateStaticParams 用）
+// RS vs PO: 同じ選手の「リーグ内の位置」を並べる。生の数値は出場時間と相手の強さで必ずずれるので比べない
+function CompareGroup({
+  poGp,
+  pctRows,
+  poPctRows,
+  radarItems,
+  poRadarItems,
+  vScore,
+  poVScore,
+  scoring,
+  poScoring,
+  hustleItems,
+  poHustleItems,
+  motion,
+  poMotion,
+}: {
+  poGp: number;
+  pctRows: PercentileRow[];
+  poPctRows: PercentileRow[];
+  radarItems: { label: string; pct: number }[] | null;
+  poRadarItems: { label: string; pct: number }[] | null;
+  vScore: number | null;
+  poVScore: number | null;
+  scoring: { pts3: number; pts2: number; ptsFt: number; ptsAvg: number };
+  poScoring: { pts3: number; pts2: number; ptsFt: number; ptsAvg: number };
+  hustleItems: { label: string; pct: number }[] | null;
+  poHustleItems: { label: string; pct: number }[] | null;
+  motion: { items: PercentileRow[]; score: number } | null;
+  poMotion: { items: PercentileRow[]; score: number } | null;
+}) {
+  const legend = (
+    <span className="text-xs text-muted-foreground">
+      <span className="font-semibold" style={{ color: RS_COLOR }}>灰=RS</span> · <span className="font-semibold" style={{ color: PO_COLOR }}>橙=PO</span>
+    </span>
+  );
+  const arrow = (a: number | null, b: number | null) =>
+    a != null && b != null ? `${(a * 100).toFixed(1)} → ${(b * 100).toFixed(1)}` : "";
+  const hasScoring = scoring.pts3 + scoring.pts2 + scoring.ptsFt > 0 && poScoring.pts3 + poScoring.pts2 + poScoring.ptsFt > 0;
+  return (
+    <section className="space-y-4">
+      <h2 className="text-lg font-semibold">RS vs PO</h2>
+      <p className="text-xs text-muted-foreground">
+        値はいずれもリーグ内の位置（100が最上位）。RS はGP{MIN_GP}以上の選手内、PO はGP{PO_MIN_GP}以上のPO出場選手内で、母集団が違う。
+        この選手の PO は{poGp}試合{poGp < 8 ? "（試合数が少なく値は荒れやすい）" : ""}。
+      </p>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <CardTitle>League Percentile</CardTitle>
+            <MetricLink anchor="percentile" />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <PhaseCompareBars rs={pctRows} po={poPctRows} />
+        </CardContent>
+      </Card>
+      <div className="grid gap-4 lg:grid-cols-2">
+        {radarItems && poRadarItems && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <CardTitle>オールラウンド度 {arrow(vScore, poVScore)}</CardTitle>
+                <MetricLink anchor="versatility" />
+              </div>
+              {legend}
+            </CardHeader>
+            <CardContent className="flex justify-center">
+              <VersatilityRadar items={poRadarItems} base={radarItems} />
+            </CardContent>
+          </Card>
+        )}
+        {hasScoring && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <CardTitle>得点の作り方</CardTitle>
+                <MetricLink anchor="scoring-mix" />
+              </div>
+            </CardHeader>
+            <CardContent className="grid grid-cols-2 gap-4">
+              {[{ tag: "RS", color: RS_COLOR, v: scoring }, { tag: "PO", color: PO_COLOR, v: poScoring }].map(({ tag, color, v }) => (
+                <div key={tag} className="space-y-2">
+                  <div className="text-sm font-semibold" style={{ color }}>{tag} <span className="font-mono text-muted-foreground">{v.ptsAvg.toFixed(1)} PTS</span></div>
+                  <ScoringWaffle pts3={v.pts3} pts2={v.pts2} ptsFt={v.ptsFt} />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+        {hustleItems && poHustleItems && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <CardTitle>縁の下の力持ち度 {arrow(hustleItems.reduce((a, r) => a + r.pct, 0) / hustleItems.length, poHustleItems.reduce((a, r) => a + r.pct, 0) / poHustleItems.length)}</CardTitle>
+                <MetricLink anchor="hustle" />
+              </div>
+              {legend}
+            </CardHeader>
+            <CardContent className="flex justify-center">
+              <VersatilityRadar items={poHustleItems} base={hustleItems} />
+            </CardContent>
+          </Card>
+        )}
+        {motion && poMotion && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <CardTitle>運動量 {arrow(motion.score, poMotion.score)}</CardTitle>
+                <MetricLink anchor="motion" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <PhaseCompareBars rs={motion.items} po={poMotion.items} />
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export function playerIdsOf(season: string): number[] {
   return [...new Set([...getPlayerPerGame({ season }), ...getPlayoffPlayerPerGame(season)].map((p) => p.playerId))];
 }
@@ -284,6 +406,8 @@ export async function renderPlayer(playerId: string, season: string) {
   const poPctRows = poEligible
     ? buildPctRows(poPg, poAdv, dedupe(allPoPerGame, PO_MIN_GP), dedupe(allPoAdvanced, PO_MIN_GP))
     : null;
+  // RS vs PO タブ: 両方のパーセンタイルが出せる選手だけ
+  const canCompare = pctRows != null && poPctRows != null;
 
   // レーダー: League Percentileの5部門値をラベルで明示的に抽出（行順への位置依存を避ける）
   const extractRadar = (rows: PercentileRow[] | null) => {
@@ -486,7 +610,7 @@ export async function renderPlayer(playerId: string, season: string) {
       {/* ビジュアル: トップ・チーム詳細と同じ RS｜PO タブ（既定 RS）。PO の図が出せない（GP不足・未出場）ときはタブなしで RS だけ */}
       {poEligible ? (
         <Tabs defaultValue="rs" className="gap-6">
-          <PhaseTabsList />
+          <PhaseTabsList compare={canCompare} />
           <TabsContent value="rs">
             <VisualGroup
               title={`Regular Season ${season}`}
@@ -526,6 +650,25 @@ export async function renderPlayer(playerId: string, season: string) {
               swing={poSwing}
             />
           </TabsContent>
+          {canCompare && (
+            <TabsContent value="compare">
+              <CompareGroup
+                poGp={poPg!.gp}
+                pctRows={pctRows!}
+                poPctRows={poPctRows!}
+                radarItems={radarItems}
+                poRadarItems={poRadarItems}
+                vScore={vScore}
+                poVScore={poVScore}
+                scoring={{ pts3, pts2, ptsFt, ptsAvg: pg.pts }}
+                poScoring={{ pts3: poPts3, pts2: poPts2, ptsFt: poPtsFt, ptsAvg: poPg!.pts }}
+                hustleItems={hustleItems}
+                poHustleItems={poHustleItems}
+                motion={motion}
+                poMotion={poMotion}
+              />
+            </TabsContent>
+          )}
         </Tabs>
       ) : (
         <VisualGroup
