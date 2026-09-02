@@ -76,7 +76,7 @@ export function PlayoffTeamsClient({
         <table className="w-full text-sm">
           <thead className="border-b bg-muted/50">
             <tr>
-              <th className="text-left py-2 px-3 font-medium">チーム</th>
+              <th className="text-left py-2 px-2 sm:px-3 font-medium sticky left-0 z-10 bg-background">チーム</th>
               <th className="py-2 px-3 text-center text-muted-foreground font-medium text-xs w-16">W-L</th>
               {COLS.map((col) => (
                 <th key={col.key} className="py-2 px-2 text-right font-medium">
@@ -91,11 +91,11 @@ export function PlayoffTeamsClient({
               const rec = teamRecords.get(t.team);
               return (
                 <tr key={t.team} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                  <td className="py-2 px-3">
+                  <td className="py-2 px-2 sm:px-3 sticky left-0 z-10 bg-background">
                     <Link href={`/teams/${t.team}`} className="flex items-center gap-2 hover:underline font-medium">
                       <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: getTeamColor(t.team) }} />
-                      <span>{teamInfo?.name ?? t.team}</span>
-                      <span className="text-muted-foreground text-xs">{t.team}</span>
+                      <span className="hidden sm:inline">{teamInfo?.name ?? t.team}</span>
+                      <span className="sm:text-muted-foreground sm:text-xs">{t.team}</span>
                     </Link>
                   </td>
                   <td className="py-2 px-3 text-center font-mono text-xs text-muted-foreground">

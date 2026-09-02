@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SortableHeader } from "@/components/sortable-header";
+import { STICKY_RANK, STICKY_NAME } from "@/lib/table-classes";
 import { getTeamColor } from "@/lib/constants/teams";
 import type { SortConfig } from "@/lib/types";
 import { PhaseSwitch } from "@/components/phase-switch";
@@ -89,8 +90,8 @@ export function TeamsClient({ teams, poAvailable, season }: { teams: TeamSummary
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-8">#</TableHead>
-                  <TableHead>Team</TableHead>
+                  <TableHead className={`w-8 ${STICKY_RANK}`}>#</TableHead>
+                  <TableHead className={STICKY_NAME}>Team</TableHead>
                   <TableHead className="text-right">
                     <SortableHeader label="W" sortKey="wins" sortConfig={sortConfig} onSort={handleSort} className="justify-end" />
                   </TableHead>
@@ -123,11 +124,12 @@ export function TeamsClient({ teams, poAvailable, season }: { teams: TeamSummary
               <TableBody>
                 {sorted.map((t, i) => (
                   <TableRow key={t.abbr} className="hover:bg-accent/50">
-                    <TableCell className="text-muted-foreground">{i + 1}</TableCell>
-                    <TableCell>
+                    <TableCell className={`text-muted-foreground ${STICKY_RANK}`}>{i + 1}</TableCell>
+                    <TableCell className={STICKY_NAME}>
                       <Link href={`/teams/${t.abbr}`} className="flex items-center gap-2 hover:underline font-medium">
-                        <div className="h-3 w-3 rounded-full" style={{ backgroundColor: getTeamColor(t.abbr) }} />
-                        {t.name}
+                        <div className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: getTeamColor(t.abbr) }} />
+                        <span className="sm:hidden">{t.abbr}</span>
+                        <span className="hidden sm:inline">{t.name}</span>
                       </Link>
                     </TableCell>
                     <TableCell className="text-right font-mono">{t.wins}</TableCell>

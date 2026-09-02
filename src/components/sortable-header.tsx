@@ -30,7 +30,7 @@ export function SortableHeader({
           <ArrowDown className="h-3 w-3" />
         )
       ) : (
-        <ArrowUpDown className="h-3 w-3 opacity-40" />
+        <ArrowUpDown className="h-3 w-3 opacity-40 hidden sm:inline" /> /* スマホ幅は列を詰めるため未ソート列のアイコンは出さない（見出しをタップすれば並べ替わる） */
       )}
     </button>
   );

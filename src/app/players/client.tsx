@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { SortableHeader } from "@/components/sortable-header";
 import { QuadrantMap, MAP_HELP, type QuadrantDot } from "@/components/quadrant-map";
+import { STICKY_RANK, STICKY_NAME } from "@/lib/table-classes";
 import { getTeamColor } from "@/lib/constants/teams";
 import type { PlayerPerGame, PlayerAdvanced, SortConfig } from "@/lib/types";
 import { PhaseSwitch } from "@/components/phase-switch";
@@ -206,9 +207,9 @@ export function PlayersClient({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-8">#</TableHead>
-                      <TableHead>Player</TableHead>
-                      <TableHead>Team</TableHead>
+                      <TableHead className={`w-8 ${STICKY_RANK}`}>#</TableHead>
+                      <TableHead className={STICKY_NAME}>Player</TableHead>
+                      <TableHead className="hidden sm:table-cell">Team</TableHead>
                       <TableHead className="text-right">
                         <SortableHeader label="GP" sortKey="gp" sortConfig={sortConfig} onSort={handleSort} className="justify-end" />
                       </TableHead>
@@ -244,13 +245,14 @@ export function PlayersClient({
                   <TableBody>
                     {pagedPerGame.map((p, i) => (
                       <TableRow key={`${p.player}-${p.team}`} className="hover:bg-accent/50">
-                        <TableCell className="text-muted-foreground">{page * PAGE_SIZE + i + 1}</TableCell>
-                        <TableCell>
-                          <Link href={`/players/${p.playerId}`} className="hover:underline font-medium">
+                        <TableCell className={`text-muted-foreground ${STICKY_RANK}`}>{page * PAGE_SIZE + i + 1}</TableCell>
+                        <TableCell className={STICKY_NAME}>
+                          <Link href={`/players/${p.playerId}`} className="block truncate hover:underline font-medium">
                             {p.player}
                           </Link>
+                          <span className="sm:hidden text-muted-foreground">{p.team}</span>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           <Link href={`/teams/${p.team}`} className="flex items-center gap-1.5 hover:underline">
                             <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: getTeamColor(p.team) }} />
                             {p.team}
@@ -282,9 +284,9 @@ export function PlayersClient({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-8">#</TableHead>
-                      <TableHead>Player</TableHead>
-                      <TableHead>Team</TableHead>
+                      <TableHead className={`w-8 ${STICKY_RANK}`}>#</TableHead>
+                      <TableHead className={STICKY_NAME}>Player</TableHead>
+                      <TableHead className="hidden sm:table-cell">Team</TableHead>
                       <TableHead className="text-right">
                         <SortableHeader label="GP" sortKey="gp" sortConfig={advSortConfig} onSort={handleAdvSort} className="justify-end" />
                       </TableHead>
@@ -317,13 +319,14 @@ export function PlayersClient({
                   <TableBody>
                     {pagedAdvanced.map((p, i) => (
                       <TableRow key={`${p.player}-${p.team}`} className="hover:bg-accent/50">
-                        <TableCell className="text-muted-foreground">{page * PAGE_SIZE + i + 1}</TableCell>
-                        <TableCell>
-                          <Link href={`/players/${p.playerId}`} className="hover:underline font-medium">
+                        <TableCell className={`text-muted-foreground ${STICKY_RANK}`}>{page * PAGE_SIZE + i + 1}</TableCell>
+                        <TableCell className={STICKY_NAME}>
+                          <Link href={`/players/${p.playerId}`} className="block truncate hover:underline font-medium">
                             {p.player}
                           </Link>
+                          <span className="sm:hidden text-muted-foreground">{p.team}</span>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           <Link href={`/teams/${p.team}`} className="flex items-center gap-1.5 hover:underline">
                             <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: getTeamColor(p.team) }} />
                             {p.team}
