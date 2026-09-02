@@ -780,6 +780,11 @@ sumo-data `src/lib/midokoro.ts` の型（ビルド時に最大3枚を決定論�
 
 **やらないこと**: Workers＋OpenNext（SSR維持）。Workers にはファイルシステムが無く `src/lib/data/*.ts` の `fs.readFileSync` が全て動かないため、CSV のバンドル化か R2 移行が要り、静的エクスポートより大きい。
 
+**繰越の模擬ビルドで出た静的エクスポートの落とし穴（2026-09-02 記録・同日修正）**: rollover 後の状態（PO 依存ファイル削除・season.txt=2026-27・data/2025-26/ あり）と、その翌日の日次取得後（RS CSV がヘッダーのみ）の2状態をコピーで `npm run build` した。どちらも 2026-09-01 の rollover 検証（SSR 時代）では出なかった。
+1. `/games/[gameId]` は boxscore（PO のみ取得）から params を作るため RS 期間中は空になり、`output: export` は空の generateStaticParams を「未定義」扱いでビルド失敗にする（`next/dist/build/index.js` の `prerenderedRoutes.length > 0` 判定）。→ boxscore を現季＋過去季から探す（`findBoxScore` / `boxScoreGameIds`、gameId はシーズン跨ぎで一意）。副産物として過去季のボックススコアが残る
+2. `/og/players/[...slug]` は静的出力で `og/players/<id>`（ファイル）と `og/players/<id>/<season>`（ディレクトリ）が同名衝突し EISDIR。過去季が存在する限り毎回起きる。→ 過去季の OG 画像 URL を `/og/players/<season>/<id>` に逆順化（`.html` が付く page と違い Route Handler は拡張子なしで書き出されるため）
+- 翌日取得後の状態: RS 各ページは「2026-27 Regular Season」見出しのまま空表になる（「開幕前」表示があるのは PO だけ）。`/players/<id>`（現季）は params が空になり 404、`/players/<id>/2025-26` は残る。**繰越を開幕直前にすれば空表の期間は最小になる**
+
 ### 12-12. チーム色のコントラスト根本対策（2026-09-01 記録・同日実装 `19bc44d`。ふくたろう指摘）
 
 **現象**: 暗背景（`html.dark`・`--background: oklch(0.145 0 0)`≒#0a0a0a、カードは 0.205）に対して、チームのプライマリ色をそのまま置くと PHX・DEN・MIN 等が沈んで見えない。2026-09-01 に文字色→ドットへ変えた（`b80c83a`）が、ドット自体が同じ色なので根本解決になっていない。

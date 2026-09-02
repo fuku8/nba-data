@@ -1,11 +1,10 @@
 import fs from "fs";
-import path from "path";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { pageMeta, phaseTitle } from "@/lib/metadata";
 import Link from "next/link";
 import { getTeamColor } from "@/lib/constants/teams";
-import { currentSeason, seasonDir } from "@/lib/season";
+import { findBoxScore, boxScoreGameIds } from "@/lib/data/games";
 import { PhaseBadge } from "@/components/phase-switch";
 
 export const dynamicParams = false;
@@ -20,17 +19,15 @@ export async function generateMetadata({ params }: { params: Promise<{ gameId: s
     ? new Date(box.gameTimeUTC).toLocaleDateString("ja-JP", { timeZone: "America/New_York", year: "numeric", month: "long", day: "numeric" })
     : "";
   return pageMeta({
-    title: `${away.tricode} ${away.score} - ${home.score} ${home.tricode} · ${phaseTitle("po")}`,
+    title: `${away.tricode} ${away.score} - ${home.score} ${home.tricode} · ${phaseTitle("po", box.season)}`,
     description: `${date} ${away.tricode} @ ${home.tricode} のボックススコア。クォーター別スコアとチーム・選手スタッツ。`,
     path: `/games/${gameId}`,
   });
 }
 
-// data/boxscores/{gameId}.json がある試合（現季）
+// boxscores/{gameId}.json がある試合（現季＋過去季）
 export function generateStaticParams() {
-  const dir = path.join(seasonDir(currentSeason()), "boxscores");
-  if (!fs.existsSync(dir)) return [];
-  return fs.readdirSync(dir).filter((f) => f.endsWith(".json")).map((f) => ({ gameId: f.replace(/\.json$/, "") }));
+  return boxScoreGameIds().map((gameId) => ({ gameId }));
 }
 
 // ─── Types ──────────────────────────────────────────────────
@@ -108,11 +105,11 @@ interface BoxScore {
 
 // ─── Data loader ────────────────────────────────────────────
 
-function getBoxScore(gameId: string): BoxScore | null {
-  const p = path.join(seasonDir(currentSeason()), "boxscores", `${gameId}.json`);
-  if (!fs.existsSync(p)) return null;
+function getBoxScore(gameId: string): (BoxScore & { season: string }) | null {
+  const found = findBoxScore(gameId);
+  if (!found) return null;
   try {
-    return JSON.parse(fs.readFileSync(p, "utf-8")) as BoxScore;
+    return { ...(JSON.parse(fs.readFileSync(found.path, "utf-8")) as BoxScore), season: found.season };
   } catch {
     return null;
   }

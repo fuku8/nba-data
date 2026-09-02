@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { readCsvFile, csvToObjects, num, phaseFile, type DataCtx } from "./csv-utils";
-import { currentSeason, seasonDir } from "../season.ts";
+import { allSeasons, currentSeason, seasonDir } from "../season.ts";
 
 export interface GameResult {
   gameId: string;
@@ -93,6 +93,24 @@ export function getTeamMargins(abbr: string, ctx: DataCtx = {}): TeamGameMargin[
         oppFg3Pct: isHome ? g.awayFg3Pct : g.homeFg3Pct,
       };
     });
+}
+
+// boxscore JSON（現状POのみ）を現季→過去季の順で探す。gameId はシーズン跨ぎで一意。
+// RS中は現季の boxscores/ が無いので、静的エクスポートの generateStaticParams を空にしないために過去季も含める（plan.md §12-11）
+export function findBoxScore(gameId: string): { path: string; season: string } | null {
+  for (const season of allSeasons()) {
+    const p = path.join(seasonDir(season), "boxscores", `${gameId}.json`);
+    if (fs.existsSync(p)) return { path: p, season };
+  }
+  return null;
+}
+
+export function boxScoreGameIds(): string[] {
+  return allSeasons().flatMap((season) => {
+    const dir = path.join(seasonDir(season), "boxscores");
+    if (!fs.existsSync(dir)) return [];
+    return fs.readdirSync(dir).filter((f) => f.endsWith(".json")).map((f) => f.replace(/\.json$/, ""));
+  });
 }
 
 // 熱戦指数: leadChanges + timesTied − 最終点差。boxscore JSON（現状POのみ取得）がある試合だけ
