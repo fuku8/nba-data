@@ -14,7 +14,7 @@ import { getPlayerHustle, getPlayoffPlayerHustle, getPlayerSpeed, getPlayoffPlay
 import { MetricLink } from "@/components/metric-link";
 import { getPlayerTypes, getPoSwing, MIN_GP, PO_MIN_GP, type TypeBadge, type PoSwing } from "@/lib/data/player-types";
 import { getSimilarPlayers } from "@/lib/data/similar";
-import { currentSeason, allSeasons, poYear } from "@/lib/season";
+import { allSeasons, poYear } from "@/lib/season";
 import { SeasonSwitch } from "@/components/season-switch";
 import { SeasonTitle } from "@/components/season-title";
 import { PhaseTabsList } from "@/components/phase-switch";
