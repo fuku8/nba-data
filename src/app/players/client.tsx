@@ -250,7 +250,7 @@ export function PlayersClient({
                           <Link href={`/players/${p.playerId}`} className="block truncate hover:underline font-medium">
                             {p.player}
                           </Link>
-                          <span className="sm:hidden text-muted-foreground">{p.team}</span>
+                          <Link href={`/teams/${p.team}`} className="sm:hidden text-muted-foreground hover:underline">{p.team}</Link>
                         </TableCell>
                         <TableCell className="hidden sm:table-cell">
                           <Link href={`/teams/${p.team}`} className="flex items-center gap-1.5 hover:underline">
@@ -324,7 +324,7 @@ export function PlayersClient({
                           <Link href={`/players/${p.playerId}`} className="block truncate hover:underline font-medium">
                             {p.player}
                           </Link>
-                          <span className="sm:hidden text-muted-foreground">{p.team}</span>
+                          <Link href={`/teams/${p.team}`} className="sm:hidden text-muted-foreground hover:underline">{p.team}</Link>
                         </TableCell>
                         <TableCell className="hidden sm:table-cell">
                           <Link href={`/teams/${p.team}`} className="flex items-center gap-1.5 hover:underline">
