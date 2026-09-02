@@ -144,7 +144,7 @@ export function QuadrantMap({
   let labelY = 0;
   let labelText = "";
   let labelWidth = 0;
-  const labelHeight = 26; // タップしやすい高さ
+  const labelHeight = narrow ? 36 : 26; // スマホ幅はタップしやすいよう高く（画面上 約29px。PC は約23px）
   if (shownDot) {
     labelText = `${shownDot.name} (${shownDot.team})  ${xLabel} ${fmt(shownDot.x, xFormat)} / ${yLabel} ${fmt(shownDot.y, yFormat)}`;
     labelWidth = labelText.length * 6.2 + 16; // ponytail: SVGテキスト幅の概算（getBBox計測はしない）
