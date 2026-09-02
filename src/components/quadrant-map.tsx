@@ -7,7 +7,7 @@
 // ブラウザ標準の <title> ツールチップは約1秒静止しないと出ず、タッチでは出ないので使わない
 // 点はキーボード操作の対象にしない（150超の点を全部タブ停止にすると逆に操作性が落ちる。数値は同ページの表で読める）
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getTeamColor } from "@/lib/constants/teams";
@@ -27,9 +27,12 @@ export type AxisFormat = "pct" | "1f" | "2f";
 export const MAP_HELP = "点にホバーで選手名 · 点のクリックで選手ページへ（タッチは1回目のタップで名前、2回目で選手ページ）";
 const fmt = (v: number, f: AxisFormat) => (f === "pct" ? `${(v * 100).toFixed(1)}%` : v.toFixed(f === "1f" ? 1 : 2));
 
-const W = 640;
-const H = 420;
+// スマホ幅（sm 未満）は横スクロールさせず縦長の viewBox で幅に収める。散布図は縦横比を保つ必要がなく、
+// 文字サイズは viewBox 単位なので狭い viewBox の方が画面上では大きく読める
+const WIDE = { W: 640, H: 420 };
+const NARROW = { W: 400, H: 440 };
 const PAD = { l: 50, r: 16, t: 20, b: 40 };
+const NARROW_QUERY = "(max-width: 639px)";
 
 function median(sorted: number[]): number {
   const n = sorted.length;
@@ -65,6 +68,16 @@ export function QuadrantMap({
   const [hovered, setHovered] = useState<string | null>(null);
   const router = useRouter();
   const svgRef = useRef<SVGSVGElement>(null);
+  // 静的書き出しなので初回は PC 用の形で描き、マウント後に幅を見て切り替える（狭い画面では一度だけ形が変わる）
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia(NARROW_QUERY);
+    const sync = () => setNarrow(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+  const { W, H } = narrow ? NARROW : WIDE;
 
   if (dots.length === 0) return null;
 
@@ -91,7 +104,20 @@ export function QuadrantMap({
   const alwaysLabeled = new Set([...topBy("x"), ...topBy("y")]);
   // 常時ラベルの重なり回避: 下から順に置き、先に置いたラベルと x が重なり y が近ければ 11px ずつ上へ逃がす（上端に届いたら下へ）
   const LABEL_H = 11;
-  const placed: { x0: number; x1: number; y: number }[] = [];
+  const corners =
+    quadrantLabels &&
+    ([
+      // 上2つは図の上の余白に置く（図の中に置くと上端付近の点の名前と取り合いになる）
+      { x: sx(x1) - 6, y: PAD.t - 8, anchor: "end", text: quadrantLabels[0] },
+      { x: sx(x0) + 6, y: PAD.t - 8, anchor: "start", text: quadrantLabels[1] },
+      { x: sx(x1) - 6, y: sy(y0) - 6, anchor: "end", text: quadrantLabels[2] },
+      { x: sx(x0) + 6, y: sy(y0) - 6, anchor: "start", text: quadrantLabels[3] },
+    ] as const);
+  // 象限ラベルは先に置いた扱いにして、名前がその上に逃げてこないようにする（縦長の viewBox で上端に押し上げられたときに重なる）
+  const placed: { x0: number; x1: number; y: number }[] = (corners ?? []).map((q) => {
+    const w = q.text.length * 11; // 日本語主体なので 1 文字 ≒ fontSize
+    return q.anchor === "end" ? { x0: q.x - w, x1: q.x, y: q.y } : { x0: q.x, x1: q.x + w, y: q.y };
+  });
   const nameLabels = new Map<string, { x: number; y: number; end: boolean }>();
   for (const d of [...dots].filter((d) => alwaysLabeled.has(idOf(d))).sort((a, b) => sy(b.y) - sy(a.y))) {
     const cx = sx(d.x);
@@ -99,12 +125,11 @@ export function QuadrantMap({
     const w = d.name.length * 5.5;
     const x0 = end ? cx - 6 - w : cx + 6;
     const collides = (yy: number) => placed.some((p) => p.x0 < x0 + w && x0 < p.x1 && Math.abs(p.y - yy) < LABEL_H);
-    let y = sy(d.y) - 5;
-    while (collides(y) && y - LABEL_H >= 10) y -= LABEL_H; // 上へ（文字の上端が viewBox 内に残る範囲で）
-    if (collides(y)) {
-      y = sy(d.y) + LABEL_H + 4; // 上に余地が無ければ点の下へ
-      while (collides(y)) y += LABEL_H;
-    }
+    // 点の近くから順に試す: そのまま → 点の下 → 1段上 → 2段下 → 2段上 …（近い候補を優先し、誰の名前か分かる距離に留める）
+    const above = sy(d.y) - 5;
+    const below = sy(d.y) + LABEL_H + 4;
+    const candidates = [above, below, above - LABEL_H, below + LABEL_H, above - 2 * LABEL_H, below + 2 * LABEL_H];
+    const y = candidates.find((yy) => yy >= 9 && yy <= H && !collides(yy)) ?? above; // 9 = 文字の上端が viewBox 内に残る下限
     placed.push({ x0, x1: x0 + w, y });
     nameLabels.set(idOf(d), { x: end ? cx - 6 : cx + 6, y, end });
   }
@@ -174,20 +199,11 @@ export function QuadrantMap({
     else setSelected(idOf(d));
   };
 
-  const corners =
-    quadrantLabels &&
-    ([
-      { x: sx(x1) - 6, y: sy(y1) + 12, anchor: "end", text: quadrantLabels[0] },
-      { x: sx(x0) + 6, y: sy(y1) + 12, anchor: "start", text: quadrantLabels[1] },
-      { x: sx(x1) - 6, y: sy(y0) - 6, anchor: "end", text: quadrantLabels[2] },
-      { x: sx(x0) + 6, y: sy(y0) - 6, anchor: "start", text: quadrantLabels[3] },
-    ] as const);
-
   return (
     <div className="overflow-x-auto">
       <svg
         viewBox={`0 0 ${W} ${H}`}
-        className={`w-full min-w-[480px] ${hovered ? "cursor-pointer" : ""}`}
+        className={`w-full sm:min-w-[480px] ${hovered ? "cursor-pointer" : ""}`}
         role="img"
         aria-label={`${xLabel}と${yLabel}の散布図（中央値クロス）`}
         onClick={onClick}
