@@ -17,6 +17,8 @@ import { getSimilarPlayers } from "@/lib/data/similar";
 import { currentSeason, allSeasons, poYear } from "@/lib/season";
 import { SeasonSwitch } from "@/components/season-switch";
 import { SeasonTitle } from "@/components/season-title";
+import { PhaseTabsList } from "@/components/phase-switch";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 
 function fmtHeight(h: string): string {
   const [ft, inch] = h.split("-").map(Number);
@@ -371,7 +373,8 @@ export async function renderPlayer(playerId: string, season: string) {
   // 似たタイプの選手: スタッツのユークリッド距離が近い3名へのリンク
   const similarIds = getSimilarPlayers(playerIdNum, 3, ctx);
 
-  // 表示順: 当該シーズンの進行中フェーズを上に置く＝現シーズンにPOデータがあるときだけPOが上（plan.md §12-3）
+
+  // 表とAdvanced Statsの並び: 当該シーズンの進行中フェーズを上に置く＝現シーズンにPOデータがあるときだけPOが上（plan.md §12-3）。図はタブなので対象外
   const poFirst = isCurrent && poPg != null;
 
   // シーズン積み重ね表（新しい順）。各シーズンの RS/PO 行を並べ、現シーズンだけ poFirst の順序に従う
@@ -484,83 +487,68 @@ export async function renderPlayer(playerId: string, season: string) {
         </CardContent>
       </Card>
 
-      {/* ビジュアル: 進行中フェーズを上に（poFirst） */}
-      {poFirst ? (
-        <>
-      <VisualGroup
-        title={`Playoffs ${poYear(season)}`}
-        season={season}
-        accent
-        pctNote={`GP${PO_MIN_GP}以上のPO出場選手内での位置（100が最上位）`}
-        pctRows={poPctRows}
-        radarItems={poRadarItems}
-        vScore={poVScore}
-        pts3={poPts3}
-        pts2={poPts2}
-        ptsFt={poPtsFt}
-        ptsAvg={poPg?.pts ?? 0}
-        shots={poShots}
-        hustleItems={poHustleItems}
-        motion={poMotion}
-        badges={poBadges}
-        swing={poSwing}
-      />
-          <VisualGroup
-        title={`Regular Season ${season}`}
-        season={season}
-        pctNote={`GP${MIN_GP}以上の選手内での位置（100が最上位）`}
-        pctRows={pctRows}
-        radarItems={radarItems}
-        vScore={vScore}
-        pts3={pts3}
-        pts2={pts2}
-        ptsFt={ptsFt}
-        ptsAvg={pg.pts}
-        shots={rsShots}
-        hustleItems={hustleItems}
-        motion={motion}
-        badges={rsBadges}
-        swing={null}
-      />
-        </>
+      {/* ビジュアル: トップ・チーム詳細と同じ RS｜PO タブ（既定 RS）。PO の図が出せない（GP不足・未出場）ときはタブなしで RS だけ */}
+      {poEligible ? (
+        <Tabs defaultValue="rs" className="gap-6">
+          <PhaseTabsList />
+          <TabsContent value="rs">
+            <VisualGroup
+              title={`Regular Season ${season}`}
+              season={season}
+              pctNote={`GP${MIN_GP}以上の選手内での位置（100が最上位）`}
+              pctRows={pctRows}
+              radarItems={radarItems}
+              vScore={vScore}
+              pts3={pts3}
+              pts2={pts2}
+              ptsFt={ptsFt}
+              ptsAvg={pg.pts}
+              shots={rsShots}
+              hustleItems={hustleItems}
+              motion={motion}
+              badges={rsBadges}
+              swing={null}
+            />
+          </TabsContent>
+          <TabsContent value="po">
+            <VisualGroup
+              title={`Playoffs ${poYear(season)}`}
+              season={season}
+              accent
+              pctNote={`GP${PO_MIN_GP}以上のPO出場選手内での位置（100が最上位）`}
+              pctRows={poPctRows}
+              radarItems={poRadarItems}
+              vScore={poVScore}
+              pts3={poPts3}
+              pts2={poPts2}
+              ptsFt={poPtsFt}
+              ptsAvg={poPg?.pts ?? 0}
+              shots={poShots}
+              hustleItems={poHustleItems}
+              motion={poMotion}
+              badges={poBadges}
+              swing={poSwing}
+            />
+          </TabsContent>
+        </Tabs>
       ) : (
-        <>
-          <VisualGroup
-        title={`Regular Season ${season}`}
-        season={season}
-        pctNote={`GP${MIN_GP}以上の選手内での位置（100が最上位）`}
-        pctRows={pctRows}
-        radarItems={radarItems}
-        vScore={vScore}
-        pts3={pts3}
-        pts2={pts2}
-        ptsFt={ptsFt}
-        ptsAvg={pg.pts}
-        shots={rsShots}
-        hustleItems={hustleItems}
-        motion={motion}
-        badges={rsBadges}
-        swing={null}
-      />
-      <VisualGroup
-        title={`Playoffs ${poYear(season)}`}
-        season={season}
-        accent
-        pctNote={`GP${PO_MIN_GP}以上のPO出場選手内での位置（100が最上位）`}
-        pctRows={poPctRows}
-        radarItems={poRadarItems}
-        vScore={poVScore}
-        pts3={poPts3}
-        pts2={poPts2}
-        ptsFt={poPtsFt}
-        ptsAvg={poPg?.pts ?? 0}
-        shots={poShots}
-        hustleItems={poHustleItems}
-        motion={poMotion}
-        badges={poBadges}
-        swing={poSwing}
-      />
-        </>
+        <VisualGroup
+          title={`Regular Season ${season}`}
+          season={season}
+          pctNote={`GP${MIN_GP}以上の選手内での位置（100が最上位）`}
+          pctRows={pctRows}
+          radarItems={radarItems}
+          vScore={vScore}
+          pts3={pts3}
+          pts2={pts2}
+          ptsFt={ptsFt}
+          ptsAvg={pg.pts}
+          shots={rsShots}
+          hustleItems={hustleItems}
+          motion={motion}
+          badges={rsBadges}
+          swing={null}
+        />
       )}
 
       {/* Advanced Stats */}
