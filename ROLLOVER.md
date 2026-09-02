@@ -36,21 +36,24 @@ diff -rq data/shots data/2025-26/shots && diff -rq data/boxscores data/2025-26/b
 
 # 2. 差分があれば揃える。日次取得で AGE と hustle の小数桁が動くだけなので、
 #    確定時点の値（スナップショット）を正とし、直下をスナップショットで戻す。
-#    16:00 の日次取得が走ると再びずれるので、2〜5 は同じ日の 16:00 前に終える。
+#    16:00 の日次取得が走ると再びずれるので、2〜6 は同じ日の 16:00 前に終える。
 cp data/2025-26/*.csv data/
 
 # 3. 繰越（確認プロンプトで y）
 scripts/rollover.sh 2025-26 2026-27
 
-# 4. ビルド検証（静的エクスポート。落ちる場合は下の「既知の落とし穴」）
+# 4. 日本語名の対応表を更新（新人・two-way を Wikipedia 日本語版から追加。無い選手は NAME_JA 空＝英語名で表示。plan §13-1）
+python3 scripts/fetch-player-names-ja.py
+
+# 5. ビルド検証（静的エクスポート。落ちる場合は下の「既知の落とし穴」）
 npm run build
 
-# 5. コミット・push（データ更新コミットとは分ける）
+# 6. コミット・push（データ更新コミットとは分ける）
 git add data/ && git commit -m "data: rollover 2025-26 -> 2026-27"
 git push origin main   # SSH が使えない環境では HTTPS URL を明示
 ```
 
-### 4 のビルドで確認すること
+### 5 のビルドで確認すること
 
 | 確認項目 | 期待 |
 |---|---|
