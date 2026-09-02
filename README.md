@@ -43,7 +43,7 @@ RS（レギュラーシーズン）と PO（プレーオフ）は「モード」
 
 - 対象シーズンの単一の真実は `data/season.txt`（1行・例 `2025-26`）。アプリ（`src/lib/season.ts`）と fetch スクリプトの両方がこれを読む
 - 現シーズンのデータは `data/` 直下、過去シーズンは `data/<season>/`（例 `data/2025-26/`）。`readCsvFile(filename, season)` で読み分ける
-- **シーズン繰越**: 旧シーズン確定後・新シーズン初回取得前に `scripts/rollover.sh <old> <new>` を実行。`data/<old>/` スナップショットと `data/` 直下の差分ゼロを確認してから、フェーズ依存ファイル（`po_*.csv`・`boxscores/`・`shots/`・hustle/speed/possessions）を削除し `season.txt` を更新する。差分があれば中断するので、先にスナップショットを更新すること
+- **シーズン繰越**: 旧シーズン確定後・新シーズン初回取得前に `scripts/rollover.sh <old> <new>` を実行。`data/<old>/` スナップショットと `data/` 直下の差分ゼロを確認してから、フェーズ依存ファイル（`po_*.csv`・`boxscores/`・`shots/`・hustle/speed/possessions）を削除し `season.txt` を更新する。差分があれば中断するので、先にスナップショットを更新すること。**時期・手順・検証項目は `ROLLOVER.md`**（開幕直前に行う。早いと開幕まで RS ページが空表になる）
 
 > **注意**: `stats.nba.com` は GitHub-hosted runner（クラウド IP）からのアクセスをブロックするため、GitHub Actions でのデータ取得は廃止。
 > ローカル launchd（`~/Library/LaunchAgents/com.nba-data.update.plist`）で運用。
