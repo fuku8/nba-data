@@ -219,7 +219,6 @@ export function playerIdsOf(season: string): number[] {
 // シーズンはパス区分（/players/[id] = 現季、/players/[id]/2025-26 = 過去季）。page.tsx と [season]/page.tsx から呼ぶ（plan.md §12-11）
 export async function renderPlayer(playerId: string, season: string) {
   const ctx = { season };
-  const isCurrent = season === currentSeason();
   const playerIdNum = parseInt(playerId, 10);
   if (isNaN(playerIdNum)) notFound();
 
@@ -374,10 +373,7 @@ export async function renderPlayer(playerId: string, season: string) {
   const similarIds = getSimilarPlayers(playerIdNum, 3, ctx);
 
 
-  // 表とAdvanced Statsの並び: 当該シーズンの進行中フェーズを上に置く＝現シーズンにPOデータがあるときだけPOが上（plan.md §12-3）。図はタブなので対象外
-  const poFirst = isCurrent && poPg != null;
-
-  // シーズン積み重ね表（新しい順）。各シーズンの RS/PO 行を並べ、現シーズンだけ poFirst の順序に従う
+  // シーズン積み重ね表（新しい順）。各シーズンとも RS 行→PO 行の順（図のタブの既定 RS と揃える。plan.md §12-3 の「進行中フェーズを上」は取りやめ）
   const findRow = <T extends { playerId: number; team: string }>(all: T[]) =>
     all.find((p) => p.playerId === playerIdNum && p.team !== "TOT") ?? all.find((p) => p.playerId === playerIdNum);
   // ponytail: 過去シーズン分はリクエストごとにCSVを読み直す（1シーズン=2ファイル）。アーカイブが5季を超えたらローダー側でメモ化する
@@ -388,7 +384,7 @@ export async function renderPlayer(playerId: string, season: string) {
       ...(rs ? [{ key: `${s}-rs`, season: s, label: `${s} Regular Season`, row: rs, accent: false }] : []),
       ...(po ? [{ key: `${s}-po`, season: s, label: `${s} Playoffs`, row: po, accent: true }] : []),
     ];
-    return s === currentSeason() && po ? rows.reverse() : rows;
+    return rows;
   });
 
   return (
@@ -558,57 +554,6 @@ export async function renderPlayer(playerId: string, season: string) {
             <CardTitle>Advanced Stats</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {poFirst ? (
-              <>
-                {poAdv && (
-              <div>
-                <div className="text-xs font-medium text-orange-400 mb-2">Playoffs</div>
-                <div className="grid grid-cols-3 gap-4 sm:grid-cols-5 lg:grid-cols-9">
-                  {[
-                    { label: "ORtg", value: poAdv.offRating.toFixed(1) },
-                    { label: "DRtg", value: poAdv.defRating.toFixed(1) },
-                    { label: "NRtg", value: (poAdv.netRating > 0 ? "+" : "") + poAdv.netRating.toFixed(1) },
-                    { label: "TS%", value: (poAdv.tsPct * 100).toFixed(1) + "%" },
-                    { label: "eFG%", value: (poAdv.efgPct * 100).toFixed(1) + "%" },
-                    { label: "USG%", value: (poAdv.usgPct * 100).toFixed(1) + "%" },
-                    { label: "AST%", value: (poAdv.astPct * 100).toFixed(1) + "%" },
-                    { label: "REB%", value: (poAdv.rebPct * 100).toFixed(1) + "%" },
-                    { label: "PIE", value: (poAdv.pie * 100).toFixed(1) + "%" },
-                  ].map(({ label, value }) => (
-                    <div key={label} className="text-center">
-                      <div className="text-xs text-muted-foreground">{label}</div>
-                      <div className="text-lg font-mono font-semibold">{value}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-                {adv && (
-              <div>
-                {poAdv && <div className="text-xs font-medium text-muted-foreground mb-2">Regular Season</div>}
-                <div className="grid grid-cols-3 gap-4 sm:grid-cols-5 lg:grid-cols-9">
-                  {[
-                    { label: "ORtg", value: adv.offRating.toFixed(1) },
-                    { label: "DRtg", value: adv.defRating.toFixed(1) },
-                    { label: "NRtg", value: (adv.netRating > 0 ? "+" : "") + adv.netRating.toFixed(1) },
-                    { label: "TS%", value: (adv.tsPct * 100).toFixed(1) + "%" },
-                    { label: "eFG%", value: (adv.efgPct * 100).toFixed(1) + "%" },
-                    { label: "USG%", value: (adv.usgPct * 100).toFixed(1) + "%" },
-                    { label: "AST%", value: (adv.astPct * 100).toFixed(1) + "%" },
-                    { label: "REB%", value: (adv.rebPct * 100).toFixed(1) + "%" },
-                    { label: "PIE", value: (adv.pie * 100).toFixed(1) + "%" },
-                  ].map(({ label, value }) => (
-                    <div key={label} className="text-center">
-                      <div className="text-xs text-muted-foreground">{label}</div>
-                      <div className="text-lg font-mono font-semibold">{value}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-              </>
-            ) : (
-              <>
                 {adv && (
               <div>
                 {poAdv && <div className="text-xs font-medium text-muted-foreground mb-2">Regular Season</div>}
@@ -654,8 +599,6 @@ export async function renderPlayer(playerId: string, season: string) {
                   ))}
                 </div>
               </div>
-            )}
-              </>
             )}
           </CardContent>
         </Card>
