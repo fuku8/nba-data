@@ -158,6 +158,8 @@ export function PlayersClient({
         </div>
       </div>
 
+      {/* 検索中はマップ2枚を畳み、絞り込まれた表がすぐ見えるようにする（検索結果が図表の下に隠れる指摘への対応） */}
+      {!search && (
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
@@ -194,6 +196,7 @@ export function PlayersClient({
           </CardContent>
         </Card>
       </div>
+      )}
 
       <Tabs defaultValue="basic" onValueChange={(v) => { setActiveTab(v); setPage(0); }}>
         <TabsList>
