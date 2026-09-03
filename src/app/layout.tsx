@@ -47,8 +47,9 @@ export default function RootLayout({
               <Link href="/" className="hover:text-foreground">
                 {SITE_NAME}
               </Link>
-              {" "}— 非公式。データ: NBA.com/Stats（毎日取得）。
-              <a href="/metrics#about" className="underline">
+              {"　"}データ: NBA.com/Stats（毎日取得）
+              {/* スマホでは2行目に折り返す */}
+              <a href="/metrics#about" className="underline block sm:inline mt-1 sm:mt-0 sm:ml-3">
                 このサイトについて
               </a>
             </p>
