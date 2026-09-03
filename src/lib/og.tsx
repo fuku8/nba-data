@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { currentSeason, poYear } from "@/lib/season";
 import type { Phase } from "@/lib/phase";
-import { SITE_NAME } from "@/lib/metadata";
+import { SITE_NAME_EN } from "@/lib/metadata";
 
 // OGP 画像（1200×630）の共通フレーム。文字は英数字だけにして next/og 同梱の Inter で描く
 // （日本語を入れると画像ごとにフォント取得が要り、650枚のビルドが遅く不安定になる。2026-09-02 決定）
@@ -33,7 +33,7 @@ export function ogImage({ title, subtitle, stats = [], accent = "#3f3f46", kicke
         <div style={{ width: 28, height: "100%", background: accent }} />
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "56px 72px 56px 64px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 30, color: SOFT }}>
-            <span>{SITE_NAME}</span>
+            <span>{SITE_NAME_EN}</span>
             {kicker && <span>{kicker}</span>}
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>

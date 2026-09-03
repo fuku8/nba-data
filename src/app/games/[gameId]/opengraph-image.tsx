@@ -8,7 +8,7 @@ export const dynamicParams = false;
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 export const dynamic = "force-static";
-export const alt = "Box score | NBA Data";
+export const alt = "Box score | スタッツのかたち";
 
 type Team = { tricode: string; score: number; wins: number; losses: number; isHome: boolean };
 

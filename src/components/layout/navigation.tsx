@@ -63,8 +63,8 @@ export function Navigation({ season }: { season: string }) {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-12 items-center gap-4 px-4">
         <Link href="/" className="flex items-center space-x-2 shrink-0">
-          <span className="text-base font-bold tracking-tight">NBA Data</span>
-          <span className="text-xs text-muted-foreground hidden sm:inline">{season}</span>
+          <span className="text-base font-bold tracking-tight">スタッツのかたち</span>
+          <span className="text-xs text-muted-foreground hidden sm:inline">NBA {season}</span>
         </Link>
         <nav className="flex h-12 items-center space-x-1 overflow-x-auto">
           {navItems.map((item) => (

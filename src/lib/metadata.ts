@@ -3,9 +3,11 @@ import { currentSeason, poYear } from "@/lib/season";
 import { PHASE_LABEL, type Phase } from "@/lib/phase";
 
 export const SITE_URL = "https://nba-data.pages.dev";
-export const SITE_NAME = "NBA Data";
+export const SITE_NAME = "スタッツのかたち";
+// OG 画像内の表記（画像は英数字のみで描く決定のため。og.tsx のコメント参照）
+export const SITE_NAME_EN = "Stats no Katachi";
 
-// ページごとの title / description / OG。title は layout の template で「… | NBA Data」になる
+// ページごとの title / description / OG。title は layout の template で「… | スタッツのかたち」になる
 export function pageMeta({ title, description, path, image }: { title: string; description: string; path: string; image?: string }): Metadata {
   return {
     // ルート layout と同じ階層の page（トップ）には template が効かないので、トップだけ絶対指定
