@@ -1,15 +1,16 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTypeLeaderboard } from "@/lib/data/player-types";
 import { MetricLink } from "@/components/metric-link";
 import { SeasonTitle } from "@/components/season-title";
 import { currentSeason } from "@/lib/season";
+import { pageMeta } from "@/lib/metadata";
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "選手タイプ",
   description: "スタイルから判定した7つの選手タイプと、タイプ別のリーグ内評価点ランキング",
-};
+  path: "/types",
+});
 
 function Board({ players }: { players: { id: number; name: string; score: number }[] }) {
   if (players.length === 0) return <p className="text-sm text-muted-foreground">該当選手なし</p>;

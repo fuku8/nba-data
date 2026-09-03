@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { getTeamColor } from "@/lib/constants/teams";
+import { normalizeName } from "@/lib/utils";
 import { ScoringWaffle } from "@/components/scoring-waffle";
 import { CompareStatsTable, type CompareStatRow } from "@/components/compare-stats-table";
 import {
@@ -70,10 +71,6 @@ export interface ComparePlayer {
   } | null;
 }
 
-// ダイアクリティカルマーク除去（Jokić を "jokic" で検索可能に）
-const normalizeName = (s: string) =>
-  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-
 // 凡例を選択順・縦1列で描画（rechartsの並びに依存しない）
 const legendContent = (items: { name: string; color: string }[]) =>
   function LegendList() {
@@ -96,6 +93,14 @@ const HUSTLE_AXES: { key: keyof NonNullable<ComparePlayer["hustle2"]>; label: st
   { key: "boxOuts", label: "ボックスアウト" },
   { key: "distPerGame", label: "走行距離" },
   { key: "avgSpeed", label: "平均スピード" },
+];
+
+// 初期表示が空にならないための固定プリセット（plan §13-2-1）。両選手がデータに居る組だけ表示する
+const PRESETS: { label: string; ids: number[] }[] = [
+  { label: "ヨキッチ vs SGA", ids: [203999, 1628983] },
+  { label: "ドンチッチ vs エドワーズ", ids: [1629029, 1630162] },
+  { label: "ウェンバンヤマ vs ヤニス", ids: [1641705, 203507] },
+  { label: "カリー vs ブランソン", ids: [201939, 1628973] },
 ];
 
 export function CompareClient({ players, phase, season, poAvailable }: { players: ComparePlayer[]; phase: Phase; season: string; poAvailable: boolean }) {
@@ -172,7 +177,7 @@ export function CompareClient({ players, phase, season, poAvailable }: { players
       <div>
         <SeasonTitle season={season} phase={phase} />
         <div className="flex items-center gap-3 flex-wrap">
-          <h1 className="text-3xl font-bold tracking-tight">検索</h1>
+          <h1 className="text-3xl font-bold tracking-tight">選手比較</h1>
           <PhaseSwitch phase={phase} poAvailable={poAvailable} basePath="/compare" params={{ ids: selectedIds.length > 0 ? selectedIds.join(",") : undefined }} />
         </div>
       </div>
@@ -229,9 +234,16 @@ export function CompareClient({ players, phase, season, poAvailable }: { players
       </div>
 
       {selectedPlayers.length === 0 && (
-        <p className="text-center text-muted-foreground py-8">
-          上の検索バーから選手を追加してください（最大{MAX_PLAYERS}人）
-        </p>
+        <div className="py-8 text-center space-y-4">
+          <p className="text-muted-foreground">上の検索バーから選手を追加してください（最大{MAX_PLAYERS}人）</p>
+          <div className="flex flex-wrap justify-center gap-2">
+            {PRESETS.filter((pr) => pr.ids.every((id) => players.some((p) => p.playerId === id))).map((pr) => (
+              <Button key={pr.label} variant="outline" size="sm" onClick={() => setSelectedIds(pr.ids)}>
+                {pr.label}
+              </Button>
+            ))}
+          </div>
+        </div>
       )}
 
       {selectedPlayers.length > 0 && (

@@ -1,11 +1,12 @@
-import type { Metadata } from "next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { currentSeason, poYear } from "@/lib/season";
+import { pageMeta } from "@/lib/metadata";
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "指標解説",
   description: "このサイトの視覚化指標（パーセンタイル・オールラウンド度・熱戦指数など）の意味と計算方法",
-};
+  path: "/metrics",
+});
 
 interface MetricSection {
   id: string;
@@ -144,6 +145,24 @@ export default function MetricsPage() {
           アイコンからこのページの該当セクションに飛べます。
         </p>
       </div>
+
+      <Card id="about" className="scroll-mt-28">
+        <CardHeader>
+          <CardTitle>このサイトについて</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-1.5 text-sm leading-relaxed">
+          <p>データの出典は NBA公式スタッツ（NBA.com/Stats）です。取得には nba_api を使用しています。</p>
+          <p>データは毎日自動取得し、各ページの図表に反映しています。</p>
+          <p>NBA および各チームとは無関係の、非公式・個人運営のサイトです。</p>
+          <p>
+            取得済みデータ（CSV）はリポジトリ（
+            <a href="https://github.com/fuku8/nba-data" className="underline" target="_blank" rel="noopener noreferrer">
+              GitHub
+            </a>
+            ）でそのまま見られます。
+          </p>
+        </CardContent>
+      </Card>
 
       {SECTIONS.map((s) => (
         <Card key={s.id} id={s.id} className="scroll-mt-28">

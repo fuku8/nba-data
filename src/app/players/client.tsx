@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { normalizeName } from "@/lib/utils";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -80,8 +81,8 @@ export function PlayersClient({
   const filteredPerGame = useMemo(() => {
     let result = perGame.filter((p) => p.gp >= minGames);
     if (search) {
-      const q = search.toLowerCase();
-      result = result.filter((p) => p.player.toLowerCase().includes(q));
+      const q = normalizeName(search);
+      result = result.filter((p) => normalizeName(p.player).includes(q));
     }
     return result;
   }, [perGame, search, minGames]);
@@ -100,8 +101,8 @@ export function PlayersClient({
   const filteredAdvanced = useMemo(() => {
     let result = advanced.filter((p) => p.gp >= minGames);
     if (search) {
-      const q = search.toLowerCase();
-      result = result.filter((p) => p.player.toLowerCase().includes(q));
+      const q = normalizeName(search);
+      result = result.filter((p) => normalizeName(p.player).includes(q));
     }
     return result;
   }, [advanced, search, minGames]);

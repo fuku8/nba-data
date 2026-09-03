@@ -15,13 +15,13 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// 単一ナビ。RS/POは「モード」ではなく各ページ内の ?phase= 切替と文脈バッジで示す（plan.md §12-2）
+// 単一ナビ。RS/POは「モード」ではなく各ページ内の /po パス切替と文脈バッジで示す（plan.md §12-2）
 const navItems = [
   { href: "/standings", label: "順位表", icon: Trophy },
   { href: "/teams", label: "チーム", icon: BarChart3 },
   { href: "/players", label: "選手", icon: Users },
   { href: "/leaders", label: "リーダーズ", icon: Medal },
-  { href: "/compare", label: "検索", icon: Search },
+  { href: "/compare", label: "比較", icon: Search },
   { href: "/games", label: "試合", icon: Calendar },
   { href: "/playoffs", label: "プレーオフ", icon: LayoutDashboard },
   { href: "/types", label: "タイプ", icon: Shapes },
@@ -66,11 +66,15 @@ export function Navigation({ season }: { season: string }) {
           <span className="text-base font-bold tracking-tight">スタッツのかたち</span>
           <span className="text-xs text-muted-foreground hidden sm:inline">NBA {season}</span>
         </Link>
-        <nav className="flex h-12 items-center space-x-1 overflow-x-auto">
-          {navItems.map((item) => (
-            <NavLink key={item.href} {...item} pathname={pathname} />
-          ))}
-        </nav>
+        <div className="relative min-w-0 flex-1">
+          <nav className="flex h-12 items-center space-x-1 overflow-x-auto">
+            {navItems.map((item) => (
+              <NavLink key={item.href} {...item} pathname={pathname} />
+            ))}
+          </nav>
+          {/* モバイルで右にまだ項目があることを示すフェード（横スクロールの手がかり） */}
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background to-transparent sm:hidden" />
+        </div>
       </div>
     </header>
   );

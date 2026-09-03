@@ -31,6 +31,12 @@ export default function RootLayout({
         </Script>
         <Navigation season={currentSeason()} />
         <main className="container mx-auto px-4 py-6">{children}</main>
+        <footer className="container mx-auto px-4 py-6 text-center text-xs text-muted-foreground">
+          {SITE_NAME} — 非公式・個人運営。データ: NBA.com/Stats（毎日取得）。
+          <a href="/metrics#about" className="underline">
+            このサイトについて
+          </a>
+        </footer>
       </body>
     </html>
   );
