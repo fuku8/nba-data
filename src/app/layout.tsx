@@ -4,7 +4,6 @@ import Link from "next/link";
 import "./globals.css";
 import { Navigation } from "@/components/layout/navigation";
 import { navItems } from "@/components/layout/nav-items";
-import { currentSeason } from "@/lib/season";
 import { SITE_URL, SITE_NAME } from "@/lib/metadata";
 
 export const metadata: Metadata = {
@@ -31,7 +30,7 @@ export default function RootLayout({
           gtag('js', new Date());
           gtag('config', 'G-W51Q1TQCNV');`}
         </Script>
-        <Navigation season={currentSeason()} />
+        <Navigation />
         <main className="container mx-auto px-4 py-6">{children}</main>
         <footer className="border-t mt-10">
           <div className="container mx-auto px-4 py-8 space-y-5">

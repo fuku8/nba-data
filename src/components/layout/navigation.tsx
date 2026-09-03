@@ -49,16 +49,16 @@ function LogoMark() {
   );
 }
 
-export function Navigation({ season }: { season: string }) {
+export function Navigation() {
   const pathname = usePathname();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-12 items-center gap-4 px-4">
-        {/* 当面マークのみ（2026-09-03 決定）。ロゴタイプはふくたろうさん検討中で、決定後にここへ入れる */}
-        <Link href="/" className="flex items-center gap-2 shrink-0" aria-label="スタッツのかたち トップ">
+        {/* 当面マークのみ（2026-09-03 決定）。ロゴタイプはふくたろうさん検討中で、決定後にここへ入れる。
+            シーズン副記も不要（各ページの SeasonTitle が持つ） */}
+        <Link href="/" className="flex items-center shrink-0" aria-label="スタッツのかたち トップ">
           <LogoMark />
-          <span className="text-xs text-muted-foreground hidden sm:inline">NBA {season}</span>
         </Link>
         <div className="relative min-w-0 flex-1">
           <nav className="flex h-12 items-center space-x-1 overflow-x-auto">
