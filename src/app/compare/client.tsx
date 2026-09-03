@@ -105,6 +105,9 @@ const PRESETS: { label: string; ids: number[] }[] = [
   { label: "カリー vs ブランソン", ids: [201939, 1628973] },
 ];
 
+// 表示は日本語名主・英語名従（plan §13-1 段階2）。データ（player）は英語のまま
+const dn = (p: ComparePlayer) => p.playerJa ?? p.player;
+
 export function CompareClient({ players, phase, season, poAvailable }: { players: ComparePlayer[]; phase: Phase; season: string; poAvailable: boolean }) {
   const searchParams = useSearchParams();
   const [selectedIds, setSelectedIds] = useState<number[]>(() => parseIds(searchParams.get("ids"), players));
@@ -209,8 +212,8 @@ export function CompareClient({ players, phase, season, poAvailable }: { players
                   className="w-full px-3 py-2 text-left text-sm hover:bg-accent flex items-center gap-2"
                 >
                   <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: getTeamColor(p.team) }} />
-                  {p.player}
-                  <span className="text-muted-foreground">({p.team})</span>
+                  {dn(p)}
+                  <span className="text-muted-foreground">({p.team}{p.playerJa ? ` · ${p.player}` : ""})</span>
                 </button>
               ))}
             </div>
@@ -230,7 +233,7 @@ export function CompareClient({ players, phase, season, poAvailable }: { players
               className="text-sm py-1 px-3 gap-1.5"
               style={{ borderLeft: `3px solid ${COLORS[i]}` }}
             >
-              {p.player} ({p.team})
+              {dn(p)} ({p.team})
               <button onClick={() => removePlayer(p.playerId)}>
                 <X className="h-3 w-3" />
               </button>
@@ -258,7 +261,7 @@ export function CompareClient({ players, phase, season, poAvailable }: { players
             <CardTitle>比較表</CardTitle>
           </CardHeader>
           <CardContent>
-            <CompareStatsTable rows={statRows} players={selectedPlayers} colors={COLORS} onRemove={removePlayer} />
+            <CompareStatsTable rows={statRows} players={selectedPlayers.map((p) => ({ ...p, player: dn(p) }))} colors={COLORS} onRemove={removePlayer} />
           </CardContent>
         </Card>
       )}
@@ -280,7 +283,7 @@ export function CompareClient({ players, phase, season, poAvailable }: { players
                   {selectedPlayers.map((p, i) => (
                     <Radar
                       key={p.playerId}
-                      name={p.player}
+                      name={dn(p)}
                       dataKey={p.playerId}
                       stroke={COLORS[i]}
                       strokeWidth={2}
@@ -290,7 +293,7 @@ export function CompareClient({ players, phase, season, poAvailable }: { players
                   ))}
                   <Legend
                     verticalAlign="bottom"
-                    content={legendContent(selectedPlayers.map((p, i) => ({ name: p.player, color: COLORS[i] })))}
+                    content={legendContent(selectedPlayers.map((p, i) => ({ name: dn(p), color: COLORS[i] })))}
                   />
                 </RadarChart>
               </ResponsiveContainer>
@@ -316,7 +319,7 @@ export function CompareClient({ players, phase, season, poAvailable }: { players
                       return (
                         <Radar
                           key={p.playerId}
-                          name={p.player}
+                          name={dn(p)}
                           dataKey={p.playerId}
                           stroke={COLORS[i]}
                           strokeWidth={2}
@@ -327,7 +330,7 @@ export function CompareClient({ players, phase, season, poAvailable }: { players
                     })}
                     <Legend
                       verticalAlign="bottom"
-                      content={legendContent(hustleEligible.map((p) => ({ name: p.player, color: COLORS[selectedPlayers.indexOf(p)] })))}
+                      content={legendContent(hustleEligible.map((p) => ({ name: dn(p), color: COLORS[selectedPlayers.indexOf(p)] })))}
                     />
                   </RadarChart>
                 </ResponsiveContainer>
@@ -336,7 +339,7 @@ export function CompareClient({ players, phase, season, poAvailable }: { players
               )}
               {hustleMissing.length > 0 && (
                 <p className="text-xs text-muted-foreground">
-                  {hustleMissing.map((p) => p.player).join("、")}はハッスルデータ対象外
+                  {hustleMissing.map(dn).join("、")}はハッスルデータ対象外
                 </p>
               )}
             </CardContent>
@@ -353,7 +356,7 @@ export function CompareClient({ players, phase, season, poAvailable }: { players
                   <div key={p.playerId} className="space-y-2">
                     <div className="text-sm font-medium flex items-center gap-1.5">
                       <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[i] }} />
-                      {p.player}
+                      {dn(p)}
                     </div>
                     <ScoringWaffle pts3={p.pts3} pts2={p.pts2} ptsFt={p.ptsFt} />
                   </div>

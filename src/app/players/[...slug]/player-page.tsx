@@ -18,6 +18,7 @@ import { allSeasons, poYear } from "@/lib/season";
 import { SeasonSwitch } from "@/components/season-switch";
 import { SeasonTitle } from "@/components/season-title";
 import { PhaseTabsList } from "@/components/phase-switch";
+import { playerNameJa } from "@/lib/data/names-ja";
 import { PhaseCompareBars, RS_COLOR, PO_COLOR } from "@/components/phase-compare-bars";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 
@@ -343,6 +344,7 @@ export async function renderPlayer(playerId: string, season: string) {
   const ctx = { season };
   const playerIdNum = parseInt(playerId, 10);
   if (isNaN(playerIdNum)) notFound();
+  const nameJa = playerNameJa(playerIdNum);
 
   const allPerGame = getPlayerPerGame(ctx);
   const allAdvanced = getPlayerAdvanced(ctx);
@@ -523,7 +525,9 @@ export async function renderPlayer(playerId: string, season: string) {
           {pg.player.split(" ").map((n) => n[0]).join("").slice(0, 2)}
         </div>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{pg.player}</h1>
+          {/* 日本語名主・英語名従（plan §13-1 段階2）。対応表に無い選手は英語名のみ */}
+          <h1 className="text-3xl font-bold tracking-tight">{nameJa ?? pg.player}</h1>
+          {nameJa && <p className="text-sm text-muted-foreground">{pg.player}</p>}
           <div className="flex items-center gap-2 text-muted-foreground">
             <Link href={`/teams/${pg.team}`} className="hover:underline flex items-center gap-1.5">
               <div className="h-3 w-3 rounded-full" style={{ backgroundColor: getTeamColor(pg.team) }} />

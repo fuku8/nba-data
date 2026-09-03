@@ -1,10 +1,20 @@
 import { ImageResponse } from "next/og";
+import fs from "fs";
+import path from "path";
 import { currentSeason, poYear } from "@/lib/season";
 import type { Phase } from "@/lib/phase";
 import { SITE_NAME_EN } from "@/lib/metadata";
 
-// OGP 画像（1200×630）の共通フレーム。文字は英数字だけにして next/og 同梱の Inter で描く
-// （日本語を入れると画像ごとにフォント取得が要り、650枚のビルドが遅く不安定になる。2026-09-02 決定）
+// OGP 画像（1200×630）の共通フレーム。
+// 日本語はローカル同梱のサブセットフォントで描く（plan §13-1 段階2）。対応表の全文字＋ASCII＋
+// 英語名のダイアクリティカルの 203 字・各55KB を一度だけ読むので、「画像ごとにフォント取得が要り
+// 650枚のビルドが不安定」という 2026-09-02 の英数字のみ決定の前提は生じない。生成は
+// scripts/subset-og-font.py（対応表を更新したら再実行）
+const FONT_DIR = path.join(process.cwd(), "src/assets/og");
+const OG_FONTS = [
+  { name: "Noto Sans JP", data: fs.readFileSync(path.join(FONT_DIR, "NotoSansJP-400-subset.ttf")), weight: 400 as const, style: "normal" as const },
+  { name: "Noto Sans JP", data: fs.readFileSync(path.join(FONT_DIR, "NotoSansJP-700-subset.ttf")), weight: 700 as const, style: "normal" as const },
+];
 export const OG_SIZE = { width: 1200, height: 630 };
 export const OG_CONTENT_TYPE = "image/png";
 
@@ -26,10 +36,12 @@ export function ogImage({ title, subtitle, stats = [], accent = "#3f3f46", kicke
   accent?: string;
   kicker?: string;
 }) {
-  const titleSize = title.length > 22 ? 64 : 88;
+  // 全角（日本語）は半角の約2倍幅なので、幅換算でサイズを段階的に落とす
+  const units = [...title].reduce((a, c) => a + ((c.codePointAt(0) ?? 0) > 0xff ? 2 : 1), 0);
+  const titleSize = units > 30 ? 52 : units > 22 ? 64 : 88;
   return new ImageResponse(
     (
-      <div style={{ width: "100%", height: "100%", display: "flex", background: BG, color: INK, fontFamily: "Inter, sans-serif" }}>
+      <div style={{ width: "100%", height: "100%", display: "flex", background: BG, color: INK, fontFamily: "'Noto Sans JP', Inter, sans-serif" }}>
         <div style={{ width: 28, height: "100%", background: accent }} />
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "56px 72px 56px 64px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 30, color: SOFT }}>
@@ -51,6 +63,6 @@ export function ogImage({ title, subtitle, stats = [], accent = "#3f3f46", kicke
         </div>
       </div>
     ),
-    OG_SIZE,
+    { ...OG_SIZE, fonts: OG_FONTS },
   );
 }

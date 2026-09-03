@@ -2,6 +2,7 @@ import { getPlayerPerGame } from "@/lib/data/players";
 import { getTeamColor, getTeamInfo } from "@/lib/constants/teams";
 import { currentSeason } from "@/lib/season";
 import { ogImage } from "@/lib/og";
+import { playerNameJa } from "@/lib/data/names-ja";
 
 // 選手ページは catch-all（/players/[id] と /players/[id]/[season] を1ルートで持つ）なので、その下に
 // opengraph-image.tsx は置けない（Next の制約）。代わりに Route Handler で同じ画像を返し、pageMeta から URL を指す
@@ -22,9 +23,11 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
   const rows = getPlayerPerGame({ season });
   const pg = rows.find((p) => p.playerId === id && p.team !== "TOT") ?? rows.find((p) => p.playerId === id);
   if (!pg) return ogImage({ title: "Player", kicker: `NBA ${season}` });
+  // 日本語名主・英語名従（plan §13-1 段階2）。対応表に無い選手は英語名のみ
+  const ja = playerNameJa(id);
   return ogImage({
-    title: pg.player,
-    subtitle: `${getTeamInfo(pg.team)?.name ?? pg.team} · ${pg.gp} GP · ${pg.mpg.toFixed(1)} MPG`,
+    title: ja ?? pg.player,
+    subtitle: `${ja ? `${pg.player} · ` : ""}${getTeamInfo(pg.team)?.name ?? pg.team} · ${pg.gp} GP · ${pg.mpg.toFixed(1)} MPG`,
     kicker: `NBA ${season}`,
     accent: getTeamColor(pg.team),
     stats: [
