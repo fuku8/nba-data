@@ -6,6 +6,7 @@ import { currentSeason } from "@/lib/season";
 import { PreSeasonNotice } from "@/components/phase-switch";
 import { PlayersClient } from "./client";
 import type { QuadrantDot } from "@/components/quadrant-map";
+import { playerNameJa } from "@/lib/data/names-ja";
 
 const SHOOTER_MIN_3PA = 1.0;
 
@@ -21,6 +22,13 @@ export function renderPlayers(phase: Phase) {
     .filter((p) => p.gp >= minGp)
     .map((p) => ({ playerId: p.playerId, name: p.player, team: p.team, x: p.usgPct, y: p.tsPct }));
 
+  // 検索照合用の日本語名（plan §13-1。表示は英語名のまま）。ページに居る選手分だけ渡す
+  const namesJa: Record<number, string> = {};
+  for (const p of perGame) {
+    const ja = playerNameJa(p.playerId);
+    if (ja) namesJa[p.playerId] = ja;
+  }
+
   const shooterDots: QuadrantDot[] = perGame
     .filter((p) => p.gp >= minGp && p.threePtA >= SHOOTER_MIN_3PA)
     .map((p) => ({ playerId: p.playerId, name: p.player, team: p.team, x: p.threePtA, y: p.threePtPct }));
@@ -33,6 +41,7 @@ export function renderPlayers(phase: Phase) {
       poAvailable={poAvailable}
       perGame={perGame}
       advanced={advanced}
+      namesJa={namesJa}
       usageEfficiencyDots={usageEfficiencyDots}
       shooterDots={shooterDots}
       minGp={minGp}

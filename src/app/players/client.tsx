@@ -45,12 +45,15 @@ export function PlayersClient({
   shooterDots,
   minGp,
   shooterMin3pa,
+  namesJa,
 }: {
   phase: Phase;
   season: string;
   poAvailable: boolean;
   perGame: PlayerPerGame[];
   advanced: PlayerAdvanced[];
+  // 検索照合用の日本語名（playerId → 日本語名。対応表に無い選手は含まれない）
+  namesJa: Record<number, string>;
   usageEfficiencyDots: QuadrantDot[];
   shooterDots: QuadrantDot[];
   minGp: number;
@@ -82,10 +85,12 @@ export function PlayersClient({
     let result = perGame.filter((p) => p.gp >= minGames);
     if (search) {
       const q = normalizeName(search);
-      result = result.filter((p) => normalizeName(p.player).includes(q));
+      result = result.filter(
+        (p) => normalizeName(p.player).includes(q) || (namesJa[p.playerId] != null && normalizeName(namesJa[p.playerId]).includes(q))
+      );
     }
     return result;
-  }, [perGame, search, minGames]);
+  }, [perGame, search, minGames, namesJa]);
 
   const sortedPerGame = useMemo(() => {
     return [...filteredPerGame].sort((a, b) => {
@@ -102,10 +107,12 @@ export function PlayersClient({
     let result = advanced.filter((p) => p.gp >= minGames);
     if (search) {
       const q = normalizeName(search);
-      result = result.filter((p) => normalizeName(p.player).includes(q));
+      result = result.filter(
+        (p) => normalizeName(p.player).includes(q) || (namesJa[p.playerId] != null && normalizeName(namesJa[p.playerId]).includes(q))
+      );
     }
     return result;
-  }, [advanced, search, minGames]);
+  }, [advanced, search, minGames, namesJa]);
 
   const sortedAdvanced = useMemo(() => {
     return [...filteredAdvanced].sort((a, b) => {
