@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { pageMeta } from "@/lib/metadata";
+import { teamNameJa } from "@/lib/data/names-ja";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -31,9 +32,11 @@ export async function generateMetadata({ params }: { params: Promise<{ teamId: s
   if (!info) return {};
   const st = getStandings().find((s) => s.teamAbbr === abbr);
   const rec = st ? `成績 ${st.wins}-${st.losses}、` : "";
+  // 日本語名を主・英語名を従の併記（plan §13-1 段階1。検索流入用で、画面表示は変えない）
+  const ja = teamNameJa(abbr);
   return pageMeta({
-    title: `${info.name} · NBA ${currentSeason()}`,
-    description: `${info.name} の NBA ${currentSeason()} シーズン。${rec}レーティング・Season Heartbeat・ワンマン度・ボール支配・チームスタッツ・ロスター${isPlayoffDataAvailable() ? "・プレーオフ成績" : ""}。`,
+    title: `${ja ? `${ja}（${info.name}）` : info.name} · NBA ${currentSeason()}`,
+    description: `${ja ?? info.name}（${abbr}）の NBA ${currentSeason()} シーズン。${rec}レーティング・Season Heartbeat・ワンマン度・ボール支配・チームスタッツ・ロスター${isPlayoffDataAvailable() ? "・プレーオフ成績" : ""}。`,
     path: `/teams/${abbr}`,
   });
 }

@@ -5,6 +5,7 @@ import { getPlayerPerGame } from "@/lib/data/players";
 import { getPlayoffPlayerPerGame } from "@/lib/data/playoffs";
 import { renderPlayer, playerIdsOf } from "./player-page";
 import { archivedSeasons, currentSeason } from "@/lib/season";
+import { playerNameJa } from "@/lib/data/names-ja";
 
 export const dynamicParams = false;
 
@@ -17,9 +18,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const pg = rows.find((p) => p.playerId === id && p.team !== "TOT") ?? rows.find((p) => p.playerId === id);
   if (!pg) return {};
   const po = getPlayoffPlayerPerGame(season).some((p) => p.playerId === id);
+  // 日本語名を主・英語名を従の併記（plan §13-1 段階1。検索流入用で、画面表示は変えない）
+  const ja = playerNameJa(id);
   return pageMeta({
-    title: `${pg.player} · NBA ${season}`,
-    description: `${pg.player}（${pg.team}）の NBA ${season} スタッツ: ${pg.gp}試合 ${pg.pts.toFixed(1)} PTS / ${pg.trb.toFixed(1)} REB / ${pg.ast.toFixed(1)} AST。リーグ内パーセンタイル・レーダー・得点の作り方・ショットチャート${po ? "・プレーオフ成績" : ""}。`,
+    title: `${ja ? `${ja}（${pg.player}）` : pg.player} · NBA ${season}`,
+    description: `${ja ? `${ja}（${pg.player}・${pg.team}）` : `${pg.player}（${pg.team}）`}の NBA ${season} スタッツ: ${pg.gp}試合 ${pg.pts.toFixed(1)} PTS / ${pg.trb.toFixed(1)} REB / ${pg.ast.toFixed(1)} AST。リーグ内パーセンタイル・レーダー・得点の作り方・ショットチャート${po ? "・プレーオフ成績" : ""}。`,
     path: s ? `/players/${playerId}/${s}` : `/players/${playerId}`,
     image: `/og/players/${[...slug].reverse().join("/")}`, // 順序は og/players/[...slug]/route.tsx 参照
   });

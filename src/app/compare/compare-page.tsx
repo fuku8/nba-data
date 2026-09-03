@@ -2,6 +2,7 @@ import { getPlayerPerGame, getPlayerAdvanced, getPlayerTotals } from "@/lib/data
 import { isPlayoffDataAvailable } from "@/lib/data/playoffs";
 import { getPlayerHustle, getPlayerSpeed } from "@/lib/data/tracking";
 import { MIN_GP, PO_MIN_GP } from "@/lib/data/player-types";
+import { playerNameJa } from "@/lib/data/names-ja";
 import type { Phase } from "@/lib/phase";
 import { currentSeason } from "@/lib/season";
 import { PreSeasonNotice } from "@/components/phase-switch";
@@ -55,6 +56,8 @@ export function renderCompare(phase: Phase) {
     return {
       playerId: p.playerId,
       player: p.player,
+      // 検索照合用（カタカナで当てる。plan §13-1 段階1。表示は英語名のまま）
+      playerJa: playerNameJa(p.playerId) ?? null,
       team: p.team,
       gp: p.gp,
       mpg: p.mpg,

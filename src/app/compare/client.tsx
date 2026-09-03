@@ -42,6 +42,8 @@ const COLORS = ["#3b82f6", "#ef4444", "#22c55e", "#f59e0b"];
 export interface ComparePlayer {
   playerId: number;
   player: string;
+  // 検索照合用の日本語名（対応表に無い選手は null。表示には使わない）
+  playerJa: string | null;
   team: string;
   gp: number;
   mpg: number;
@@ -112,7 +114,11 @@ export function CompareClient({ players, phase, season, poAvailable }: { players
     if (search.length < 1) return [];
     const q = normalizeName(search);
     return players
-      .filter((p) => normalizeName(p.player).includes(q) && !selectedIds.includes(p.playerId))
+      .filter(
+        (p) =>
+          (normalizeName(p.player).includes(q) || (p.playerJa != null && normalizeName(p.playerJa).includes(q))) &&
+          !selectedIds.includes(p.playerId)
+      )
       .slice(0, 8);
   }, [search, players, selectedIds]);
 
