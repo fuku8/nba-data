@@ -18,3 +18,9 @@ export function teamNameJa(abbr: string): string | undefined {
   );
   return teamMap.get(abbr) || undefined;
 }
+
+// クライアントコンポーネントに props で渡す用（略称 → 日本語名）
+export function allTeamNamesJa(): Record<string, string> {
+  teamNameJa("OKC"); // teamMap を初期化
+  return Object.fromEntries(teamMap!);
+}

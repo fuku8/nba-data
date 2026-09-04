@@ -24,10 +24,12 @@ export function PlayoffTeamsClient({
   teamStats,
   series,
   season,
+  namesJa,
 }: {
   teamStats: PlayoffTeamStats[];
   series: PlayoffSeries[];
   season: string;
+  namesJa: Record<string, string>;
 }) {
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "pts", direction: "desc" });
 
@@ -94,7 +96,7 @@ export function PlayoffTeamsClient({
                   <td className="py-2 px-2 sm:px-3 sticky left-0 z-10 bg-background">
                     <Link href={`/teams/${t.team}`} className="flex items-center gap-2 hover:underline font-medium">
                       <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: getTeamColor(t.team) }} />
-                      <span className="hidden sm:inline">{teamInfo?.name ?? t.team}</span>
+                      <span className="hidden sm:inline">{namesJa[t.team] ?? teamInfo?.name ?? t.team}</span>
                       <span className="sm:text-muted-foreground sm:text-xs">{t.team}</span>
                     </Link>
                   </td>

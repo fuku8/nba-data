@@ -5,6 +5,7 @@ import { getStandings } from "@/lib/data/teams";
 import { getPlayerPerGame } from "@/lib/data/players";
 import { getLatestGameDate, getPoLastGameDate } from "@/lib/data/csv-utils";
 import { getTeamColor } from "@/lib/constants/teams";
+import { teamNameJa } from "@/lib/data/names-ja";
 import { isPlayoffDataAvailable, getPlayoffSeries, getPlayoffPlayerPerGame, getPlayoffBracket } from "@/lib/data/playoffs";
 import { PlayoffsTopClient, StatLeaders } from "@/app/playoffs/client";
 import { currentSeason } from "@/lib/season";
@@ -27,7 +28,7 @@ function ConferenceTable({ title, teams }: { title: string; teams: TeamStanding[
               <span className="w-4 sm:w-5 text-right text-muted-foreground tabular-nums">{i + 1}</span>
               <span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full shrink-0" style={{ backgroundColor: getTeamColor(t.teamAbbr) }} />
               <span className="font-medium sm:hidden">{t.teamAbbr}</span>
-              <span className="font-medium hidden sm:inline truncate">{t.teamName}</span>
+              <span className="font-medium hidden sm:inline truncate">{teamNameJa(t.teamAbbr) ?? t.teamName}</span>
             </div>
             <div className="flex items-center gap-2 sm:gap-4 font-mono tabular-nums">
               <span>{t.wins}-{t.losses}</span>

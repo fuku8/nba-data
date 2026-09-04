@@ -1,4 +1,5 @@
 import { getStandings, getTeamAdvanced } from "@/lib/data/teams";
+import { teamNameJa } from "@/lib/data/names-ja";
 import { currentSeason } from "@/lib/season";
 import { StandingsClient } from "./client";
 import { pageMeta, phaseTitle } from "@/lib/metadata";
@@ -22,6 +23,8 @@ export default function StandingsPage() {
     return {
       ...s,
       abbr,
+      // 日本語の正式名（plan §13-1 段階4）。略称はそのまま
+      displayName: teamNameJa(abbr) ?? s.teamName,
       offRating: adv?.offRating ?? 0,
       defRating: adv?.defRating ?? 0,
       netRating: adv?.netRating ?? 0,

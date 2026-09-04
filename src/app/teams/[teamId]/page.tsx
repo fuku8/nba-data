@@ -355,7 +355,9 @@ export default async function TeamDetailPage({
           style={{ backgroundColor: teamInfo.primaryColor }}
         />
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{teamInfo.name}</h1>
+          {/* 日本語名主・英語名従（plan §13-1 段階4。選手ページの h1 と同型） */}
+          <h1 className="text-3xl font-bold tracking-tight">{teamNameJa(abbr) ?? teamInfo.name}</h1>
+          {teamNameJa(abbr) && <p className="text-sm text-muted-foreground">{teamInfo.name}</p>}
           <div className="flex items-center gap-2 text-muted-foreground">
             <span>{teamInfo.conference}ern Conference</span>
             <span>·</span>

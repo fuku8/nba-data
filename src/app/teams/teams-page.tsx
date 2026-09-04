@@ -1,4 +1,5 @@
 import { getStandings, getTeamAdvanced, getTeamPerGame } from "@/lib/data/teams";
+import { teamNameJa, allTeamNamesJa } from "@/lib/data/names-ja";
 import { getPlayoffTeamStats, getPlayoffSeries, isPlayoffDataAvailable } from "@/lib/data/playoffs";
 import type { Phase } from "@/lib/phase";
 import { currentSeason } from "@/lib/season";
@@ -11,7 +12,7 @@ export function renderTeams(phase: Phase) {
   const poAvailable = isPlayoffDataAvailable();
   if (phase === "po" && !poAvailable) return <PreSeasonNotice />;
   if (phase === "po") {
-    return <PlayoffTeamsClient teamStats={getPlayoffTeamStats()} series={getPlayoffSeries()} season={currentSeason()} />;
+    return <PlayoffTeamsClient teamStats={getPlayoffTeamStats()} series={getPlayoffSeries()} season={currentSeason()} namesJa={allTeamNamesJa()} />;
   }
 
   const standings = getStandings();
@@ -25,7 +26,7 @@ export function renderTeams(phase: Phase) {
     const adv = advMap.get(s.teamName);
     const pg = pgMap.get(s.teamName);
     return {
-      name: s.teamName,
+      name: teamNameJa(s.teamAbbr) ?? s.teamName,
       abbr: s.teamAbbr,
       conference: s.conference,
       wins: s.wins,

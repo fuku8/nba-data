@@ -29,6 +29,7 @@ interface EnrichedStanding {
   oppPointsPg: number;
   conference: "East" | "West";
   abbr: string;
+  displayName: string;
   offRating: number;
   defRating: number;
   netRating: number;
@@ -114,7 +115,7 @@ export function StandingsClient({ standings, season }: { standings: EnrichedStan
                 <Link href={`/teams/${t.abbr}`} className="flex items-center gap-2 hover:underline font-medium">
                   <div className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: getTeamColor(t.abbr) }} />
                   <span className="sm:hidden">{t.abbr}</span>
-                  <span className="hidden sm:inline">{t.teamName}</span>
+                  <span className="hidden sm:inline">{t.displayName}</span>
                 </Link>
               </TableCell>
               <TableCell className="text-right font-mono">{t.wins}</TableCell>

@@ -18,7 +18,7 @@ import { allSeasons, poYear } from "@/lib/season";
 import { SeasonSwitch } from "@/components/season-switch";
 import { SeasonTitle } from "@/components/season-title";
 import { PhaseTabsList } from "@/components/phase-switch";
-import { playerNameJa } from "@/lib/data/names-ja";
+import { playerNameJa, teamNameJa } from "@/lib/data/names-ja";
 import { PhaseCompareBars, RS_COLOR, PO_COLOR } from "@/components/phase-compare-bars";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 
@@ -531,7 +531,7 @@ export async function renderPlayer(playerId: string, season: string) {
           <div className="flex items-center gap-2 text-muted-foreground">
             <Link href={`/teams/${pg.team}`} className="hover:underline flex items-center gap-1.5">
               <div className="h-3 w-3 rounded-full" style={{ backgroundColor: getTeamColor(pg.team) }} />
-              {teamInfo?.name ?? pg.team}
+              {teamNameJa(pg.team) ?? teamInfo?.name ?? pg.team}
             </Link>
             <span>·</span>
             <span>Age {pg.age}</span>
