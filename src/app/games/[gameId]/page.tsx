@@ -6,6 +6,7 @@ import Link from "next/link";
 import { getTeamColor } from "@/lib/constants/teams";
 import { findBoxScore, boxScoreGameIds } from "@/lib/data/games";
 import { PhaseBadge } from "@/components/phase-switch";
+import { withDisplayNames } from "@/lib/data/names-ja";
 
 export const dynamicParams = false;
 
@@ -226,7 +227,10 @@ function sumMinutes(players: PlayerStats[]): string {
 
 function PlayerTable({ players, tricode, teamStats }: { players: PlayerStats[]; tricode: string; teamStats?: TeamStats }) {
   const active = players.filter((p) => p.minutes && p.minutes !== "");
-  const sorted = [...active].sort((a, b) => b.points - a.points);
+  // 表示名は日本語の短縮名（plan §13-1 段階3）。同チームの兄弟・父子はフル名で識別される
+  const sorted = withDisplayNames(
+    [...active].sort((a, b) => b.points - a.points).map((p) => ({ ...p, playerId: p.personId, player: p.name, team: tricode }))
+  );
 
   const teamFgm = active.reduce((s, p) => s + (p.fieldGoalsMade ?? 0), 0);
   const teamFga = active.reduce((s, p) => s + (p.fieldGoalsAttempted ?? 0), 0);
@@ -245,7 +249,7 @@ function PlayerTable({ players, tricode, teamStats }: { players: PlayerStats[]; 
       <table className="w-full text-xs">
         <thead>
           <tr className="border-b bg-muted/30">
-            <th className="text-left py-2 px-3 font-medium text-muted-foreground">選手</th>
+            <th className="text-left py-2 px-3 font-medium text-muted-foreground sticky left-0 z-10 bg-card">選手</th>
             <th className="py-2 px-2 text-center text-muted-foreground">POS</th>
             <th className="py-2 px-2 text-center text-muted-foreground">MIN</th>
             <th className="py-2 px-2 text-center font-semibold">PTS</th>
@@ -263,7 +267,7 @@ function PlayerTable({ players, tricode, teamStats }: { players: PlayerStats[]; 
         <tbody>
           {teamStats && (
             <tr className="border-b bg-primary/10 font-semibold">
-              <td className="py-2.5 px-3">
+              <td className="py-2.5 px-3 sticky left-0 z-10 bg-card">
                 <span className="inline-flex items-center gap-1.5">
                   <span className="h-2 w-2 rounded-full" style={{ backgroundColor: getTeamColor(tricode) }} />
                   チーム合計
@@ -287,9 +291,9 @@ function PlayerTable({ players, tricode, teamStats }: { players: PlayerStats[]; 
             const pm = p.plusMinusPoints ?? 0;
             return (
               <tr key={p.personId} className="border-b last:border-0 hover:bg-muted/20">
-                <td className="py-2 px-3 font-medium">
+                <td className="py-2 px-3 font-medium sticky left-0 z-10 bg-card">
                   <Link href={`/players/${p.personId}`} className="hover:underline">
-                    {p.name}
+                    {p.player}
                   </Link>
                 </td>
                 <td className="py-2 px-2 text-center text-muted-foreground">{p.position || "—"}</td>

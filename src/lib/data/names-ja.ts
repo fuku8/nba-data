@@ -30,7 +30,7 @@ export function allTeamNamesJa(): Record<string, string> {
 const PLAYER_NAME_SHORT: Record<number, string> = {
   1628983: "SGA", // シェイ・ギルジャス＝アレクサンダー
   203484: "KCP", // ケンテイビアス・コールドウェル＝ポープ
-  1629638: "NAW", // ニキール・アレクサンダー＝ウォーカー
+  1629638: "ニキール", // アレクサンダー＝ウォーカー。日本ではファーストネームで流通（リーグに1人）
   1629008: "MPJ", // マイケル・ポーター・ジュニア
 };
 
