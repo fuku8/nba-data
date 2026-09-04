@@ -115,6 +115,7 @@ n, miss = write(os.path.join(DATA_DIR, "player_names_ja.csv"), "PLAYER_ID", play
 print(f"players: {n - len(miss)}/{n} 取得。未取得 {len(miss)}: {', '.join(miss)}")
 
 with open(os.path.join(DATA_DIR, "standings.csv"), newline="") as f:
-    teams = [(r["TEAM_ABBREVIATION"], r["TEAM_NAME"]) for r in csv.DictReader(f)]
+    # NBA.com はクリッパーズだけ略称欄が空（表記も "LA Clippers"）なので補う。teams.ts の逆引きと同じ対処
+    teams = [(r["TEAM_ABBREVIATION"] or {"LA Clippers": "LAC"}.get(r["TEAM_NAME"], ""), r["TEAM_NAME"]) for r in csv.DictReader(f)]
 n, miss = write(os.path.join(DATA_DIR, "team_names_ja.csv"), "TEAM_ABBREVIATION", teams)
 print(f"teams: {n - len(miss)}/{n} 取得。未取得: {', '.join(miss)}")

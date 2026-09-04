@@ -46,6 +46,7 @@ export function PlayersClient({
   minGp,
   shooterMin3pa,
   namesJa,
+  namesShort,
 }: {
   phase: Phase;
   season: string;
@@ -54,6 +55,8 @@ export function PlayersClient({
   advanced: PlayerAdvanced[];
   // 検索照合用の日本語名（playerId → 日本語名。対応表に無い選手は含まれない）
   namesJa: Record<number, string>;
+  // 表の表示用の短縮名（`playerId-team` → 略称/カタカナ姓。検索照合には使わない）
+  namesShort: Record<string, string>;
   usageEfficiencyDots: QuadrantDot[];
   shooterDots: QuadrantDot[];
   minGp: number;
@@ -259,7 +262,7 @@ export function PlayersClient({
                         <TableCell className={`text-muted-foreground ${STICKY_RANK}`}>{page * PAGE_SIZE + i + 1}</TableCell>
                         <TableCell className={STICKY_NAME}>
                           <Link href={`/players/${p.playerId}`} className="block truncate hover:underline font-medium">
-                            {p.player}
+                            {namesShort[`${p.playerId}-${p.team}`] ?? p.player}
                           </Link>
                           <Link href={`/teams/${p.team}`} className="sm:hidden text-muted-foreground hover:underline">{p.team}</Link>
                         </TableCell>
@@ -333,7 +336,7 @@ export function PlayersClient({
                         <TableCell className={`text-muted-foreground ${STICKY_RANK}`}>{page * PAGE_SIZE + i + 1}</TableCell>
                         <TableCell className={STICKY_NAME}>
                           <Link href={`/players/${p.playerId}`} className="block truncate hover:underline font-medium">
-                            {p.player}
+                            {namesShort[`${p.playerId}-${p.team}`] ?? p.player}
                           </Link>
                           <Link href={`/teams/${p.team}`} className="sm:hidden text-muted-foreground hover:underline">{p.team}</Link>
                         </TableCell>

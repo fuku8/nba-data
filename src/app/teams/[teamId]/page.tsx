@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { pageMeta } from "@/lib/metadata";
-import { teamNameJa } from "@/lib/data/names-ja";
+import { teamNameJa, withDisplayNames } from "@/lib/data/names-ja";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -85,7 +85,7 @@ export default async function TeamDetailPage({
   const giniByTeam = getTeamPointsGini();
   const teamGini = giniByTeam.find((g) => g.team === abbr);
   const giniRank = teamGini ? giniByTeam.indexOf(teamGini) + 1 : null;
-  const teamScorers = teamGini?.players ?? [];
+  const teamScorers = withDisplayNames(teamGini?.players ?? []); // 説明文の最多得点者名も日本語短縮名に
   const teamTotalPts = getPlayerTotals()
     .filter((p) => p.team === abbr)
     .reduce((a, p) => a + p.pts, 0);
@@ -94,8 +94,7 @@ export default async function TeamDetailPage({
     : 0;
 
   // ボール支配の帯: シーズン総タッチ数（タッチ/試合 × GP）のチーム内シェア
-  const teamPoss = getPlayerPossessions()
-    .filter((p) => p.team === abbr && p.gp > 0)
+  const teamPoss = withDisplayNames(getPlayerPossessions().filter((p) => p.team === abbr && p.gp > 0))
     .map((p) => ({ name: p.player, total: p.touches * p.gp }))
     .sort((a, b) => b.total - a.total);
   const possTotal = teamPoss.reduce((a, p) => a + p.total, 0);
@@ -114,12 +113,14 @@ export default async function TeamDetailPage({
     allAdvanced.filter((p) => p.team === abbr).map((p) => [p.player, p])
   );
 
-  const rosterRows = roster.map((player) => {
+  // 表示名は日本語の短縮名（plan §13-1 段階3後半）。advanced 照合（英語名キー）の後に差し替える
+  const rosterRows = withDisplayNames(roster.map((player) => {
     const advancedStats = rosterAdvanced.get(player.player);
 
     return {
       playerId: player.playerId,
       player: player.player,
+      team: abbr, // withDisplayNames の同チーム同姓判定用
       gp: player.gp,
       mpg: player.mpg,
       pts: player.pts,
@@ -134,7 +135,7 @@ export default async function TeamDetailPage({
       netRating: advancedStats?.netRating ?? null,
       tsPct: advancedStats?.tsPct ?? null,
     };
-  });
+  }));
 
   // プレーオフ（出場チームのみ）。トップと同じ RS｜PO タブで出す（既定 RS・時期で変えない plan.md §12-2）
   const poAvailable = isPlayoffDataAvailable();
@@ -144,12 +145,12 @@ export default async function TeamDetailPage({
   const poTeamStats = teamSeries.length > 0 ? getPlayoffTeamStats().find((t) => t.team === abbr) : undefined;
   const poAdvById = new Map(getPlayoffPlayerAdvanced().filter((p) => p.team === abbr).map((p) => [p.playerId, p]));
   const poPlayers = teamSeries.length > 0
-    ? getPlayoffPlayerPerGame()
+    ? withDisplayNames(getPlayoffPlayerPerGame()
         .filter((p) => p.team === abbr)
         .map((p) => {
           const a = poAdvById.get(p.playerId);
           return { ...p, offRating: a?.offRating ?? null, defRating: a?.defRating ?? null, netRating: a?.netRating ?? null };
-        })
+        }))
     : [];
 
   const playoffSection = (
