@@ -100,6 +100,10 @@ export function QuadrantMap({
   const sy = (v: number) => H - PAD.b - (((v > yTop ? y1 : v) - y0) / (y1 - y0)) * (H - PAD.t - PAD.b);
   const midX = (PAD.l + W - PAD.r) / 2;
 
+  // 全角混じりのテキスト幅の概算（全角は半角の2倍。名前が日本語短縮名になったため）
+  const textW = (s: string, half: number) =>
+    [...s].reduce((acc, c) => acc + ((c.codePointAt(0) ?? 0) > 0xff ? half * 2 : half), 0);
+
   const topBy = (key: "x" | "y") => [...dots].sort((a, b) => b[key] - a[key]).slice(0, labelTop).map(idOf);
   const alwaysLabeled = new Set([...topBy("x"), ...topBy("y")]);
   // 常時ラベルの重なり回避: 下から順に置き、先に置いたラベルと x が重なり y が近ければ 11px ずつ上へ逃がす（上端に届いたら下へ）
@@ -122,7 +126,7 @@ export function QuadrantMap({
   for (const d of [...dots].filter((d) => alwaysLabeled.has(idOf(d))).sort((a, b) => sy(b.y) - sy(a.y))) {
     const cx = sx(d.x);
     const end = cx > midX;
-    const w = d.name.length * 5.5;
+    const w = textW(d.name, 5.5);
     const x0 = end ? cx - 6 - w : cx + 6;
     const collides = (yy: number) => placed.some((p) => p.x0 < x0 + w && x0 < p.x1 && Math.abs(p.y - yy) < LABEL_H);
     // 点の近くから順に試す: そのまま → 点の下 → 1段上 → 2段下 → 2段上 …（近い候補を優先し、誰の名前か分かる距離に留める）
@@ -147,7 +151,7 @@ export function QuadrantMap({
   const labelHeight = narrow ? 36 : 26; // スマホ幅はタップしやすいよう高く（画面上 約29px。PC は約23px）
   if (shownDot) {
     labelText = `${shownDot.name} (${shownDot.team})  ${xLabel} ${fmt(shownDot.x, xFormat)} / ${yLabel} ${fmt(shownDot.y, yFormat)}`;
-    labelWidth = labelText.length * 6.2 + 16; // ponytail: SVGテキスト幅の概算（getBBox計測はしない）
+    labelWidth = textW(labelText, 6.2) + 16; // ponytail: SVGテキスト幅の概算（getBBox計測はしない）
     const dotX = sx(shownDot.x);
     const dotY = sy(shownDot.y);
     labelX = dotX + 12;

@@ -195,7 +195,8 @@ export function StatLeaders({ players, label, stat }: { players: LeaderRow[]; la
           <div key={p.player} className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
               <span className="w-4 text-muted-foreground font-mono">{i + 1}</span>
-              <Link href={`/players/${p.playerId}`} className="hover:underline font-medium truncate max-w-[120px]">{p.player}</Link>
+              {/* 短縮名（姓）でも「ボールドウィン・ジュニア」級があるため 160px（全角11文字強） */}
+              <Link href={`/players/${p.playerId}`} className="hover:underline font-medium truncate max-w-[160px]">{p.player}</Link>
               <Badge variant="outline" className="text-xs shrink-0" style={{ borderColor: getTeamColor(p.team) }}>{p.team}</Badge>
             </div>
             <span className="font-mono font-semibold">{p[stat].toFixed(1)}</span>

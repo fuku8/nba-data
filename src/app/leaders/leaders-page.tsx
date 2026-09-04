@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getPlayerPerGame, getPlayerAdvanced, getPlayerTotals } from "@/lib/data/players";
+import { withDisplayNames } from "@/lib/data/names-ja";
 import { isPlayoffDataAvailable } from "@/lib/data/playoffs";
 import { PO_MIN_GP } from "@/lib/data/player-types";
 import type { Phase } from "@/lib/phase";
@@ -58,8 +59,9 @@ export function renderLeaders(phase: Phase) {
   const poAvailable = isPlayoffDataAvailable();
   if (phase === "po" && !poAvailable) return <PreSeasonNotice />;
   const minGp = LEADER_MIN_GP[phase];
-  const perGame = getPlayerPerGame({ phase }).filter((p) => p.gp >= minGp && p.team !== "TOT");
-  const advanced = getPlayerAdvanced({ phase }).filter((p) => p.gp >= minGp && p.team !== "TOT");
+  // 表示名は日本語の短縮名（略称→カタカナ姓。plan §13-1 段階3）。図ラベル・リーダー行の幅に収める
+  const perGame = withDisplayNames(getPlayerPerGame({ phase }).filter((p) => p.gp >= minGp && p.team !== "TOT"));
+  const advanced = withDisplayNames(getPlayerAdvanced({ phase }).filter((p) => p.gp >= minGp && p.team !== "TOT"));
 
   const mapPlayers = advanced.filter((p) => p.gp >= MAP_MIN_GP[phase] && p.mp >= 25);
   const usageDots = mapPlayers.map((p) => ({ playerId: p.playerId, name: p.player, team: p.team, x: p.usgPct, y: p.tsPct }));

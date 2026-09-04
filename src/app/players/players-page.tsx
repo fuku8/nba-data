@@ -6,7 +6,7 @@ import { currentSeason } from "@/lib/season";
 import { PreSeasonNotice } from "@/components/phase-switch";
 import { PlayersClient } from "./client";
 import type { QuadrantDot } from "@/components/quadrant-map";
-import { playerNameJa } from "@/lib/data/names-ja";
+import { playerNameJa, withDisplayNames } from "@/lib/data/names-ja";
 
 const SHOOTER_MIN_3PA = 1.0;
 
@@ -18,8 +18,8 @@ export function renderPlayers(phase: Phase) {
   const perGame = getPlayerPerGame({ phase }).filter((p) => p.team !== "TOT");
   const advanced = getPlayerAdvanced({ phase }).filter((p) => p.team !== "TOT");
 
-  const usageEfficiencyDots: QuadrantDot[] = advanced
-    .filter((p) => p.gp >= minGp)
+  // 図ラベルは日本語の短縮名（plan §13-1 段階3。表の表示は英語名のまま）
+  const usageEfficiencyDots: QuadrantDot[] = withDisplayNames(advanced.filter((p) => p.gp >= minGp))
     .map((p) => ({ playerId: p.playerId, name: p.player, team: p.team, x: p.usgPct, y: p.tsPct }));
 
   // 検索照合用の日本語名（plan §13-1。表示は英語名のまま）。ページに居る選手分だけ渡す
@@ -29,8 +29,7 @@ export function renderPlayers(phase: Phase) {
     if (ja) namesJa[p.playerId] = ja;
   }
 
-  const shooterDots: QuadrantDot[] = perGame
-    .filter((p) => p.gp >= minGp && p.threePtA >= SHOOTER_MIN_3PA)
+  const shooterDots: QuadrantDot[] = withDisplayNames(perGame.filter((p) => p.gp >= minGp && p.threePtA >= SHOOTER_MIN_3PA))
     .map((p) => ({ playerId: p.playerId, name: p.player, team: p.team, x: p.threePtA, y: p.threePtPct }));
 
   return (

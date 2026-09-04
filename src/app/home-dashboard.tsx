@@ -5,7 +5,7 @@ import { getStandings } from "@/lib/data/teams";
 import { getPlayerPerGame } from "@/lib/data/players";
 import { getLatestGameDate, getPoLastGameDate } from "@/lib/data/csv-utils";
 import { getTeamColor } from "@/lib/constants/teams";
-import { teamNameJa } from "@/lib/data/names-ja";
+import { teamNameJa, withDisplayNames } from "@/lib/data/names-ja";
 import { isPlayoffDataAvailable, getPlayoffSeries, getPlayoffPlayerPerGame, getPlayoffBracket } from "@/lib/data/playoffs";
 import { PlayoffsTopClient, StatLeaders } from "@/app/playoffs/client";
 import { currentSeason } from "@/lib/season";
@@ -43,7 +43,7 @@ function ConferenceTable({ title, teams }: { title: string; teams: TeamStanding[
 
 function RegularSeason({ season }: { season: string }) {
   const standings = getStandings();
-  const players = getPlayerPerGame().filter((p) => p.gp >= 30 && p.team !== "TOT");
+  const players = withDisplayNames(getPlayerPerGame().filter((p) => p.gp >= 30 && p.team !== "TOT"));
   const conf = (c: TeamStanding["conference"]) =>
     standings.filter((s) => s.conference === c).sort((a, b) => a.playoffRank - b.playoffRank || b.winPct - a.winPct);
 
@@ -86,7 +86,7 @@ export function HomeDashboard({ defaultTab }: { defaultTab: "rs" | "po" }) {
   const season = currentSeason();
   if (!isPlayoffDataAvailable()) return <RegularSeason season={season} />;
 
-  const players = getPlayoffPlayerPerGame().filter((p) => p.team !== "TOT");
+  const players = withDisplayNames(getPlayoffPlayerPerGame().filter((p) => p.team !== "TOT"));
   return (
     <Tabs defaultValue={defaultTab} className="gap-6">
       <PhaseTabsList />
