@@ -5,7 +5,7 @@ import {
   Search,
   Calendar,
   Medal,
-  LayoutDashboard,
+  ListOrdered,
   BookOpen,
   Shapes,
 } from "lucide-react";
@@ -14,13 +14,13 @@ import {
 // ヘッダー（navigation.tsx）とフッター（layout.tsx）の両方で使う。
 // "use client" のモジュールに置くとサーバー側の layout から値として読めないため、ここに分離
 export const navItems = [
-  { href: "/standings", label: "順位表", icon: Trophy },
+  { href: "/standings", label: "順位表", icon: ListOrdered },
   { href: "/teams", label: "チーム", icon: BarChart3 },
   { href: "/players", label: "選手", icon: Users },
   { href: "/leaders", label: "リーダーズ", icon: Medal },
   { href: "/compare", label: "比較", icon: Search },
   { href: "/games", label: "試合", icon: Calendar },
-  { href: "/playoffs", label: "プレーオフ", icon: LayoutDashboard },
+  { href: "/playoffs", label: "プレーオフ", icon: Trophy },
   { href: "/types", label: "タイプ", icon: Shapes },
   { href: "/metrics", label: "指標解説", icon: BookOpen },
 ];

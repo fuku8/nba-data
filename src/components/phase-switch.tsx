@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PHASE_LABEL, phasePath, type Phase } from "@/lib/phase";
@@ -14,7 +13,6 @@ export function PhaseBadge({ phase, className }: { phase: Phase; className?: str
         className,
       )}
     >
-      {phase === "po" && <Trophy className="h-3 w-3" />}
       {PHASE_LABEL[phase]}
     </span>
   );
@@ -52,9 +50,8 @@ export function PhaseSwitch({
       <Link
         href={href("po")}
         aria-current={phase === "po" ? "page" : undefined}
-        className={cn("px-3 py-1.5 border-l transition-colors flex items-center gap-1.5", phase === "po" ? "bg-orange-500 text-white" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground")}
+        className={cn("px-3 py-1.5 border-l transition-colors", phase === "po" ? "bg-orange-500 text-white" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground")}
       >
-        <Trophy className="h-3.5 w-3.5" />
         Playoffs
       </Link>
     </div>
@@ -77,7 +74,6 @@ export function PhaseTabsList({ compare = false }: { compare?: boolean }) {
     <TabsList>
       <TabsTrigger value="rs" className="px-3">Regular Season</TabsTrigger>
       <TabsTrigger value="po" className="px-3 data-active:bg-orange-500 data-active:text-white dark:data-active:bg-orange-500 dark:data-active:text-white">
-        <Trophy />
         Playoffs
       </TabsTrigger>
       {compare && <TabsTrigger value="compare" className="px-3">RS vs PO</TabsTrigger>}
