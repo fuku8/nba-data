@@ -57,13 +57,10 @@ export default function RootLayout({
                 </Link>
               ))}
             </nav>
+            {/* サイト名はすぐ上のロゴが持つため、この行からは削除（2026-09-05） */}
             <p className="mt-5 text-center text-xs text-muted-foreground">
-              <Link href="/" className="hover:text-foreground">
-                {SITE_NAME}
-              </Link>
-              {"　"}データ: NBA.com/Stats（毎日取得）
-              {/* スマホでは2行目に折り返す */}
-              <a href="/metrics#about" className="underline block sm:inline mt-1 sm:mt-0 sm:ml-3">
+              データ: NBA.com/Stats（毎日取得）
+              <a href="/metrics#about" className="underline ml-3">
                 このサイトについて
               </a>
             </p>
