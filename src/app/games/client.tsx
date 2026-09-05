@@ -147,7 +147,8 @@ export function GamesClient({
         <section className="mt-6">
           <h2 className="text-lg font-semibold mb-3">シリーズ状況</h2>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-            {series.map((s) => (
+            {/* 最新ラウンドが先（PO実施中は進行中のシリーズが先頭に来る）。スマホのPOページと同じ並び */}
+            {[...series].sort((a, b) => b.round - a.round).map((s) => (
               // カード全体でシリーズ詳細（試合一覧→ボックススコア）へ
               <Card key={`${s.team1}-${s.team2}`} className="relative text-sm transition-colors hover:bg-accent/40">
                 <Link href={`/playoffs/${s.team1}-${s.team2}`} className="absolute inset-0" aria-label="シリーズ詳細" />
