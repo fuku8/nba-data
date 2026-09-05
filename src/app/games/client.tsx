@@ -148,7 +148,9 @@ export function GamesClient({
           <h2 className="text-lg font-semibold mb-3">シリーズ状況</h2>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
             {series.map((s) => (
-              <Card key={`${s.team1}-${s.team2}`} className="text-sm">
+              // カード全体でシリーズ詳細（試合一覧→ボックススコア）へ
+              <Card key={`${s.team1}-${s.team2}`} className="relative text-sm transition-colors hover:bg-accent/40">
+                <Link href={`/playoffs/${s.team1}-${s.team2}`} className="absolute inset-0" aria-label="シリーズ詳細" />
                 <CardContent className="pt-3 pb-3">
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full shrink-0 inline-block" style={{ backgroundColor: getTeamColor(s.team1) }} />{s.team1}</span>
