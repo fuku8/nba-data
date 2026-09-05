@@ -198,14 +198,14 @@ export function StatLeaders({ players, label, stat }: { players: LeaderRow[]; la
       </CardHeader>
       <CardContent className="space-y-2">
         {top3.map((p, i) => (
-          <div key={p.player} className="flex items-center justify-between text-sm">
-            <div className="flex items-center gap-2">
-              <span className="w-4 text-muted-foreground font-mono">{i + 1}</span>
-              {/* 短縮名（姓）でも「ボールドウィン・ジュニア」級があるため 160px（全角11文字強） */}
-              <Link href={`/players/${p.playerId}`} className="hover:underline font-medium truncate max-w-[160px]">{p.player}</Link>
+          <div key={p.player} className="flex items-center justify-between gap-2 text-sm">
+            {/* フル名が長い行は折り返す（切り詰めない）。min-w-0 が無いと値が押し出される */}
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <span className="w-4 text-muted-foreground font-mono shrink-0">{i + 1}</span>
+              <Link href={`/players/${p.playerId}`} className="hover:underline font-medium min-w-0 leading-snug">{p.player}</Link>
               <Badge variant="outline" className="text-xs shrink-0" style={{ borderColor: getTeamColor(p.team) }}>{p.team}</Badge>
             </div>
-            <span className="font-mono font-semibold">{p[stat].toFixed(1)}</span>
+            <span className="font-mono font-semibold shrink-0">{p[stat].toFixed(1)}</span>
           </div>
         ))}
       </CardContent>

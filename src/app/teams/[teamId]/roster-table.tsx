@@ -17,6 +17,10 @@ import {
   getNextRosterSortConfig,
   sortTeamRosterRows,
 } from "@/lib/team-roster-sorting";
+import { NAME_WRAP } from "@/lib/table-classes";
+
+// ランク列が無い表なので left-0 で固定（選手一覧の STICKY_NAME は left-8）
+const STICKY = "sticky left-0 z-10 bg-card max-w-[120px] sm:max-w-none";
 
 export function TeamRosterTable({ rows }: { rows: TeamRosterRow[] }) {
   const [sortConfig, setSortConfig] = useState(DEFAULT_TEAM_ROSTER_SORT);
@@ -34,7 +38,7 @@ export function TeamRosterTable({ rows }: { rows: TeamRosterRow[] }) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Player</TableHead>
+            <TableHead className={STICKY}>Player</TableHead>
             <TableHead className="text-right">
               <SortableHeader
                 label="GP"
@@ -157,10 +161,10 @@ export function TeamRosterTable({ rows }: { rows: TeamRosterRow[] }) {
         <TableBody>
           {sortedRows.map((row) => (
             <TableRow key={row.player} className="hover:bg-accent/50">
-              <TableCell>
+              <TableCell className={`${STICKY} ${NAME_WRAP}`}>
                 <Link
                   href={`/players/${row.playerId}`}
-                  className="hover:underline font-medium"
+                  className="block hover:underline font-medium"
                 >
                   {row.player}
                 </Link>

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { getTeamColor } from "@/lib/constants/teams";
 import { findBoxScore, boxScoreGameIds } from "@/lib/data/games";
 import { PhaseBadge } from "@/components/phase-switch";
-import { withDisplayNames } from "@/lib/data/names-ja";
+import { withFullNames } from "@/lib/data/names-ja";
 
 export const dynamicParams = false;
 
@@ -227,9 +227,9 @@ function sumMinutes(players: PlayerStats[]): string {
 
 function PlayerTable({ players, tricode, teamStats }: { players: PlayerStats[]; tricode: string; teamStats?: TeamStats }) {
   const active = players.filter((p) => p.minutes && p.minutes !== "");
-  // 表示名は日本語の短縮名（plan §13-1 段階3）。同チームの兄弟・父子はフル名で識別される
-  const sorted = withDisplayNames(
-    [...active].sort((a, b) => b.points - a.points).map((p) => ({ ...p, playerId: p.personId, player: p.name, team: tricode }))
+  // 表示名はフル日本語名（plan §13-1）
+  const sorted = withFullNames(
+    [...active].sort((a, b) => b.points - a.points).map((p) => ({ ...p, playerId: p.personId, player: p.name }))
   );
 
   const teamFgm = active.reduce((s, p) => s + (p.fieldGoalsMade ?? 0), 0);
@@ -241,15 +241,18 @@ function PlayerTable({ players, tricode, teamStats }: { players: PlayerStats[]; 
   const totalMin = sumMinutes(active);
 
   return (
-    <div className="rounded-xl border bg-card overflow-x-auto">
+    // チーム名の帯はスクロールの器の外に置く（横スクロールで一緒に流れないように）
+    <div className="rounded-xl border bg-card overflow-hidden">
       <div className="px-4 py-3 border-b flex items-center gap-2">
         <div className="h-3 w-3 rounded-full" style={{ backgroundColor: getTeamColor(tricode) }} />
         <span className="font-semibold text-sm">{tricode}</span>
       </div>
+      <div className="overflow-x-auto">
       <table className="w-full text-xs">
         <thead>
           <tr className="border-b bg-muted/30">
-            <th className="text-left py-2 px-3 font-medium text-muted-foreground sticky left-0 z-10 bg-card">選手</th>
+            {/* min-w が無いと w-full の表がスマホで名前列を min-content（1〜2文字）まで潰す */}
+            <th className="text-left py-2 px-3 font-medium text-muted-foreground sticky left-0 z-10 bg-card min-w-[6.5em]">選手</th>
             <th className="py-2 px-2 text-center text-muted-foreground">POS</th>
             <th className="py-2 px-2 text-center text-muted-foreground">MIN</th>
             <th className="py-2 px-2 text-center font-semibold">PTS</th>
@@ -291,8 +294,8 @@ function PlayerTable({ players, tricode, teamStats }: { players: PlayerStats[]; 
             const pm = p.plusMinusPoints ?? 0;
             return (
               <tr key={p.personId} className="border-b last:border-0 hover:bg-muted/20">
-                <td className="py-2 px-3 font-medium sticky left-0 z-10 bg-card">
-                  <Link href={`/players/${p.personId}`} className="hover:underline">
+                <td className="py-2 px-3 font-medium sticky left-0 z-10 bg-card min-w-[6.5em] max-w-[120px] sm:max-w-none leading-snug">
+                  <Link href={`/players/${p.personId}`} className="block hover:underline">
                     {p.player}
                   </Link>
                 </td>
@@ -315,6 +318,7 @@ function PlayerTable({ players, tricode, teamStats }: { players: PlayerStats[]; 
           })}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTypeLeaderboard } from "@/lib/data/player-types";
+import { playerNameJa } from "@/lib/data/names-ja";
 import { MetricLink } from "@/components/metric-link";
 import { SeasonTitle } from "@/components/season-title";
 import { currentSeason } from "@/lib/season";
@@ -30,8 +31,11 @@ function Board({ players }: { players: { id: number; name: string; score: number
 }
 
 export default function TypesPage() {
-  const rs = getTypeLeaderboard("rs");
-  const po = new Map(getTypeLeaderboard("po").map((t) => [t.type, t.players]));
+  // 表示はフル日本語名（対応表に無い選手は英語名のまま）
+  const ja = (players: { id: number; name: string; score: number }[]) =>
+    players.map((p) => ({ ...p, name: playerNameJa(p.id) ?? p.name }));
+  const rs = getTypeLeaderboard("rs").map((t) => ({ ...t, players: ja(t.players) }));
+  const po = new Map(getTypeLeaderboard("po").map((t) => [t.type, ja(t.players)]));
 
   return (
     <div className="space-y-6">

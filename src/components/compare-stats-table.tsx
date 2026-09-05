@@ -15,6 +15,9 @@ export type CompareStatRow<P> = {
 
 const BEST_COLOR = "#10b981"; // その項目で最も良い値
 
+// 選手名列は左固定（他ページの表と同じ）。スマホはフル名を切り詰めず折り返す
+const STICKY = "sticky left-0 z-10 bg-card min-w-[6.5em] max-w-[120px] sm:max-w-none";
+
 // 表示桁で丸めてから優劣・差分を判定する（表示上同値なのに色が付く矛盾の防止）
 function rounded<P>(row: CompareStatRow<P>, p: P): number | null {
   const x = row.value(p);
@@ -45,7 +48,7 @@ export function CompareStatsTable<P extends { playerId: number; player: string }
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b">
-            <th className="text-left py-2 px-3">選手</th>
+            <th className={`text-left py-2 px-3 ${STICKY}`}>選手</th>
             {rows.map((row) => (
               <th key={row.label} className="text-right py-2 px-3 whitespace-nowrap">
                 {row.label}
@@ -57,10 +60,10 @@ export function CompareStatsTable<P extends { playerId: number; player: string }
         <tbody>
           {players.map((p, j) => (
             <tr key={p.playerId} className="border-b hover:bg-accent/30">
-              <td className="py-2 px-3 font-medium whitespace-nowrap">
+              <td className={`py-2 px-3 font-medium leading-snug sm:whitespace-nowrap ${STICKY}`}>
                 <Link href={`/players/${p.playerId}`} className="flex items-center gap-2 hover:underline">
                   <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: colors[j] }} />
-                  {p.player}
+                  <span className="min-w-0">{p.player}</span>
                 </Link>
               </td>
               {rows.map((row) => (
@@ -83,7 +86,7 @@ export function CompareStatsTable<P extends { playerId: number; player: string }
           ))}
           {players.length === 2 && (
             <tr className="border-b">
-              <td className="py-2 px-3 text-xs text-muted-foreground whitespace-nowrap">差（上段−下段）</td>
+              <td className={`py-2 px-3 text-xs text-muted-foreground ${STICKY}`}>差（上段−下段）</td>
               {rows.map((row) => {
                 const a = rounded(row, players[0]);
                 const b = rounded(row, players[1]);

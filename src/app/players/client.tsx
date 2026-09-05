@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/select";
 import { SortableHeader } from "@/components/sortable-header";
 import { QuadrantMap, MAP_HELP, type QuadrantDot } from "@/components/quadrant-map";
-import { STICKY_RANK, STICKY_NAME } from "@/lib/table-classes";
+import { STICKY_RANK, STICKY_NAME, NAME_WRAP } from "@/lib/table-classes";
 import { getTeamColor } from "@/lib/constants/teams";
 import type { PlayerPerGame, PlayerAdvanced, SortConfig } from "@/lib/types";
 import { PhaseSwitch } from "@/components/phase-switch";
@@ -46,17 +46,14 @@ export function PlayersClient({
   minGp,
   shooterMin3pa,
   namesJa,
-  namesShort,
 }: {
   phase: Phase;
   season: string;
   poAvailable: boolean;
   perGame: PlayerPerGame[];
   advanced: PlayerAdvanced[];
-  // 検索照合用の日本語名（playerId → 日本語名。対応表に無い選手は含まれない）
+  // 検索照合＋表の表示に使う日本語フル名（playerId → 日本語名。対応表に無い選手は含まれない）
   namesJa: Record<number, string>;
-  // 表の表示用の短縮名（`playerId-team` → 略称/カタカナ姓。検索照合には使わない）
-  namesShort: Record<string, string>;
   usageEfficiencyDots: QuadrantDot[];
   shooterDots: QuadrantDot[];
   minGp: number;
@@ -260,9 +257,9 @@ export function PlayersClient({
                     {pagedPerGame.map((p, i) => (
                       <TableRow key={`${p.player}-${p.team}`} className="hover:bg-accent/50">
                         <TableCell className={`text-muted-foreground ${STICKY_RANK}`}>{page * PAGE_SIZE + i + 1}</TableCell>
-                        <TableCell className={STICKY_NAME}>
-                          <Link href={`/players/${p.playerId}`} className="block truncate hover:underline font-medium">
-                            {namesShort[`${p.playerId}-${p.team}`] ?? p.player}
+                        <TableCell className={`${STICKY_NAME} ${NAME_WRAP}`}>
+                          <Link href={`/players/${p.playerId}`} className="block hover:underline font-medium">
+                            {namesJa[p.playerId] ?? p.player}
                           </Link>
                           <Link href={`/teams/${p.team}`} className="sm:hidden text-muted-foreground hover:underline">{p.team}</Link>
                         </TableCell>
@@ -334,9 +331,9 @@ export function PlayersClient({
                     {pagedAdvanced.map((p, i) => (
                       <TableRow key={`${p.player}-${p.team}`} className="hover:bg-accent/50">
                         <TableCell className={`text-muted-foreground ${STICKY_RANK}`}>{page * PAGE_SIZE + i + 1}</TableCell>
-                        <TableCell className={STICKY_NAME}>
-                          <Link href={`/players/${p.playerId}`} className="block truncate hover:underline font-medium">
-                            {namesShort[`${p.playerId}-${p.team}`] ?? p.player}
+                        <TableCell className={`${STICKY_NAME} ${NAME_WRAP}`}>
+                          <Link href={`/players/${p.playerId}`} className="block hover:underline font-medium">
+                            {namesJa[p.playerId] ?? p.player}
                           </Link>
                           <Link href={`/teams/${p.team}`} className="sm:hidden text-muted-foreground hover:underline">{p.team}</Link>
                         </TableCell>

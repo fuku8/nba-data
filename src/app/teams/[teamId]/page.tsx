@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { pageMeta } from "@/lib/metadata";
-import { teamNameJa, withDisplayNames } from "@/lib/data/names-ja";
+import { teamNameJa, withDisplayNames, withFullNames } from "@/lib/data/names-ja";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -85,7 +85,7 @@ export default async function TeamDetailPage({
   const giniByTeam = getTeamPointsGini();
   const teamGini = giniByTeam.find((g) => g.team === abbr);
   const giniRank = teamGini ? giniByTeam.indexOf(teamGini) + 1 : null;
-  const teamScorers = withDisplayNames(teamGini?.players ?? []); // 説明文の最多得点者名も日本語短縮名に
+  const teamScorers = withFullNames(teamGini?.players ?? []); // 説明文の最多得点者名もフル日本語名に
   const teamTotalPts = getPlayerTotals()
     .filter((p) => p.team === abbr)
     .reduce((a, p) => a + p.pts, 0);
@@ -113,14 +113,13 @@ export default async function TeamDetailPage({
     allAdvanced.filter((p) => p.team === abbr).map((p) => [p.player, p])
   );
 
-  // 表示名は日本語の短縮名（plan §13-1 段階3後半）。advanced 照合（英語名キー）の後に差し替える
-  const rosterRows = withDisplayNames(roster.map((player) => {
+  // 表示名はフル日本語名（plan §13-1）。advanced 照合（英語名キー）の後に差し替える
+  const rosterRows = withFullNames(roster.map((player) => {
     const advancedStats = rosterAdvanced.get(player.player);
 
     return {
       playerId: player.playerId,
       player: player.player,
-      team: abbr, // withDisplayNames の同チーム同姓判定用
       gp: player.gp,
       mpg: player.mpg,
       pts: player.pts,
@@ -145,7 +144,7 @@ export default async function TeamDetailPage({
   const poTeamStats = teamSeries.length > 0 ? getPlayoffTeamStats().find((t) => t.team === abbr) : undefined;
   const poAdvById = new Map(getPlayoffPlayerAdvanced().filter((p) => p.team === abbr).map((p) => [p.playerId, p]));
   const poPlayers = teamSeries.length > 0
-    ? withDisplayNames(getPlayoffPlayerPerGame()
+    ? withFullNames(getPlayoffPlayerPerGame()
         .filter((p) => p.team === abbr)
         .map((p) => {
           const a = poAdvById.get(p.playerId);

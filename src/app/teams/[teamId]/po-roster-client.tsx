@@ -57,7 +57,7 @@ export function RosterClient({ players }: { players: RosterPlayerRow[] }) {
       <table className="w-full text-sm">
         <thead className="border-b bg-muted/50">
           <tr>
-            <th className="text-left py-2 px-3 font-medium sticky left-0 bg-muted/50">選手</th>
+            <th className="text-left py-2 px-3 font-medium sticky left-0 z-10 bg-muted/50 min-w-[6.5em]">選手</th>
             {COLS.map((col) => (
               <th key={col.key} className="py-2 px-2 text-right font-medium">
                 <SortableHeader sortKey={col.key} label={col.label} sortConfig={sortConfig} onSort={handleSort} className="justify-end" />
@@ -68,8 +68,9 @@ export function RosterClient({ players }: { players: RosterPlayerRow[] }) {
         <tbody>
           {sorted.map((p) => (
             <tr key={`${p.player}-${p.team}`} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-              <td className="py-2 px-3 font-medium sticky left-0 bg-background">
-                <Link href={`/players/${p.playerId}`} className="hover:underline">{p.player}</Link>
+              {/* フル名は切り詰めず折り返す。min-w が無いと w-full の表が名前列を潰す */}
+              <td className="py-2 px-3 font-medium sticky left-0 z-10 bg-background min-w-[6.5em] max-w-[120px] sm:max-w-none leading-snug">
+                <Link href={`/players/${p.playerId}`} className="block hover:underline">{p.player}</Link>
               </td>
               {COLS.map((col) => {
                 const v = ((p as unknown) as Record<string, number | null>)[col.key] ?? null;

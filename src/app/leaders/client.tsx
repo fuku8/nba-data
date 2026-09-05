@@ -32,17 +32,18 @@ function LeaderBoard({
       </CardHeader>
       <CardContent className="space-y-1.5">
         {entries.map((e, i) => (
-          <div key={`${e.playerId}-${i}`} className="flex items-center justify-between text-sm py-1">
-            <div className="flex items-center gap-2">
-              <span className="w-6 text-right text-muted-foreground font-mono">{i + 1}</span>
-              <Link href={`/players/${e.playerId}`} className="font-medium hover:underline">
+          <div key={`${e.playerId}-${i}`} className="flex items-center justify-between gap-2 text-sm py-1">
+            {/* フル名が長い行は折り返す（切り詰めない）。min-w-0 が無いと値が押し出される */}
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <span className="w-6 text-right text-muted-foreground font-mono shrink-0">{i + 1}</span>
+              <Link href={`/players/${e.playerId}`} className="font-medium hover:underline min-w-0 leading-snug">
                 {e.player}
               </Link>
-              <Badge variant="outline" className="text-xs" style={{ borderColor: getTeamColor(e.team) }}>
+              <Badge variant="outline" className="text-xs shrink-0" style={{ borderColor: getTeamColor(e.team) }}>
                 {e.team}
               </Badge>
             </div>
-            <span className="font-mono font-semibold">
+            <span className="font-mono font-semibold shrink-0">
               {e.format === "pct"
                 ? (e.value * 100).toFixed(1) + "%"
                 : e.format === "plus"

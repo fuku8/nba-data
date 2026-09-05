@@ -48,7 +48,16 @@ export function playerNameShort(playerId: number): string | undefined {
   return PLAYER_NAME_SHORT[playerId] ?? (ja ? surnameJa(ja) : undefined);
 }
 
-// リスト・図ラベル用: player を短縮表示名に差し替える。
+// 表・リスト・文中用: player をフル日本語名に差し替える（対応表に無い選手は英語名のまま）。
+// 表示は「表＝フル名／図内ラベル＝短縮名」で使い分ける（図は withDisplayNames）
+export function withFullNames<T extends { playerId: number; player: string }>(rows: T[]): T[] {
+  return rows.map((r) => {
+    const ja = playerNameJa(r.playerId);
+    return ja ? { ...r, player: ja } : r;
+  });
+}
+
+// 図ラベル用: player を短縮表示名に差し替える。
 // 同チームに同じ短縮名がいる行（兄弟・父子など8組）は日本語フル名で識別する
 export function withDisplayNames<T extends { playerId: number; player: string; team: string }>(rows: T[]): T[] {
   const count = new Map<string, number>();

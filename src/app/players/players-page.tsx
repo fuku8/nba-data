@@ -18,22 +18,15 @@ export function renderPlayers(phase: Phase) {
   const perGame = getPlayerPerGame({ phase }).filter((p) => p.team !== "TOT");
   const advanced = getPlayerAdvanced({ phase }).filter((p) => p.team !== "TOT");
 
-  // 図ラベルは日本語の短縮名（plan §13-1 段階3。表の表示は英語名のまま）
+  // 図ラベルは日本語の短縮名（plan §13-1 段階3。表の表示はフル日本語名＝namesJa）
   const usageEfficiencyDots: QuadrantDot[] = withDisplayNames(advanced.filter((p) => p.gp >= minGp))
     .map((p) => ({ playerId: p.playerId, name: p.player, team: p.team, x: p.usgPct, y: p.tsPct }));
 
-  // 検索照合用の日本語名（plan §13-1）。ページに居る選手分だけ渡す
+  // 検索照合＋表の表示に使う日本語フル名（plan §13-1）。ページに居る選手分だけ渡す
   const namesJa: Record<number, string> = {};
   for (const p of perGame) {
     const ja = playerNameJa(p.playerId);
     if (ja) namesJa[p.playerId] = ja;
-  }
-
-  // 表の表示用の短縮名（段階3後半）。検索照合は英語名フィールドを使い続けるため表示専用のマップで渡す。
-  // 同チーム同姓のフル名フォールバックは行（playerId-team）単位
-  const namesShort: Record<string, string> = {};
-  for (const p of withDisplayNames([...perGame, ...advanced])) {
-    namesShort[`${p.playerId}-${p.team}`] = p.player;
   }
 
   const shooterDots: QuadrantDot[] = withDisplayNames(perGame.filter((p) => p.gp >= minGp && p.threePtA >= SHOOTER_MIN_3PA))
@@ -48,7 +41,6 @@ export function renderPlayers(phase: Phase) {
       perGame={perGame}
       advanced={advanced}
       namesJa={namesJa}
-      namesShort={namesShort}
       usageEfficiencyDots={usageEfficiencyDots}
       shooterDots={shooterDots}
       minGp={minGp}
