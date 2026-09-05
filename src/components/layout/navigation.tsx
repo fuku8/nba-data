@@ -50,13 +50,15 @@ export function Navigation() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto flex h-12 items-center gap-4 px-4">
+      {/* モック実測値: PC はヘッダー約84px・ロゴ約40px、ナビはセンターでなくロゴ下端揃え
+          （下から18px。内容はロゴ下部より5pxほど上に見える）。スマホは47px・マーク28pxでセンター */}
+      <div className="container mx-auto flex h-12 sm:h-[84px] items-center sm:items-end gap-4 px-4 sm:pb-[18px]">
         <Link href="/" className="flex items-center shrink-0" aria-label="スタッツのかたち トップ">
           {/* PC: ロゴタイプ入り / スマホ: NSマークのみ */}
-          <img src="/logo-ns1.svg" alt="" className="hidden sm:block h-8 w-auto" />
-          <img src="/logo-ns-mark.svg" alt="" className="sm:hidden h-8 w-auto" />
+          <img src="/logo-ns1.svg" alt="" className="hidden sm:block h-10 w-auto" />
+          <img src="/logo-ns-mark.svg" alt="" className="sm:hidden h-7 w-auto" />
         </Link>
-        <nav className="flex h-12 min-w-0 flex-1 items-center space-x-1 overflow-x-auto">
+        <nav className="flex min-w-0 flex-1 items-center space-x-1 overflow-x-auto">
           {navItems.map((item, i) => (
             <NavLink
               key={item.href}
