@@ -133,8 +133,9 @@ const SECTIONS: MetricSection[] = [
 ];
 
 export default function MetricsPage() {
+  // センター寄せ。本文をベースサイズにしたぶん幅も 3xl→4xl に拡大（2026-09-05）
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6 max-w-4xl mx-auto">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">指標解説</h1>
         <p className="text-muted-foreground mt-2">
@@ -150,7 +151,7 @@ export default function MetricsPage() {
         <CardHeader>
           <CardTitle>このサイトについて</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-1.5 text-sm leading-relaxed">
+        <CardContent className="space-y-1.5 text-base leading-relaxed">
           <p>データの出典は NBA公式スタッツ（NBA.com/Stats）です。取得には nba_api を使用しています。</p>
           <p>データは毎日自動取得し、各ページの図表に反映しています。</p>
           <p>NBA および各チームとは無関係の、非公式・個人運営のサイトです。</p>
@@ -168,16 +169,16 @@ export default function MetricsPage() {
         <Card key={s.id} id={s.id} className="scroll-mt-28">
           <CardHeader>
             <CardTitle>{s.title}</CardTitle>
-            <p className="text-xs text-muted-foreground">表示場所: {s.where}</p>
+            <p className="text-sm text-muted-foreground">表示場所: {s.where}</p>
           </CardHeader>
-          <CardContent className="space-y-3 text-sm leading-relaxed">
+          <CardContent className="space-y-3 text-base leading-relaxed">
             <p>{s.what}</p>
             <div>
-              <div className="text-xs font-medium text-muted-foreground mb-1">計算方法</div>
+              <div className="text-sm font-medium text-muted-foreground mb-1">計算方法</div>
               <p>{s.how}</p>
             </div>
             <div>
-              <div className="text-xs font-medium text-muted-foreground mb-1">読み方のコツ</div>
+              <div className="text-sm font-medium text-muted-foreground mb-1">読み方のコツ</div>
               <p>{s.read}</p>
             </div>
           </CardContent>
