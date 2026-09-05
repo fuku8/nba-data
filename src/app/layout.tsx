@@ -46,7 +46,8 @@ export default function RootLayout({
           <div className="container mx-auto px-4 py-[50px]">
             <Link href="/" className="flex justify-center" aria-label="スタッツのかたち トップ">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo-ns1.svg" alt="スタッツのかたち The Shape of Numbers" className="h-[50px] w-auto" />
+              {/* モックは50pxだったが実ページでは目立ちすぎたため縮小（スマホ28px / PC40px。2026-09-05） */}
+              <img src="/logo-ns1.svg" alt="スタッツのかたち The Shape of Numbers" className="h-7 sm:h-10 w-auto" />
             </Link>
             {/* 全ページの一覧はフッターが持つ（2026-09-03 決定） */}
             <nav aria-label="フッターメニュー" className="mt-9 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
