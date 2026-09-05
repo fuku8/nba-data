@@ -1,31 +1,36 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { navItems } from "./nav-items";
 
+// スマホのアイコンナビは「試合」まで。プレーオフ以下はハンバーガーメニュー側に収める
+const MOBILE_ICON_COUNT = 6;
 
 function NavLink({
   href,
   label,
   icon: Icon,
   pathname,
-  exact = false,
+  className,
 }: {
   href: string;
   label: string;
   icon: React.ElementType;
   pathname: string;
-  exact?: boolean;
+  className?: string;
 }) {
-  const isActive = exact ? pathname === href : pathname === href || (href !== "/" && pathname.startsWith(href));
+  const isActive = pathname === href || (href !== "/" && pathname.startsWith(href));
   return (
     <Link
       href={href}
       className={cn(
         "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground whitespace-nowrap",
-        isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+        isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground",
+        className
       )}
     >
       <Icon className="h-4 w-4 shrink-0" />
@@ -34,42 +39,63 @@ function NavLink({
   );
 }
 
-// ロゴマーク: Heartbeat 壁と同じモチーフ（基準線の上下に伸びる点差バー）。スマホでは文字の代わりにこれだけ出す
-function LogoMark() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden className="shrink-0">
-      <g fill="currentColor">
-        <rect x="1.5" y="6" width="3" height="6" rx="1" />
-        <rect x="6" y="2.5" width="3" height="9.5" rx="1" fill="#f97316" />
-        <rect x="10.5" y="8" width="3" height="4" rx="1" />
-        <rect x="15" y="12" width="3" height="7.5" rx="1" opacity="0.55" />
-        <rect x="19.5" y="12" width="3" height="4.5" rx="1" opacity="0.55" />
-      </g>
-    </svg>
-  );
-}
-
 export function Navigation() {
   const pathname = usePathname();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // ページ遷移でメニューを閉じる
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-12 items-center gap-4 px-4">
-        {/* 当面マークのみ（2026-09-03 決定）。ロゴタイプはふくたろうさん検討中で、決定後にここへ入れる。
-            シーズン副記も不要（各ページの SeasonTitle が持つ） */}
         <Link href="/" className="flex items-center shrink-0" aria-label="スタッツのかたち トップ">
-          <LogoMark />
+          {/* PC: ロゴタイプ入り / スマホ: NSマークのみ */}
+          <img src="/logo-ns1.svg" alt="" className="hidden sm:block h-8 w-auto" />
+          <img src="/logo-ns-mark.svg" alt="" className="sm:hidden h-8 w-auto" />
         </Link>
-        <div className="relative min-w-0 flex-1">
-          <nav className="flex h-12 items-center space-x-1 overflow-x-auto">
-            {navItems.map((item) => (
-              <NavLink key={item.href} {...item} pathname={pathname} />
-            ))}
-          </nav>
-          {/* モバイルで右にまだ項目があることを示すフェード（横スクロールの手がかり） */}
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-14 bg-gradient-to-l from-background via-background/70 to-transparent sm:hidden" />
-        </div>
+        <nav className="flex h-12 min-w-0 flex-1 items-center space-x-1 overflow-x-auto">
+          {navItems.map((item, i) => (
+            <NavLink
+              key={item.href}
+              {...item}
+              pathname={pathname}
+              className={i >= MOBILE_ICON_COUNT ? "hidden sm:flex" : undefined}
+            />
+          ))}
+        </nav>
+        <button
+          type="button"
+          onClick={() => setMenuOpen((v) => !v)}
+          aria-expanded={menuOpen}
+          aria-label="メニュー"
+          className="sm:hidden shrink-0 rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+        >
+          {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
       </div>
+      {/* スマホ全メニュー（テキスト付き） */}
+      {menuOpen && (
+        <nav className="sm:hidden border-t bg-background px-4 py-2" aria-label="全メニュー">
+          {navItems.map(({ href, label, icon: Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              className={cn(
+                "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium",
+                pathname === href || pathname.startsWith(href)
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground"
+              )}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              {label}
+            </Link>
+          ))}
+        </nav>
+      )}
     </header>
   );
 }

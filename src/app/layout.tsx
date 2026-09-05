@@ -34,7 +34,11 @@ export default function RootLayout({
         <main className="container mx-auto px-4 py-6">{children}</main>
         <footer className="border-t mt-10">
           <div className="container mx-auto px-4 py-8 space-y-5">
-            {/* 全ページの一覧はフッターが持つ（ヘッダーは現状のアイコンナビのまま。2026-09-03 決定） */}
+            <Link href="/" className="flex justify-center" aria-label="スタッツのかたち トップ">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-ns1.svg" alt="スタッツのかたち The Shape of Numbers" className="h-14 w-auto" />
+            </Link>
+            {/* 全ページの一覧はフッターが持つ（2026-09-03 決定） */}
             <nav aria-label="フッターメニュー" className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
               {navItems.map((item) => (
                 <Link key={item.href} href={item.href} className="hover:text-foreground">
