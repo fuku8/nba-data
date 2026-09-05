@@ -33,20 +33,21 @@ export default function RootLayout({
         <Navigation />
         <main className="container mx-auto px-4 py-6">{children}</main>
         <footer className="border-t mt-10">
-          <div className="container mx-auto px-4 py-8 space-y-5">
+          {/* モック実測値: 境界線→ロゴ 50px・ロゴ高さ50px・ロゴ→ナビ 36px・ナビ→出典行 27px・下端まで50px（スマホもPCと同じ） */}
+          <div className="container mx-auto px-4 py-[50px]">
             <Link href="/" className="flex justify-center" aria-label="スタッツのかたち トップ">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo-ns1.svg" alt="スタッツのかたち The Shape of Numbers" className="h-14 w-auto" />
+              <img src="/logo-ns1.svg" alt="スタッツのかたち The Shape of Numbers" className="h-[50px] w-auto" />
             </Link>
             {/* 全ページの一覧はフッターが持つ（2026-09-03 決定） */}
-            <nav aria-label="フッターメニュー" className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
+            <nav aria-label="フッターメニュー" className="mt-9 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
               {navItems.map((item) => (
                 <Link key={item.href} href={item.href} className="hover:text-foreground">
                   {item.label}
                 </Link>
               ))}
             </nav>
-            <p className="text-center text-xs text-muted-foreground">
+            <p className="mt-7 text-center text-xs text-muted-foreground">
               <Link href="/" className="hover:text-foreground">
                 {SITE_NAME}
               </Link>
