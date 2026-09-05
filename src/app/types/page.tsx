@@ -19,11 +19,12 @@ function Board({ players }: { players: { id: number; name: string; score: number
     <ol className="space-y-1.5">
       {players.map((p, i) => (
         <li key={p.id} className="flex items-center gap-2 text-sm">
-          <span className="w-5 text-right font-mono text-muted-foreground">{i + 1}</span>
-          <Link href={`/players/${p.id}`} className="hover:underline flex-1 truncate">
+          <span className="w-5 text-right font-mono text-muted-foreground shrink-0">{i + 1}</span>
+          {/* フル名は切り詰めず折り返す（他の表・リストと同方針） */}
+          <Link href={`/players/${p.id}`} className="hover:underline flex-1 min-w-0 leading-snug">
             {p.name}
           </Link>
-          <span className="font-mono font-semibold">{(p.score * 100).toFixed(1)}</span>
+          <span className="font-mono font-semibold shrink-0">{(p.score * 100).toFixed(1)}</span>
         </li>
       ))}
     </ol>
