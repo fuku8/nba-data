@@ -10,6 +10,15 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: SITE_NAME, template: `%s | ${SITE_NAME}` },
   description: "NBA のチーム・選手スタッツを、順位表・リーダーズ・散布図・パーセンタイルで見るダッシュボード",
+  // favicon.ico は app/favicon.ico の規約で配信。PNG各種は public/favicons/ から
+  icons: {
+    icon: [
+      { url: "/favicons/icon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicons/icon-16x16.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: "/favicons/apple-touch-icon.png",
+  },
+  manifest: "/favicons/manifest.json",
 };
 
 export default function RootLayout({
