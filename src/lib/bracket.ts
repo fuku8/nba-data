@@ -7,6 +7,9 @@ import type { PlayoffSeries } from "@/lib/types";
 // レギュラーシーズン順位で、プレーインを経た7・8シードは入れ替わりうる（2025-26 West: RS8位 POR が7シード）ため、
 // 下位側のシードは配置に使わない。
 
+// ラウンド番号→日本語名。ブラケット表示とシリーズ詳細ページで共用
+export const ROUND_NAME: Record<number, string> = { 1: "1回戦", 2: "2回戦", 3: "カンファレンス決勝", 4: "ファイナル" };
+
 export type Conference = "East" | "West";
 export interface SeedInfo { conference: Conference; seed: number } // seed = RS順位（1〜）
 

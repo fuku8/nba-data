@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getTeamColor, getTeamAbbr } from "@/lib/constants/teams";
 import type { PlayoffSeries, PlayoffPlayerPerGame } from "@/lib/types";
-import type { Bracket } from "@/lib/bracket";
+import { ROUND_NAME, type Bracket } from "@/lib/bracket";
 
-const ROUND_NAME: Record<number, string> = { 1: "1回戦", 2: "2回戦", 3: "カンファレンス決勝", 4: "ファイナル" };
+// シリーズ詳細ページ（試合一覧→ボックススコア）へのパス
+const seriesHref = (s: PlayoffSeries) => `/playoffs/${s.team1}-${s.team2}`;
 
 // ── 木の1枠（PC幅）: 2行のコンパクト表示 ──────────────────────────
 function BracketSlot({ s }: { s: PlayoffSeries | null }) {
@@ -24,14 +25,16 @@ function BracketSlot({ s }: { s: PlayoffSeries | null }) {
     { name: s.team2, wins: s.team2Wins },
   ];
   return (
-    <div className={`h-full rounded-md border bg-card px-2 py-1.5 text-sm min-h-14 flex flex-col justify-center gap-0.5 ${inProgress ? "border-orange-500/60" : ""}`}>
+    // 枠全体がシリーズ詳細へのリンク（重ねたLink）。チーム名リンクは z-10 で上に残す
+    <div className={`relative h-full rounded-md border bg-card px-2 py-1.5 text-sm min-h-14 flex flex-col justify-center gap-0.5 transition-colors hover:bg-accent/40 ${inProgress ? "border-orange-500/60" : ""}`}>
+      <Link href={seriesHref(s)} className="absolute inset-0" aria-label="シリーズ詳細" />
       {rows.map((t) => {
         const abbr = getTeamAbbr(t.name);
         const won = !inProgress && s.winner === t.name;
         const lost = !inProgress && !won;
         return (
           <div key={t.name} className={`flex items-center justify-between gap-2 ${lost ? "opacity-50" : ""}`}>
-            <Link href={`/teams/${abbr}`} className={`flex items-center gap-1.5 truncate hover:underline ${won ? "font-bold" : ""}`}>
+            <Link href={`/teams/${abbr}`} className={`relative z-10 flex items-center gap-1.5 truncate hover:underline ${won ? "font-bold" : ""}`}>
               <span className="h-2.5 w-2.5 rounded-full shrink-0 inline-block" style={{ backgroundColor: getTeamColor(t.name) }} />
               {abbr}
             </Link>
@@ -83,11 +86,12 @@ function SeriesCard({ s }: { s: PlayoffSeries }) {
   const inProgress = !s.winner;
 
   return (
-    <Card className="relative overflow-hidden">
+    <Card className="relative overflow-hidden transition-colors hover:bg-accent/40">
+      <Link href={seriesHref(s)} className="absolute inset-0" aria-label="シリーズ詳細" />
       <CardContent className="pt-4 pb-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex flex-col items-center flex-1 min-w-0">
-            <Link href={`/teams/${getTeamAbbr(s.team1)}`} className="text-sm font-semibold truncate w-full flex items-center justify-center gap-1.5 hover:underline"><span className="h-2.5 w-2.5 rounded-full shrink-0 inline-block" style={{ backgroundColor: getTeamColor(s.team1) }} />{s.team1}</Link>
+            <Link href={`/teams/${getTeamAbbr(s.team1)}`} className="relative z-10 text-sm font-semibold truncate w-full flex items-center justify-center gap-1.5 hover:underline"><span className="h-2.5 w-2.5 rounded-full shrink-0 inline-block" style={{ backgroundColor: getTeamColor(s.team1) }} />{s.team1}</Link>
             <span className="text-3xl font-bold mt-1">{s.team1Wins}</span>
           </div>
           <div className="flex flex-col items-center px-2">
@@ -99,7 +103,7 @@ function SeriesCard({ s }: { s: PlayoffSeries }) {
             <span className="text-xs text-muted-foreground mt-1">{s.seriesStatus}</span>
           </div>
           <div className="flex flex-col items-center flex-1 min-w-0">
-            <Link href={`/teams/${getTeamAbbr(s.team2)}`} className="text-sm font-semibold truncate w-full flex items-center justify-center gap-1.5 hover:underline"><span className="h-2.5 w-2.5 rounded-full shrink-0 inline-block" style={{ backgroundColor: getTeamColor(s.team2) }} />{s.team2}</Link>
+            <Link href={`/teams/${getTeamAbbr(s.team2)}`} className="relative z-10 text-sm font-semibold truncate w-full flex items-center justify-center gap-1.5 hover:underline"><span className="h-2.5 w-2.5 rounded-full shrink-0 inline-block" style={{ backgroundColor: getTeamColor(s.team2) }} />{s.team2}</Link>
             <span className="text-3xl font-bold mt-1">{s.team2Wins}</span>
           </div>
         </div>
@@ -119,7 +123,7 @@ function SeriesRow({ s }: { s: PlayoffSeries }) {
     return (
       <Link
         href={`/teams/${getTeamAbbr(name)}`}
-        className={`flex items-center gap-1.5 hover:underline ${right ? "flex-row-reverse" : ""} ${won ? "font-bold" : ""} ${!inProgress && !won ? "opacity-50" : ""}`}
+        className={`relative z-10 flex items-center gap-1.5 hover:underline ${right ? "flex-row-reverse" : ""} ${won ? "font-bold" : ""} ${!inProgress && !won ? "opacity-50" : ""}`}
       >
         <span className="h-2.5 w-2.5 rounded-full shrink-0 inline-block" style={{ backgroundColor: getTeamColor(name) }} />
         {getTeamAbbr(name)}
@@ -127,7 +131,9 @@ function SeriesRow({ s }: { s: PlayoffSeries }) {
     );
   };
   return (
-    <div className={`grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-md border bg-card px-3 py-2 text-sm ${inProgress ? "border-orange-500/60" : ""}`}>
+    // 行全体がシリーズ詳細へのリンク（重ねたLink）。チーム名リンクは z-10 で上に残す
+    <div className={`relative grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-md border bg-card px-3 py-2 text-sm transition-colors hover:bg-accent/40 ${inProgress ? "border-orange-500/60" : ""}`}>
+      <Link href={seriesHref(s)} className="absolute inset-0" aria-label="シリーズ詳細" />
       <div className="flex justify-end">{side(s.team1, false)}</div>
       <span className={`font-mono font-semibold tabular-nums ${inProgress ? "text-orange-500" : ""}`}>{s.team1Wins}-{s.team2Wins}</span>
       <div className="flex justify-start">{side(s.team2, true)}</div>

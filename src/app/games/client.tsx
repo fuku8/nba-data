@@ -18,15 +18,7 @@ import { gameDetailUrl } from "@/lib/game-url";
 import { PhaseSwitch } from "@/components/phase-switch";
 import type { Phase } from "@/lib/phase";
 import { SeasonTitle } from "@/components/season-title";
-
-// 熱戦指数(leadChanges + timesTied − 点差)を🔥の数に変換
-function dramaFlames(drama: number | undefined): string {
-  if (drama == null) return "";
-  if (drama >= 20) return "🔥🔥🔥";
-  if (drama >= 10) return "🔥🔥";
-  if (drama >= 4) return "🔥";
-  return "";
-}
+import { dramaFlames } from "@/lib/drama";
 
 function GameCard({ game, drama, detailHref }: { game: GameResult; drama?: number; detailHref: string | null }) {
   const inProgress = !game.homeWl; // POはスコアボード補完で進行中の試合が入ることがある
