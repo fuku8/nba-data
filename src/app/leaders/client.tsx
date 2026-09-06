@@ -39,11 +39,15 @@ function LeaderBoard({
               <span className="w-6 text-right text-muted-foreground font-mono shrink-0">{i + 1}</span>
               <div className="min-w-0 leading-snug">
                 <Link href={`/players/${e.playerId}`} className="font-medium hover:underline">
-                  <SegmentedName name={e.player} />
-                </Link>{" "}
-                <Badge variant="outline" className="text-xs" style={{ borderColor: getTeamColor(e.team) }}>
-                  {e.team}
-                </Badge>
+                  <SegmentedName
+                    name={e.player}
+                    suffix={
+                      <Badge variant="outline" className="text-xs ml-1.5" style={{ borderColor: getTeamColor(e.team) }}>
+                        {e.team}
+                      </Badge>
+                    }
+                  />
+                </Link>
               </div>
             </div>
             <span className="font-mono font-semibold shrink-0">

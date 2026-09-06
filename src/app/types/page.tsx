@@ -26,11 +26,15 @@ function Board({ players }: { players: { id: number; name: string; team: string;
           {/* フル名は切り詰めず折り返す（他の表・リストと同方針）。チームバッジはリーダーズと同じく名前直後のインライン */}
           <div className="flex-1 min-w-0 leading-snug">
             <Link href={`/players/${p.id}`} className="hover:underline">
-              <SegmentedName name={p.name} />
-            </Link>{" "}
-            <Badge variant="outline" className="text-xs" style={{ borderColor: getTeamColor(p.team) }}>
-              {p.team}
-            </Badge>
+              <SegmentedName
+                name={p.name}
+                suffix={
+                  <Badge variant="outline" className="text-xs ml-1.5" style={{ borderColor: getTeamColor(p.team) }}>
+                    {p.team}
+                  </Badge>
+                }
+              />
+            </Link>
           </div>
           <span className="font-mono font-semibold shrink-0">{(p.score * 100).toFixed(1)}</span>
         </li>
