@@ -34,17 +34,50 @@ export function ChartFrame({
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const captureRef = useRef<HTMLDivElement>(null);
+  // PNG はモーダルを開いた時点で裏で生成し始める。iOS Safari はタップから時間が経った
+  // ダウンロード/共有をエラー表示なしで無視するため、保存タップ時には生成済みにしておく
+  const pngPromise = useRef<Promise<Blob | null> | null>(null);
+
+  const makePng = async () => {
+    const node = captureRef.current;
+    if (!node) return null;
+    // 保存時だけ読む（初期バンドルに入れない）
+    const { toBlob } = await import("html-to-image");
+    return toBlob(node, { pixelRatio: 2 });
+  };
+
+  const open = () => {
+    dialogRef.current?.showModal();
+    // 比較ページ等で内容が変わっている可能性があるので、開くたびに作り直す
+    pngPromise.current = null;
+    requestAnimationFrame(() => {
+      pngPromise.current = makePng();
+    });
+  };
 
   const save = async () => {
-    const node = captureRef.current;
-    if (!node) return;
-    // 保存時だけ読む（初期バンドルに入れない）
-    const { toPng } = await import("html-to-image");
-    const dataUrl = await toPng(node, { pixelRatio: 2 });
+    const blob = await (pngPromise.current ??= makePng());
+    if (!blob) return;
+    const filename = `${name ? `${name}-` : ""}${title}.png`;
+    // スマホは共有シート（「画像を保存」で写真アプリへ・X/LINE へ直接）。
+    // <a download> は iOS Safari で静かに失敗するため使わない。PC は従来どおりダウンロード
+    const file = new File([blob], filename, { type: "image/png" });
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
+    if (coarse && navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file] });
+        return;
+      } catch (e) {
+        // ユーザーのキャンセルは何もしない。共有機構自体の失敗だけダウンロードへフォールバック
+        if (e instanceof DOMException && e.name === "AbortError") return;
+      }
+    }
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = dataUrl;
-    a.download = `${name ? `${name}-` : ""}${title}.png`;
+    a.href = url;
+    a.download = filename;
     a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
   };
 
   return (
@@ -52,7 +85,7 @@ export function ChartFrame({
       {trigger === "area" ? (
         <button
           type="button"
-          onClick={() => dialogRef.current?.showModal()}
+          onClick={open}
           className="block w-full cursor-zoom-in text-left"
           title="クリックで拡大・画像保存"
         >
@@ -64,7 +97,7 @@ export function ChartFrame({
           <div className="mt-2 flex justify-end">
             <button
               type="button"
-              onClick={() => dialogRef.current?.showModal()}
+              onClick={open}
               className="rounded-md border border-border px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               ⤢ 拡大・画像保存
