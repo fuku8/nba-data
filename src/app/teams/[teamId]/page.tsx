@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { getStandings, getTeamAdvanced, getTeamPerGame, getTeamPointsGini, getTeamDefenseFactors, getTeamOffenseFactors, GINI_MIN_MP } from "@/lib/data/teams";
 import { getPlayerPerGame, getPlayerAdvanced, getPlayerTotals } from "@/lib/data/players";
-import { getTeamMargins } from "@/lib/data/games";
+import { getTeamMargins, getLatestGameDate } from "@/lib/data/games";
+import { ChartFrame } from "@/components/chart-frame";
 import { SeasonHeartbeat } from "@/components/season-heartbeat";
 import { LorenzCurve } from "@/components/lorenz-curve";
 import { PossessionBand } from "@/components/possession-band";
@@ -239,6 +240,10 @@ export default async function TeamDetailPage({
     </div>
   );
 
+  // 拡大・画像保存の枠に渡す文脈（plan §13-4 B）
+  const frame = { name: teamNameJa(abbr) ?? teamInfo.name, team: abbr, asOf: getLatestGameDate() };
+  const rsContext = `Regular Season ${currentSeason()}`;
+
   const regularSeason = (
     <div className="space-y-6">
         {/* スマホは 3+2 の2行（縦積みだと冒頭で縦幅を取りすぎる）。PC は従来どおり5列 */}
@@ -284,7 +289,10 @@ export default async function TeamDetailPage({
                 <p className="text-xs text-muted-foreground">全{margins.length}試合の点差 · 上=勝ち / 下=負け · バーをクリックすると詳細と「試合詳細」ボタン（NBA.comへ）が表示されます</p>
               </CardHeader>
               <CardContent>
-                <SeasonHeartbeat games={margins} />
+                {/* バークリックで試合詳細が出る図なので全面クリックにせず明示ボタンで拡大 */}
+                <ChartFrame title="Season Heartbeat" context={rsContext} name={frame.name} team={frame.team} asOf={frame.asOf} trigger="button">
+                  <SeasonHeartbeat games={margins} />
+                </ChartFrame>
               </CardContent>
             </Card>
           )}
@@ -304,8 +312,18 @@ export default async function TeamDetailPage({
                   · トレード選手はシーズン通算を現所属に計上
                 </p>
               </CardHeader>
-              <CardContent className="flex justify-center">
-                <LorenzCurve values={teamScorers.map((p) => p.pts)} />
+              <CardContent>
+                <ChartFrame
+                  title={`ワンマン度 ${teamGini.gini.toFixed(3)}`}
+                  context={rsContext}
+                  name={frame.name}
+                  team={frame.team}
+                  asOf={frame.asOf}
+                >
+                  <div className="flex justify-center">
+                    <LorenzCurve values={teamScorers.map((p) => p.pts)} />
+                  </div>
+                </ChartFrame>
               </CardContent>
             </Card>
           )}
@@ -325,7 +343,9 @@ export default async function TeamDetailPage({
                 </p>
               </CardHeader>
               <CardContent>
-                <FactorRanks rows={offenseRows} teams={offFactors.length} color={getTeamColor(abbr)} />
+                <ChartFrame title="攻撃4ファクター" context={rsContext} name={frame.name} team={frame.team} asOf={frame.asOf}>
+                  <FactorRanks rows={offenseRows} teams={offFactors.length} color={getTeamColor(abbr)} />
+                </ChartFrame>
               </CardContent>
             </Card>
           )}
@@ -342,7 +362,9 @@ export default async function TeamDetailPage({
                 </p>
               </CardHeader>
               <CardContent>
-                <FactorRanks rows={defenseRows} teams={defFactors.length} color={getTeamColor(abbr)} />
+                <ChartFrame title="守備4ファクター" context={rsContext} name={frame.name} team={frame.team} asOf={frame.asOf}>
+                  <FactorRanks rows={defenseRows} teams={defFactors.length} color={getTeamColor(abbr)} />
+                </ChartFrame>
               </CardContent>
             </Card>
           )}
@@ -361,7 +383,9 @@ export default async function TeamDetailPage({
               </p>
             </CardHeader>
             <CardContent>
-              <PossessionBand segments={possSegments} color={getTeamColor(abbr)} />
+              <ChartFrame title="ボール支配" context={rsContext} name={frame.name} team={frame.team} asOf={frame.asOf}>
+                <PossessionBand segments={possSegments} color={getTeamColor(abbr)} />
+              </ChartFrame>
             </CardContent>
           </Card>
         )}

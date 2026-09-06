@@ -5,6 +5,8 @@ import { MIN_GP, PO_MIN_GP } from "@/lib/data/player-types";
 import { playerNameJa } from "@/lib/data/names-ja";
 import type { Phase } from "@/lib/phase";
 import { currentSeason } from "@/lib/season";
+import { getLatestGameDate } from "@/lib/data/games";
+import { getPoLastGameDate } from "@/lib/data/csv-utils";
 import { PreSeasonNotice } from "@/components/phase-switch";
 import { Suspense } from "react";
 import { CompareClient, type ComparePlayer } from "./client";
@@ -94,7 +96,14 @@ export function renderCompare(phase: Phase) {
   // useSearchParams を使うクライアントは Suspense で包む（静的エクスポートの要件）
   return (
     <Suspense fallback={null}>
-      <CompareClient key={phase} players={players} phase={phase} season={currentSeason()} poAvailable={poAvailable} />
+      <CompareClient
+        key={phase}
+        players={players}
+        phase={phase}
+        season={currentSeason()}
+        poAvailable={poAvailable}
+        asOf={phase === "po" ? getPoLastGameDate() : getLatestGameDate()}
+      />
     </Suspense>
   );
 }

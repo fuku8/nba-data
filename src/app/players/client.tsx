@@ -29,7 +29,8 @@ import { SegmentedName } from "@/components/segmented-name";
 import { getTeamColor } from "@/lib/constants/teams";
 import type { PlayerPerGame, PlayerAdvanced, SortConfig } from "@/lib/types";
 import { PhaseSwitch } from "@/components/phase-switch";
-import type { Phase } from "@/lib/phase";
+import { PHASE_LABEL, type Phase } from "@/lib/phase";
+import { ChartFrame } from "@/components/chart-frame";
 import { SeasonTitle } from "@/components/season-title";
 
 // GP下限の選択肢。POは最長でも28試合なので刻みを小さくする
@@ -48,9 +49,11 @@ export function PlayersClient({
   shooterMin3pa,
   mapTeamTop,
   namesJa,
+  asOf,
 }: {
   phase: Phase;
   season: string;
+  asOf: string; // 拡大・画像保存のデータ反映日（サーバー側で取得して渡す）
   poAvailable: boolean;
   perGame: PlayerPerGame[];
   advanced: PlayerAdvanced[];
@@ -179,14 +182,17 @@ export function PlayersClient({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <QuadrantMap
-              dots={usageEfficiencyDots}
-              labelTop={5}
-              xLabel="USG%"
-              yLabel="TS%"
-              xFormat="pct"
-              yFormat="pct"
-            />
+            {/* ドット操作がある図なので全面クリックにせず明示ボタンで拡大（plan §13-4 B） */}
+            <ChartFrame title="使われ方 × 効率マップ" context={`${PHASE_LABEL[phase]} ${season}`} asOf={asOf} trigger="button">
+              <QuadrantMap
+                dots={usageEfficiencyDots}
+                labelTop={5}
+                xLabel="USG%"
+                yLabel="TS%"
+                xFormat="pct"
+                yFormat="pct"
+              />
+            </ChartFrame>
           </CardContent>
         </Card>
         <Card>
@@ -197,14 +203,16 @@ export function PlayersClient({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <QuadrantMap
-              dots={shooterDots}
-              labelTop={5}
-              xLabel="3PA/G"
-              yLabel="3P%"
-              xFormat="1f"
-              yFormat="pct"
-            />
+            <ChartFrame title="シューターマップ" context={`${PHASE_LABEL[phase]} ${season}`} asOf={asOf} trigger="button">
+              <QuadrantMap
+                dots={shooterDots}
+                labelTop={5}
+                xLabel="3PA/G"
+                yLabel="3P%"
+                xFormat="1f"
+                yFormat="pct"
+              />
+            </ChartFrame>
           </CardContent>
         </Card>
       </div>

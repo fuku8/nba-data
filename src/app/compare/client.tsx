@@ -1,7 +1,8 @@
 "use client";
 
 import { PhaseSwitch } from "@/components/phase-switch";
-import type { Phase } from "@/lib/phase";
+import { PHASE_LABEL, type Phase } from "@/lib/phase";
+import { ChartFrame } from "@/components/chart-frame";
 import { useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -108,7 +109,7 @@ const PRESETS: { label: string; ids: number[] }[] = [
 // 表示は日本語名主・英語名従（plan §13-1 段階2）。データ（player）は英語のまま
 const dn = (p: ComparePlayer) => p.playerJa ?? p.player;
 
-export function CompareClient({ players, phase, season, poAvailable }: { players: ComparePlayer[]; phase: Phase; season: string; poAvailable: boolean }) {
+export function CompareClient({ players, phase, season, poAvailable, asOf }: { players: ComparePlayer[]; phase: Phase; season: string; poAvailable: boolean; asOf: string }) {
   const searchParams = useSearchParams();
   const [selectedIds, setSelectedIds] = useState<number[]>(() => parseIds(searchParams.get("ids"), players));
   const [search, setSearch] = useState("");
@@ -275,28 +276,36 @@ export function CompareClient({ players, phase, season, poAvailable }: { players
               <CardTitle>スタッツ比較</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={480}>
-                <RadarChart data={radarData} outerRadius="72%">
-                  <PolarGrid />
-                  <PolarAngleAxis dataKey="stat" />
-                  <PolarRadiusAxis domain={[0, 100]} tick={false} />
-                  {selectedPlayers.map((p, i) => (
-                    <Radar
-                      key={p.playerId}
-                      name={dn(p)}
-                      dataKey={p.playerId}
-                      stroke={COLORS[i]}
-                      strokeWidth={2}
-                      fill={COLORS[i]}
-                      fillOpacity={0.12}
+              {/* 名前は「A vs B」の組。選手ごとにチームが違うのでバッジ・カラー縦線は付けない */}
+              <ChartFrame
+                title="スタッツ比較"
+                context={`${PHASE_LABEL[phase]} ${season}`}
+                name={selectedPlayers.map(dn).join(" vs ")}
+                asOf={asOf}
+              >
+                <ResponsiveContainer width="100%" height={480}>
+                  <RadarChart data={radarData} outerRadius="72%">
+                    <PolarGrid />
+                    <PolarAngleAxis dataKey="stat" />
+                    <PolarRadiusAxis domain={[0, 100]} tick={false} />
+                    {selectedPlayers.map((p, i) => (
+                      <Radar
+                        key={p.playerId}
+                        name={dn(p)}
+                        dataKey={p.playerId}
+                        stroke={COLORS[i]}
+                        strokeWidth={2}
+                        fill={COLORS[i]}
+                        fillOpacity={0.12}
+                      />
+                    ))}
+                    <Legend
+                      verticalAlign="bottom"
+                      content={legendContent(selectedPlayers.map((p, i) => ({ name: dn(p), color: COLORS[i] })))}
                     />
-                  ))}
-                  <Legend
-                    verticalAlign="bottom"
-                    content={legendContent(selectedPlayers.map((p, i) => ({ name: dn(p), color: COLORS[i] })))}
-                  />
-                </RadarChart>
-              </ResponsiveContainer>
+                  </RadarChart>
+                </ResponsiveContainer>
+              </ChartFrame>
             </CardContent>
           </Card>
 
@@ -309,31 +318,38 @@ export function CompareClient({ players, phase, season, poAvailable }: { players
             </CardHeader>
             <CardContent className="space-y-2">
               {hustleEligible.length > 0 ? (
-                <ResponsiveContainer width="100%" height={480}>
-                  <RadarChart data={radarData2} outerRadius="72%">
-                    <PolarGrid />
-                    <PolarAngleAxis dataKey="stat" />
-                    <PolarRadiusAxis domain={[0, 100]} tick={false} />
-                    {hustleEligible.map((p) => {
-                      const i = selectedPlayers.indexOf(p);
-                      return (
-                        <Radar
-                          key={p.playerId}
-                          name={dn(p)}
-                          dataKey={p.playerId}
-                          stroke={COLORS[i]}
-                          strokeWidth={2}
-                          fill={COLORS[i]}
-                          fillOpacity={0.12}
-                        />
-                      );
-                    })}
-                    <Legend
-                      verticalAlign="bottom"
-                      content={legendContent(hustleEligible.map((p) => ({ name: dn(p), color: COLORS[selectedPlayers.indexOf(p)] })))}
-                    />
-                  </RadarChart>
-                </ResponsiveContainer>
+                <ChartFrame
+                  title="ハッスル・運動量比較"
+                  context={`${PHASE_LABEL[phase]} ${season}`}
+                  name={hustleEligible.map(dn).join(" vs ")}
+                  asOf={asOf}
+                >
+                  <ResponsiveContainer width="100%" height={480}>
+                    <RadarChart data={radarData2} outerRadius="72%">
+                      <PolarGrid />
+                      <PolarAngleAxis dataKey="stat" />
+                      <PolarRadiusAxis domain={[0, 100]} tick={false} />
+                      {hustleEligible.map((p) => {
+                        const i = selectedPlayers.indexOf(p);
+                        return (
+                          <Radar
+                            key={p.playerId}
+                            name={dn(p)}
+                            dataKey={p.playerId}
+                            stroke={COLORS[i]}
+                            strokeWidth={2}
+                            fill={COLORS[i]}
+                            fillOpacity={0.12}
+                          />
+                        );
+                      })}
+                      <Legend
+                        verticalAlign="bottom"
+                        content={legendContent(hustleEligible.map((p) => ({ name: dn(p), color: COLORS[selectedPlayers.indexOf(p)] })))}
+                      />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </ChartFrame>
               ) : (
                 <p className="text-sm text-muted-foreground py-4">ハッスルデータのある選手がいません</p>
               )}

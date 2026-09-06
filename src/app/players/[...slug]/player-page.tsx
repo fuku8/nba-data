@@ -16,6 +16,7 @@ import { getPlayerTypes, getPoSwing, MIN_GP, PO_MIN_GP, type TypeBadge, type PoS
 import { getSimilarPlayers } from "@/lib/data/similar";
 import { allSeasons, currentSeason, poYear } from "@/lib/season";
 import { getLatestGameDate } from "@/lib/data/games";
+import { getPoLastGameDate } from "@/lib/data/csv-utils";
 import { ChartFrame } from "@/components/chart-frame";
 import { SeasonSwitch } from "@/components/season-switch";
 import { SeasonTitle } from "@/components/season-title";
@@ -148,8 +149,12 @@ function VisualGroup({
                 </div>
                 <p className="text-xs text-muted-foreground">全試投の位置（緑=成功 / 灰=失敗）</p>
               </CardHeader>
-              <CardContent className="flex justify-center">
-                <ShotChart shots={shots} />
+              <CardContent>
+                <ChartFrame title="ショットチャート" context={title} name={frame.name} team={frame.team} asOf={frame.asOf}>
+                  <div className="flex justify-center">
+                    <ShotChart shots={shots} />
+                  </div>
+                </ChartFrame>
               </CardContent>
             </Card>
           )}
@@ -162,8 +167,18 @@ function VisualGroup({
                 </div>
                 <p className="text-xs text-muted-foreground">5部門パーセンタイルの平均×均等さ</p>
               </CardHeader>
-              <CardContent className="flex justify-center">
-                <VersatilityRadar items={radarItems} />
+              <CardContent>
+                <ChartFrame
+                  title={`オールラウンド度 ${(vScore * 100).toFixed(1)}`}
+                  context={title}
+                  name={frame.name}
+                  team={frame.team}
+                  asOf={frame.asOf}
+                >
+                  <div className="flex justify-center">
+                    <VersatilityRadar items={radarItems} />
+                  </div>
+                </ChartFrame>
               </CardContent>
             </Card>
           )}
@@ -177,7 +192,9 @@ function VisualGroup({
                 <p className="text-xs text-muted-foreground">平均{ptsAvg.toFixed(1)}点の内訳（1マス=1%）</p>
               </CardHeader>
               <CardContent>
-                <ScoringWaffle pts3={pts3} pts2={pts2} ptsFt={ptsFt} />
+                <ChartFrame title="得点の作り方" context={title} name={frame.name} team={frame.team} asOf={frame.asOf}>
+                  <ScoringWaffle pts3={pts3} pts2={pts2} ptsFt={ptsFt} />
+                </ChartFrame>
               </CardContent>
             </Card>
           )}
@@ -190,8 +207,18 @@ function VisualGroup({
                 </div>
                 <p className="text-xs text-muted-foreground">ハッスル6部門パーセンタイルの平均（スタッツに出ない貢献）</p>
               </CardHeader>
-              <CardContent className="flex justify-center">
-                <VersatilityRadar items={hustleItems} />
+              <CardContent>
+                <ChartFrame
+                  title={`縁の下の力持ち度 ${(hustleScore * 100).toFixed(1)}`}
+                  context={title}
+                  name={frame.name}
+                  team={frame.team}
+                  asOf={frame.asOf}
+                >
+                  <div className="flex justify-center">
+                    <VersatilityRadar items={hustleItems} />
+                  </div>
+                </ChartFrame>
               </CardContent>
             </Card>
           )}
@@ -206,11 +233,21 @@ function VisualGroup({
                   各項目のリーグ内評点（0-100）。総合スコアは役割に左右されにくい走行距離/試合と平均速度のみの平均
                 </p>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <PercentileBars rows={motion.items} />
-                <p className="text-xs text-muted-foreground">
-                  合計走行距離 {motion.distKm.toFixed(1)}km = フルマラソン{motion.marathons.toFixed(1)}本分
-                </p>
+              <CardContent>
+                <ChartFrame
+                  title={`運動量 ${(motion.score * 100).toFixed(1)}`}
+                  context={title}
+                  name={frame.name}
+                  team={frame.team}
+                  asOf={frame.asOf}
+                >
+                  <div className="space-y-3">
+                    <PercentileBars rows={motion.items} />
+                    <p className="text-xs text-muted-foreground">
+                      合計走行距離 {motion.distKm.toFixed(1)}km = フルマラソン{motion.marathons.toFixed(1)}本分
+                    </p>
+                  </div>
+                </ChartFrame>
               </CardContent>
             </Card>
           )}
@@ -505,12 +542,15 @@ export async function renderPlayer(playerId: string, season: string) {
   // 似たタイプの選手: スタッツのユークリッド距離が近い3名へのリンク
   const similarIds = getSimilarPlayers(playerIdNum, 3, ctx);
 
-  // 拡大・画像保存の枠に渡す文脈（データ反映日は現行シーズンのみ。過去季は凍結データなので出さない）
+  // 拡大・画像保存の枠に渡す文脈（データ反映日は現行シーズンのみ。過去季は凍結データなので出さない。
+  // PO の図には PO 最終戦日。getPoLastGameDate は PO データが無ければ空を返し、空なら表示されない）
+  const isCurrent = season === currentSeason();
   const frame = {
     name: nameJa ?? pg.player,
     team: pg.team,
-    ...(season === currentSeason() ? { asOf: getLatestGameDate() } : {}),
+    ...(isCurrent ? { asOf: getLatestGameDate() } : {}),
   };
+  const poFrame = { ...frame, ...(isCurrent ? { asOf: getPoLastGameDate() } : {}) };
 
 
   // シーズン積み重ね表（新しい順）。各シーズンとも RS 行→PO 行の順（図のタブの既定 RS と揃える。plan.md §12-3 の「進行中フェーズを上」は取りやめ）
@@ -651,7 +691,7 @@ export async function renderPlayer(playerId: string, season: string) {
           </TabsContent>
           <TabsContent value="po">
             <VisualGroup
-              frame={frame}
+              frame={poFrame}
               title={`Playoffs ${poYear(season)}`}
               season={season}
               accent

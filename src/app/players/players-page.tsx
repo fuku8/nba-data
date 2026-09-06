@@ -7,6 +7,8 @@ import { PreSeasonNotice } from "@/components/phase-switch";
 import { PlayersClient } from "./client";
 import type { QuadrantDot } from "@/components/quadrant-map";
 import { playerNameJa, withDisplayNames } from "@/lib/data/names-ja";
+import { getLatestGameDate } from "@/lib/data/games";
+import { getPoLastGameDate } from "@/lib/data/csv-utils";
 
 // 3PAは図の横軸そのものなので、本数で絞っても分布は歪まず左端が切れるだけ（NBA公式の3P%資格と同じ発想）
 const SHOOTER_MIN_3PA = 4.0;
@@ -62,6 +64,7 @@ export function renderPlayers(phase: Phase) {
       minGp={minGp}
       shooterMin3pa={SHOOTER_MIN_3PA}
       mapTeamTop={MAP_TEAM_TOP}
+      asOf={phase === "po" ? getPoLastGameDate() : getLatestGameDate()}
     />
   );
 }

@@ -19,6 +19,7 @@ export function ChartFrame({
   name,
   team,
   asOf,
+  trigger = "area",
   children,
 }: {
   title: string; // 図表タイトル（例: League Percentile）
@@ -26,6 +27,9 @@ export function ChartFrame({
   name?: string; // 選手名・チーム名（日本語）。無い図はタイトルのみのヘッダーになる
   team?: string; // チーム略称（バッジとカラー縦線）
   asOf?: string; // データ反映日（現行シーズンのみ渡す）
+  // area = 図全面クリックで拡大（操作のない図）。button = 図の下に明示ボタン
+  // （ドットのホバー・クリックがある図は全面クリックだと既存操作とぶつかるため）
+  trigger?: "area" | "button";
   children: ReactNode;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -45,14 +49,29 @@ export function ChartFrame({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => dialogRef.current?.showModal()}
-        className="block w-full cursor-zoom-in text-left"
-        title="クリックで拡大・画像保存"
-      >
-        {children}
-      </button>
+      {trigger === "area" ? (
+        <button
+          type="button"
+          onClick={() => dialogRef.current?.showModal()}
+          className="block w-full cursor-zoom-in text-left"
+          title="クリックで拡大・画像保存"
+        >
+          {children}
+        </button>
+      ) : (
+        <div>
+          {children}
+          <div className="mt-2 flex justify-end">
+            <button
+              type="button"
+              onClick={() => dialogRef.current?.showModal()}
+              className="rounded-md border border-border px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              ⤢ 拡大・画像保存
+            </button>
+          </div>
+        </div>
+      )}
       <dialog
         ref={dialogRef}
         onClick={(e) => e.target === dialogRef.current && dialogRef.current?.close()}

@@ -11,6 +11,10 @@ import { LeadersClient } from "./client";
 import { TOP_N } from "./constants";
 import { SeasonTitle } from "@/components/season-title";
 import { currentSeason } from "@/lib/season";
+import { PHASE_LABEL } from "@/lib/phase";
+import { getLatestGameDate } from "@/lib/data/games";
+import { getPoLastGameDate } from "@/lib/data/csv-utils";
+import { ChartFrame } from "@/components/chart-frame";
 
 // リーダーズのGP下限（RS30・PO4）
 const LEADER_MIN_GP = { rs: 30, po: PO_MIN_GP } as const;
@@ -21,6 +25,8 @@ function MapCard({
   anchor,
   lead,
   scope,
+  context,
+  asOf,
   dots,
   ...map
 }: {
@@ -28,6 +34,8 @@ function MapCard({
   anchor: string;
   lead: string;
   scope: string;
+  context: string;
+  asOf?: string;
   dots: QuadrantDot[];
   xLabel: string;
   yLabel: string;
@@ -48,7 +56,10 @@ function MapCard({
         </p>
       </CardHeader>
       <CardContent>
-        <QuadrantMap dots={dots} labelTop={5} {...map} />
+        {/* ドット操作（ホバー・クリック）があるので全面クリックにせず明示ボタンで拡大（plan §13-4 B） */}
+        <ChartFrame title={title} context={context} asOf={asOf} trigger="button">
+          <QuadrantMap dots={dots} labelTop={5} {...map} />
+        </ChartFrame>
       </CardContent>
     </Card>
   );
@@ -82,6 +93,10 @@ export function renderLeaders(phase: Phase) {
     return t && t.gp > 0 ? [{ playerId: p.playerId, name: p.player, team: p.team, x: t.stl / t.gp, y: t.blk / t.gp }] : [];
   });
 
+  // 拡大モーダルの文脈行とデータ反映日（リーダーズは常に現行シーズン。PO の図には PO 最終戦日）
+  const mapContext = `${PHASE_LABEL[phase]} ${currentSeason()}`;
+  const asOf = phase === "po" ? getPoLastGameDate() : getLatestGameDate();
+
   return (
     <div className="space-y-6">
       {/* 見出しは図の上に置く（他ページと同じ並び。RS｜PO 切替も最上部に） */}
@@ -98,6 +113,8 @@ export function renderLeaders(phase: Phase) {
           anchor="usg-ts"
           lead="攻撃をどれだけ背負い、どれだけ効率よく決めたか"
           scope={`USG%・TS% 各上位${TOP_N}`}
+          context={mapContext}
+          asOf={asOf}
           dots={usageDots}
           xLabel="USG%"
           yLabel="TS%"
@@ -110,6 +127,8 @@ export function renderLeaders(phase: Phase) {
           anchor="stl-blk"
           lead="外で奪う（スティール）か、中で止める（ブロック）か"
           scope={`STL・BLK 各上位${TOP_N}`}
+          context={mapContext}
+          asOf={asOf}
           dots={defenseDots}
           xLabel="STL"
           yLabel="BLK"
