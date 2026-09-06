@@ -14,7 +14,9 @@ import { getPlayerHustle, getPlayoffPlayerHustle, getPlayerSpeed, getPlayoffPlay
 import { MetricLink } from "@/components/metric-link";
 import { getPlayerTypes, getPoSwing, MIN_GP, PO_MIN_GP, type TypeBadge, type PoSwing } from "@/lib/data/player-types";
 import { getSimilarPlayers } from "@/lib/data/similar";
-import { allSeasons, poYear } from "@/lib/season";
+import { allSeasons, currentSeason, poYear } from "@/lib/season";
+import { getLatestGameDate } from "@/lib/data/games";
+import { ChartFrame } from "@/components/chart-frame";
 import { SeasonSwitch } from "@/components/season-switch";
 import { SeasonTitle } from "@/components/season-title";
 import { PhaseTabsList } from "@/components/phase-switch";
@@ -52,6 +54,7 @@ function VisualGroup({
   badges,
   swing,
   season,
+  frame,
 }: {
   title: string;
   season: string;
@@ -69,6 +72,7 @@ function VisualGroup({
   motion: { distKm: number; marathons: number; items: PercentileRow[]; score: number } | null;
   badges: TypeBadge[] | null;
   swing: PoSwing | null;
+  frame: { name: string; team: string; asOf?: string };
 }) {
   const hasWaffle = pts3 + pts2 + ptsFt > 0;
   const hasShots = shots.length > 0;
@@ -126,7 +130,10 @@ function VisualGroup({
             <p className="text-xs text-muted-foreground">{pctNote}</p>
           </CardHeader>
           <CardContent>
-            <PercentileBars rows={pctRows} />
+            {/* 拡大＋画像保存（plan §13-4 B）。まずこの1枚で反応を見てから他カードへ展開 */}
+            <ChartFrame title="League Percentile" context={title} name={frame.name} team={frame.team} asOf={frame.asOf}>
+              <PercentileBars rows={pctRows} />
+            </ChartFrame>
           </CardContent>
         </Card>
       )}
@@ -498,6 +505,13 @@ export async function renderPlayer(playerId: string, season: string) {
   // 似たタイプの選手: スタッツのユークリッド距離が近い3名へのリンク
   const similarIds = getSimilarPlayers(playerIdNum, 3, ctx);
 
+  // 拡大・画像保存の枠に渡す文脈（データ反映日は現行シーズンのみ。過去季は凍結データなので出さない）
+  const frame = {
+    name: nameJa ?? pg.player,
+    team: pg.team,
+    ...(season === currentSeason() ? { asOf: getLatestGameDate() } : {}),
+  };
+
 
   // シーズン積み重ね表（新しい順）。各シーズンとも RS 行→PO 行の順（図のタブの既定 RS と揃える。plan.md §12-3 の「進行中フェーズを上」は取りやめ）
   const findRow = <T extends { playerId: number; team: string }>(all: T[]) =>
@@ -617,6 +631,7 @@ export async function renderPlayer(playerId: string, season: string) {
           <PhaseTabsList compare={canCompare} />
           <TabsContent value="rs">
             <VisualGroup
+              frame={frame}
               title={`Regular Season ${season}`}
               season={season}
               pctNote={`GP${MIN_GP}以上の選手内での位置（100が最上位）`}
@@ -636,6 +651,7 @@ export async function renderPlayer(playerId: string, season: string) {
           </TabsContent>
           <TabsContent value="po">
             <VisualGroup
+              frame={frame}
               title={`Playoffs ${poYear(season)}`}
               season={season}
               accent
@@ -676,6 +692,7 @@ export async function renderPlayer(playerId: string, season: string) {
         </Tabs>
       ) : (
         <VisualGroup
+          frame={frame}
           title={`Regular Season ${season}`}
           season={season}
           pctNote={`GP${MIN_GP}以上の選手内での位置（100が最上位）`}
