@@ -933,3 +933,13 @@ sumo-data `src/lib/midokoro.ts` の型（ビルド時に最大3枚を決定論�
 - データ: 眠っていた `team_opponent.csv`（B-Ref 形式の相手成績）を初使用（`getTeamDefenseFactors()`）。DRB% だけ team_advanced の DREB_PCT。PO 版データは無いので RS タブ限定
 - 検証: OKC=eFG2位/TOV2位/FTr2位（エリート守備）、BOS=奪TOV28位（ギャンブルしない守備）と実態どおり
 - 部品: `defense-factors.tsx`（サーバーコンポーネント・div のみ、PossessionBand と同型）。配置はボール支配と PC 横並び。指標解説に `#defense-factors` 追加
+
+### 13-9. チームページ: 攻撃4ファクター追加・図表の並び確定（2026-09-06 実装）
+
+守備4ファクターの好評を受けた攻撃版（ふくたろう依頼）。「ワンマン度と入れ替えては」の相談には、ワンマン度はサイト独自の看板図（4ファクターはどこにでもある定番）なので削除せず並び替えで対応と回答し、承認済み（「ローレンツ曲線は気に入っています」）。
+
+- **図表の並び（確定）**: ①Heartbeat｜ワンマン度 → ②攻撃4ファクター｜守備4ファクター（同じ形を横並びにして攻守のスタイル比較）→ ③ボール支配（全幅）
+- **攻撃4ファクター**: eFG%（シュート効率）・TOV率（ボール保持・低いほど良い）・ORB%（攻撃リバウンド）・FTレート（FT獲得）。eFG%・TOV率・ORB% は team_advanced 既存列、FTレートのみ team_per_game の FTM÷FGA（`getTeamOffenseFactors()`）
+- 検証: DEN=eFG1位（Jokić）、HOU=ORB1位・eFG17位（二次攻撃型）、OKC=TOV率1位と実態どおり
+- 部品は攻守共用化のため `defense-factors.tsx` → `factor-ranks.tsx`（FactorRanks）に改名。指標解説に `#offense-factors` 追加（重要度はシュート効率が約4割という Oliver の推定も記載）
+- 同日ついで: 冒頭カードのラベル↔数値間隔をスマホで圧縮し正式名を極小フォントで復活（「Possessions / 48min」に空白挿入）。POタブのシリーズカードをプレーオフページと同じ全面リンク（シリーズ詳細へ）に

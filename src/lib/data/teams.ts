@@ -120,6 +120,23 @@ export function getTeamDefenseFactors(season?: string): TeamDefenseFactors[] {
     });
 }
 
+// 攻撃4ファクター（Four Factors の本家・攻撃側）。eFG%・TOV率・ORB% は team_advanced にあり、FTレートだけ team_per_game から計算
+export interface TeamOffenseFactors {
+  team: string; // 略称
+  efgPct: number; // eFG%（高いほど良い）
+  tovPct: number; // TOV率（低いほど良い）
+  orebPct: number; // 攻撃リバウンド率（高いほど良い）
+  ftRate: number; // FTレート = FT成功/FGA（高いほど良い）
+}
+
+export function getTeamOffenseFactors(season?: string): TeamOffenseFactors[] {
+  const ftRate = new Map(getTeamPerGame(season).map((p) => [getTeamAbbr(p.teamName), p.fga > 0 ? p.ftm / p.fga : 0]));
+  return getTeamAdvanced(season).map((a) => {
+    const team = getTeamAbbr(a.teamName);
+    return { team, efgPct: a.efgPct, tovPct: a.tmTovPct, orebPct: a.orebPct, ftRate: ftRate.get(team) ?? 0 };
+  });
+}
+
 // ワンマン度: チーム内得点分布のGini係数
 export function gini(values: number[]): number {
   const xs = [...values].sort((a, b) => a - b);

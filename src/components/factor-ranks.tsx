@@ -1,14 +1,14 @@
-// 守備4ファクターのリーグ順位バー: 「何で守るチームか」を4部門の順位で表示
+// 4ファクターのリーグ順位バー（攻撃・守備で共用）: 「何で点を取る/守るチームか」を4部門の順位で表示
 // サーバーコンポーネント・divのみ（PossessionBand と同型）
 
-export interface DefenseFactorRow {
+export interface FactorRankRow {
   label: string; // 例: シュート抑止
   metric: string; // 例: 被eFG%
   value: string; // 書式済みの表示値
   rank: number; // 1 = リーグ最良
 }
 
-export function DefenseFactors({ rows, teams, color }: { rows: DefenseFactorRow[]; teams: number; color: string }) {
+export function FactorRanks({ rows, teams, color }: { rows: FactorRankRow[]; teams: number; color: string }) {
   if (rows.length === 0) return null;
   return (
     <div className="space-y-4">
