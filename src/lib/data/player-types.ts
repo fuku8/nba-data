@@ -84,6 +84,7 @@ function rimShare(playerId: number, phase: Phase, minShots: number, season?: str
 interface TypedPlayer {
   id: number;
   name: string;
+  team: string;
   badges: TypeBadge[]; // 評価点の高い順
 }
 
@@ -159,7 +160,7 @@ export function getPlayerTypes(phase: Phase, season?: string): Map<number, Typed
     const badges = (isFallback ? [cand[0]] : picked)
       .map((c) => ({ type: c.name, score: c.score, fallback: isFallback }))
       .sort((a, b) => b.score - a.score);
-    result.set(id, { id, name: pg.get(id)!["PLAYER_NAME"] || "", badges });
+    result.set(id, { id, name: pg.get(id)!["PLAYER_NAME"] || "", team: pg.get(id)!["TEAM_ABBREVIATION"] || "", badges });
   }
 
   cache.set(key, { stamp, value: result });
@@ -167,11 +168,11 @@ export function getPlayerTypes(phase: Phase, season?: string): Map<number, Typed
 }
 
 // タイプ別リーダーボード（該当者を評価点順に）。fallbackバッジ（z<1.0の参考表示）は対象外
-export function getTypeLeaderboard(phase: Phase, topN = 10, season?: string): { type: string; players: { id: number; name: string; score: number }[] }[] {
+export function getTypeLeaderboard(phase: Phase, topN = 10, season?: string): { type: string; players: { id: number; name: string; team: string; score: number }[] }[] {
   const all = getPlayerTypes(phase, season);
   return TYPE_NAMES.map((type) => {
     const players = [...all.values()]
-      .flatMap((p) => p.badges.filter((b) => b.type === type && !b.fallback).map((b) => ({ id: p.id, name: p.name, score: b.score })))
+      .flatMap((p) => p.badges.filter((b) => b.type === type && !b.fallback).map((b) => ({ id: p.id, name: p.name, team: p.team, score: b.score })))
       .sort((a, b) => b.score - a.score)
       .slice(0, topN);
     return { type, players };

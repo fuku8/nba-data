@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { getTeamColor } from "@/lib/constants/teams";
 import { getTypeLeaderboard } from "@/lib/data/player-types";
 import { playerNameJa } from "@/lib/data/names-ja";
 import { SegmentedName } from "@/components/segmented-name";
@@ -14,17 +16,22 @@ export const metadata = pageMeta({
   path: "/types",
 });
 
-function Board({ players }: { players: { id: number; name: string; score: number }[] }) {
+function Board({ players }: { players: { id: number; name: string; team: string; score: number }[] }) {
   if (players.length === 0) return <p className="text-sm text-muted-foreground">該当選手なし</p>;
   return (
     <ol className="space-y-1.5">
       {players.map((p, i) => (
         <li key={p.id} className="flex items-center gap-2 text-sm">
           <span className="w-5 text-right font-mono text-muted-foreground shrink-0">{i + 1}</span>
-          {/* フル名は切り詰めず折り返す（他の表・リストと同方針） */}
-          <Link href={`/players/${p.id}`} className="hover:underline flex-1 min-w-0 leading-snug">
-            <SegmentedName name={p.name} />
-          </Link>
+          {/* フル名は切り詰めず折り返す（他の表・リストと同方針）。チームバッジはリーダーズと同じく名前直後のインライン */}
+          <div className="flex-1 min-w-0 leading-snug">
+            <Link href={`/players/${p.id}`} className="hover:underline">
+              <SegmentedName name={p.name} />
+            </Link>{" "}
+            <Badge variant="outline" className="text-xs" style={{ borderColor: getTeamColor(p.team) }}>
+              {p.team}
+            </Badge>
+          </div>
           <span className="font-mono font-semibold shrink-0">{(p.score * 100).toFixed(1)}</span>
         </li>
       ))}
@@ -34,7 +41,7 @@ function Board({ players }: { players: { id: number; name: string; score: number
 
 export default function TypesPage() {
   // 表示はフル日本語名（対応表に無い選手は英語名のまま）
-  const ja = (players: { id: number; name: string; score: number }[]) =>
+  const ja = (players: { id: number; name: string; team: string; score: number }[]) =>
     players.map((p) => ({ ...p, name: playerNameJa(p.id) ?? p.name }));
   const rs = getTypeLeaderboard("rs").map((t) => ({ ...t, players: ja(t.players) }));
   const po = new Map(getTypeLeaderboard("po").map((t) => [t.type, ja(t.players)]));
