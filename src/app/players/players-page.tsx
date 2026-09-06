@@ -1,4 +1,4 @@
-import { getPlayerPerGame, getPlayerAdvanced } from "@/lib/data/players";
+import { getPlayerPerGame, getPlayerAdvanced, getPlayerTotals } from "@/lib/data/players";
 import { isPlayoffDataAvailable } from "@/lib/data/playoffs";
 import { MIN_GP, PO_MIN_GP } from "@/lib/data/player-types";
 import type { Phase } from "@/lib/phase";
@@ -8,7 +8,10 @@ import { PlayersClient } from "./client";
 import type { QuadrantDot } from "@/components/quadrant-map";
 import { playerNameJa, withDisplayNames } from "@/lib/data/names-ja";
 
-const SHOOTER_MIN_3PA = 1.0;
+// 3PAは図の横軸そのものなので、本数で絞っても分布は歪まず左端が切れるだけ（NBA公式の3P%資格と同じ発想）
+const SHOOTER_MIN_3PA = 4.0;
+// USG%×TS% 図は各チームの出場時間上位N人（MPG一律より点数が安定し、全チームが図に登場する）
+const MAP_TEAM_TOP = 5;
 
 // フェーズはパス区分（/players = RS, /players/po = PO）。page.tsx と po/page.tsx から呼ぶ（plan.md §12-11）
 export function renderPlayers(phase: Phase) {
@@ -18,8 +21,21 @@ export function renderPlayers(phase: Phase) {
   const perGame = getPlayerPerGame({ phase }).filter((p) => p.team !== "TOT");
   const advanced = getPlayerAdvanced({ phase }).filter((p) => p.team !== "TOT");
 
+  // 各チームの出場時間合計 上位N人だけを図に載せる
+  const teamTop = new Map<string, { id: number; mp: number }[]>();
+  for (const t of getPlayerTotals({ phase })) {
+    if (t.team === "TOT") continue;
+    const list = teamTop.get(t.team) ?? [];
+    list.push({ id: t.playerId, mp: t.mp });
+    teamTop.set(t.team, list);
+  }
+  const mapKeys = new Set<string>();
+  for (const [team, list] of teamTop) {
+    for (const p of [...list].sort((a, b) => b.mp - a.mp).slice(0, MAP_TEAM_TOP)) mapKeys.add(`${p.id}-${team}`);
+  }
+
   // 図ラベルは日本語の短縮名（plan §13-1 段階3。表の表示はフル日本語名＝namesJa）
-  const usageEfficiencyDots: QuadrantDot[] = withDisplayNames(advanced.filter((p) => p.gp >= minGp))
+  const usageEfficiencyDots: QuadrantDot[] = withDisplayNames(advanced.filter((p) => mapKeys.has(`${p.playerId}-${p.team}`)))
     .map((p) => ({ playerId: p.playerId, name: p.player, team: p.team, x: p.usgPct, y: p.tsPct }));
 
   // 検索照合＋表の表示に使う日本語フル名（plan §13-1）。ページに居る選手分だけ渡す
@@ -45,6 +61,7 @@ export function renderPlayers(phase: Phase) {
       shooterDots={shooterDots}
       minGp={minGp}
       shooterMin3pa={SHOOTER_MIN_3PA}
+      mapTeamTop={MAP_TEAM_TOP}
     />
   );
 }

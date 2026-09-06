@@ -46,6 +46,7 @@ export function PlayersClient({
   shooterDots,
   minGp,
   shooterMin3pa,
+  mapTeamTop,
   namesJa,
 }: {
   phase: Phase;
@@ -59,6 +60,7 @@ export function PlayersClient({
   shooterDots: QuadrantDot[];
   minGp: number;
   shooterMin3pa: number;
+  mapTeamTop: number;
 }) {
   const [search, setSearch] = useState("");
   const [minGames, setMinGames] = useState(minGp); // 既定＝サイト共通のローテ選手下限（RS20/PO4）
@@ -173,12 +175,13 @@ export function PlayersClient({
           <CardHeader>
             <CardTitle>使われ方 × 効率マップ</CardTitle>
             <CardDescription>
-              USG%（攻撃をどれだけ背負うか）× TS%（得点効率）・GP{minGp}以上の{usageEfficiencyDots.length}人・点線は中央値 · {MAP_HELP}
+              USG%（攻撃をどれだけ背負うか）× TS%（得点効率）・各チーム出場時間上位{mapTeamTop}人の{usageEfficiencyDots.length}人・点線は中央値 · {MAP_HELP}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <QuadrantMap
               dots={usageEfficiencyDots}
+              labelTop={5}
               xLabel="USG%"
               yLabel="TS%"
               xFormat="pct"
@@ -196,6 +199,7 @@ export function PlayersClient({
           <CardContent>
             <QuadrantMap
               dots={shooterDots}
+              labelTop={5}
               xLabel="3PA/G"
               yLabel="3P%"
               xFormat="1f"

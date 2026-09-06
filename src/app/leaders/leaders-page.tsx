@@ -8,26 +8,26 @@ import { PreSeasonNotice, PhaseSwitch } from "@/components/phase-switch";
 import { QuadrantMap, MAP_HELP, type QuadrantDot, type AxisFormat } from "@/components/quadrant-map";
 import { MetricLink } from "@/components/metric-link";
 import { LeadersClient } from "./client";
+import { TOP_N } from "./constants";
 import { SeasonTitle } from "@/components/season-title";
 import { currentSeason } from "@/lib/season";
 
-// リーダーズのGP下限（RS30・PO4）と四象限マップの下限（RS GP40・PO GP8。いずれもMPG25以上）
+// リーダーズのGP下限（RS30・PO4）
 const LEADER_MIN_GP = { rs: 30, po: PO_MIN_GP } as const;
-const MAP_MIN_GP = { rs: 40, po: 8 } as const;
 
 // 図はこのページのリストにあるスタッツだけで組む（USG%・TS% は Efficiency、STL・BLK は Basic）
 function MapCard({
   title,
   anchor,
   lead,
-  minGp,
+  scope,
   dots,
   ...map
 }: {
   title: string;
   anchor: string;
   lead: string;
-  minGp: number;
+  scope: string;
   dots: QuadrantDot[];
   xLabel: string;
   yLabel: string;
@@ -44,7 +44,7 @@ function MapCard({
           <MetricLink anchor={anchor} />
         </div>
         <p className="text-xs text-muted-foreground">
-          {lead}（GP{minGp}・MPG25以上の{dots.length}人 · 点線は中央値 · {MAP_HELP}）
+          {lead}（{scope}の{dots.length}人 · 点線は中央値 · {MAP_HELP}）
         </p>
       </CardHeader>
       <CardContent>
@@ -65,12 +65,19 @@ export function renderLeaders(phase: Phase) {
   const perGame = withFullNames(perGameRaw);
   const advanced = withFullNames(advancedRaw);
 
-  const mapPlayers = withDisplayNames(advancedRaw.filter((p) => p.gp >= MAP_MIN_GP[phase] && p.mp >= 25));
-  const usageDots = mapPlayers.map((p) => ({ playerId: p.playerId, name: p.player, team: p.team, x: p.usgPct, y: p.tsPct }));
+  // 図の対象＝そのリストの上位20人の和集合（図に載る人＝リストに載っている人）
+  // MPG等で切ると少出場のスペシャリスト（スティール上位のサイブル等）がリストに居るのに図から消える
+  const topKeys = <T extends { playerId: number; team: string }>(rows: T[], value: (p: T) => number) =>
+    [...rows].sort((a, b) => value(b) - value(a)).slice(0, TOP_N).map((p) => `${p.playerId}-${p.team}`);
 
-  // STL/BLK は per-game の小数1桁だと座標が重なる（RS156人中58点が先の点に隠れる）ので totals/GP で計算する
+  const usageKeys = new Set([...topKeys(advancedRaw, (p) => p.usgPct), ...topKeys(advancedRaw, (p) => p.tsPct)]);
+  const usageDots = withDisplayNames(advancedRaw.filter((p) => usageKeys.has(`${p.playerId}-${p.team}`)))
+    .map((p) => ({ playerId: p.playerId, name: p.player, team: p.team, x: p.usgPct, y: p.tsPct }));
+
+  // 対象はリスト（per-game 小数1桁）で選び、座標は totals/GP で計算する（小数1桁だと同一座標に重なるため）
+  const defenseKeys = new Set([...topKeys(perGameRaw, (p) => p.stl), ...topKeys(perGameRaw, (p) => p.blk)]);
   const totals = new Map(getPlayerTotals({ phase }).map((t) => [`${t.playerId}-${t.team}`, t]));
-  const defenseDots = mapPlayers.flatMap((p) => {
+  const defenseDots = withDisplayNames(perGameRaw.filter((p) => defenseKeys.has(`${p.playerId}-${p.team}`))).flatMap((p) => {
     const t = totals.get(`${p.playerId}-${p.team}`);
     return t && t.gp > 0 ? [{ playerId: p.playerId, name: p.player, team: p.team, x: t.stl / t.gp, y: t.blk / t.gp }] : [];
   });
@@ -90,7 +97,7 @@ export function renderLeaders(phase: Phase) {
           title="USG% × TS% 四象限マップ"
           anchor="usg-ts"
           lead="攻撃をどれだけ背負い、どれだけ効率よく決めたか"
-          minGp={MAP_MIN_GP[phase]}
+          scope={`USG%・TS% 各上位${TOP_N}`}
           dots={usageDots}
           xLabel="USG%"
           yLabel="TS%"
@@ -102,7 +109,7 @@ export function renderLeaders(phase: Phase) {
           title="STL × BLK 守備マップ"
           anchor="stl-blk"
           lead="外で奪う（スティール）か、中で止める（ブロック）か"
-          minGp={MAP_MIN_GP[phase]}
+          scope={`STL・BLK 各上位${TOP_N}`}
           dots={defenseDots}
           xLabel="STL"
           yLabel="BLK"

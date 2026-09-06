@@ -8,8 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { getTeamColor } from "@/lib/constants/teams";
 import type { PlayerPerGame, PlayerAdvanced } from "@/lib/types";
 import { SegmentedName } from "@/components/segmented-name";
-
-const TOP_N = 20;
+import { TOP_N } from "./constants";
 
 interface LeaderEntry {
   playerId: number;
