@@ -325,7 +325,7 @@ export default async function TeamDetailPage({
                 </p>
               </CardHeader>
               <CardContent>
-                <FactorRanks rows={offenseRows} teams={offFactors.length} color={teamInfo.primaryColor} />
+                <FactorRanks rows={offenseRows} teams={offFactors.length} color={getTeamColor(abbr)} />
               </CardContent>
             </Card>
           )}
@@ -342,7 +342,7 @@ export default async function TeamDetailPage({
                 </p>
               </CardHeader>
               <CardContent>
-                <FactorRanks rows={defenseRows} teams={defFactors.length} color={teamInfo.primaryColor} />
+                <FactorRanks rows={defenseRows} teams={defFactors.length} color={getTeamColor(abbr)} />
               </CardContent>
             </Card>
           )}
@@ -361,7 +361,7 @@ export default async function TeamDetailPage({
               </p>
             </CardHeader>
             <CardContent>
-              <PossessionBand segments={possSegments} color={teamInfo.primaryColor} />
+              <PossessionBand segments={possSegments} color={getTeamColor(abbr)} />
             </CardContent>
           </Card>
         )}
@@ -421,7 +421,7 @@ export default async function TeamDetailPage({
       <div className="flex items-center gap-4">
         <div
           className="h-12 w-12 rounded-lg"
-          style={{ backgroundColor: teamInfo.primaryColor }}
+          style={{ backgroundColor: getTeamColor(abbr) }}
         />
         <div>
           {/* 日本語名主・英語名従（plan §13-1 段階4。選手ページの h1 と同型） */}

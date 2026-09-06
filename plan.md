@@ -943,3 +943,4 @@ sumo-data `src/lib/midokoro.ts` の型（ビルド時に最大3枚を決定論�
 - 検証: DEN=eFG1位（Jokić）、HOU=ORB1位・eFG17位（二次攻撃型）、OKC=TOV率1位と実態どおり
 - 部品は攻守共用化のため `defense-factors.tsx` → `factor-ranks.tsx`（FactorRanks）に改名。指標解説に `#offense-factors` 追加（重要度はシュート効率が約4割という Oliver の推定も記載）
 - 同日ついで: 冒頭カードのラベル↔数値間隔をスマホで圧縮し正式名を極小フォントで復活（「Possessions / 48min」に空白挿入）。POタブのシリーズカードをプレーオフページと同じ全面リンク（シリーズ詳細へ）に
+- **チーム色の完全統一**: チームページだけ生プライマリ（DEN紺・LAL紫）で、一覧の色丸（§12-12 の暗背景補正＝ getTeamColor、16チームで別色）と食い違っていた（ふくたろう指摘）。ヘッダー色四角・ボール支配の帯・4ファクターマーカーも getTeamColor に統一（DEN/LAL は黄に）。OGP画像は明るい帯背景なので生プライマリのまま
