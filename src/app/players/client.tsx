@@ -182,8 +182,7 @@ export function PlayersClient({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {/* ドット操作がある図なので全面クリックにせず明示ボタンで拡大（plan §13-4 B） */}
-            <ChartFrame title="使われ方 × 効率マップ" context={`${PHASE_LABEL[phase]} ${season}`} asOf={asOf} trigger="button">
+            <ChartFrame title="使われ方 × 効率マップ" context={`${PHASE_LABEL[phase]} ${season}`} asOf={asOf}>
               <QuadrantMap
                 dots={usageEfficiencyDots}
                 labelTop={5}
@@ -203,7 +202,7 @@ export function PlayersClient({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartFrame title="シューターマップ" context={`${PHASE_LABEL[phase]} ${season}`} asOf={asOf} trigger="button">
+            <ChartFrame title="シューターマップ" context={`${PHASE_LABEL[phase]} ${season}`} asOf={asOf}>
               <QuadrantMap
                 dots={shooterDots}
                 labelTop={5}

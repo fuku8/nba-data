@@ -131,7 +131,6 @@ function VisualGroup({
             <p className="text-xs text-muted-foreground">{pctNote}</p>
           </CardHeader>
           <CardContent>
-            {/* 拡大＋画像保存（plan §13-4 B）。まずこの1枚で反応を見てから他カードへ展開 */}
             <ChartFrame title="League Percentile" context={title} name={frame.name} team={frame.team} asOf={frame.asOf}>
               <PercentileBars rows={pctRows} />
             </ChartFrame>

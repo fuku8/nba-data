@@ -56,8 +56,7 @@ function MapCard({
         </p>
       </CardHeader>
       <CardContent>
-        {/* ドット操作（ホバー・クリック）があるので全面クリックにせず明示ボタンで拡大（plan §13-4 B） */}
-        <ChartFrame title={title} context={context} asOf={asOf} trigger="button">
+        <ChartFrame title={title} context={context} asOf={asOf}>
           <QuadrantMap dots={dots} labelTop={5} {...map} />
         </ChartFrame>
       </CardContent>

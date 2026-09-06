@@ -289,8 +289,7 @@ export default async function TeamDetailPage({
                 <p className="text-xs text-muted-foreground">全{margins.length}試合の点差 · 上=勝ち / 下=負け · バーをクリックすると詳細と「試合詳細」ボタン（NBA.comへ）が表示されます</p>
               </CardHeader>
               <CardContent>
-                {/* バークリックで試合詳細が出る図なので全面クリックにせず明示ボタンで拡大 */}
-                <ChartFrame title="Season Heartbeat" context={rsContext} name={frame.name} team={frame.team} asOf={frame.asOf} trigger="button">
+                <ChartFrame title="Season Heartbeat" context={rsContext} name={frame.name} team={frame.team} asOf={frame.asOf}>
                   <SeasonHeartbeat games={margins} />
                 </ChartFrame>
               </CardContent>
