@@ -93,6 +93,33 @@ export function getTeamAdvanced(season?: string): TeamAdvanced[] {
     }));
 }
 
+// 守備4ファクター（Dean Oliver の Four Factors 守備版）。team_opponent.csv（相手の成績・B-Ref形式）＋ DRB% だけ team_advanced
+export interface TeamDefenseFactors {
+  team: string; // 略称
+  oppEfg: number; // 被eFG%（低いほど良い）
+  oppTovPct: number; // 奪TOV率（高いほど良い）
+  drebPct: number; // 守備リバウンド率（高いほど良い）
+  oppFtRate: number; // 被FTレート = 相手FT成功/相手FGA（低いほど良い）
+}
+
+export function getTeamDefenseFactors(season?: string): TeamDefenseFactors[] {
+  const dreb = new Map(getTeamAdvanced(season).map((a) => [getTeamAbbr(a.teamName), a.drebPct]));
+  return csvToObjects(readCsvFile("team_opponent.csv", season))
+    .filter((d) => d["Team"])
+    .map((d) => {
+      const team = getTeamAbbr(d["Team"]);
+      const fga = num(d["FGA"]);
+      const tov = num(d["TOV"]);
+      return {
+        team,
+        oppEfg: fga > 0 ? (num(d["FG"]) + 0.5 * num(d["3P"])) / fga : 0,
+        oppTovPct: tov > 0 ? tov / (fga + 0.44 * num(d["FTA"]) + tov) : 0,
+        drebPct: dreb.get(team) ?? 0,
+        oppFtRate: fga > 0 ? num(d["FT"]) / fga : 0,
+      };
+    });
+}
+
 // ワンマン度: チーム内得点分布のGini係数
 export function gini(values: number[]): number {
   const xs = [...values].sort((a, b) => a - b);

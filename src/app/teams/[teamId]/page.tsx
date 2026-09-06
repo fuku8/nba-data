@@ -6,12 +6,13 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { getStandings, getTeamAdvanced, getTeamPerGame, getTeamPointsGini, GINI_MIN_MP } from "@/lib/data/teams";
+import { getStandings, getTeamAdvanced, getTeamPerGame, getTeamPointsGini, getTeamDefenseFactors, GINI_MIN_MP } from "@/lib/data/teams";
 import { getPlayerPerGame, getPlayerAdvanced, getPlayerTotals } from "@/lib/data/players";
 import { getTeamMargins } from "@/lib/data/games";
 import { SeasonHeartbeat } from "@/components/season-heartbeat";
 import { LorenzCurve } from "@/components/lorenz-curve";
 import { PossessionBand } from "@/components/possession-band";
+import { DefenseFactors, type DefenseFactorRow } from "@/components/defense-factors";
 import { getPlayerPossessions } from "@/lib/data/tracking";
 import { MetricLink } from "@/components/metric-link";
 import { NBA_TEAMS, getTeamAbbr, getTeamColor } from "@/lib/constants/teams";
@@ -36,7 +37,7 @@ export async function generateMetadata({ params }: { params: Promise<{ teamId: s
   const ja = teamNameJa(abbr);
   return pageMeta({
     title: `${ja ? `${ja}（${info.name}）` : info.name} · NBA ${currentSeason()}`,
-    description: `${ja ?? info.name}（${abbr}）の NBA ${currentSeason()} シーズン。${rec}レーティング・Season Heartbeat・ワンマン度・ボール支配・チームスタッツ・ロスター${isPlayoffDataAvailable() ? "・プレーオフ成績" : ""}。`,
+    description: `${ja ?? info.name}（${abbr}）の NBA ${currentSeason()} シーズン。${rec}レーティング・Season Heartbeat・ワンマン度・守備4ファクター・ボール支配・チームスタッツ・ロスター${isPlayoffDataAvailable() ? "・プレーオフ成績" : ""}。`,
     path: `/teams/${abbr}`,
   });
 }
@@ -52,8 +53,9 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub?: s
         <CardTitle className="text-sm text-muted-foreground">{label}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        {sub && <p className="text-xs text-muted-foreground">{sub}</p>}
+        <div className="text-xl sm:text-2xl font-bold">{value}</div>
+        {/* 正式名はスマホ幅では省略（3列に収めるため。ラベル＋数値で読める） */}
+        {sub && <p className="hidden sm:block text-xs text-muted-foreground">{sub}</p>}
       </CardContent>
     </Card>
   );
@@ -105,6 +107,20 @@ export default async function TeamDetailPage({
         ...(teamPoss.length > TOP_N
           ? [{ name: "その他", share: teamPoss.slice(TOP_N).reduce((a, p) => a + p.total, 0) / possTotal }]
           : []),
+      ]
+    : [];
+
+  // 守備4ファクター: 各部門のリーグ内順位（1位=最良。被eFG%・被FTレートは昇順、奪TOV率・DRB%は降順）
+  const factors = getTeamDefenseFactors();
+  const factorRank = (value: (t: (typeof factors)[number]) => number, lowerIsBetter: boolean) =>
+    [...factors].sort((a, b) => (lowerIsBetter ? value(a) - value(b) : value(b) - value(a))).findIndex((t) => t.team === abbr) + 1;
+  const myFactors = factors.find((t) => t.team === abbr);
+  const defenseRows: DefenseFactorRow[] = myFactors
+    ? [
+        { label: "シュート抑止", metric: "被eFG%", value: `${(myFactors.oppEfg * 100).toFixed(1)}%`, rank: factorRank((t) => t.oppEfg, true) },
+        { label: "ボール奪取", metric: "奪TOV率", value: `${(myFactors.oppTovPct * 100).toFixed(1)}%`, rank: factorRank((t) => t.oppTovPct, false) },
+        { label: "リバウンド", metric: "DRB%", value: `${(myFactors.drebPct * 100).toFixed(1)}%`, rank: factorRank((t) => t.drebPct, false) },
+        { label: "ファウル抑制", metric: "被FTレート", value: `${(myFactors.oppFtRate * 100).toFixed(1)}%`, rank: factorRank((t) => t.oppFtRate, true) },
       ]
     : [];
 
@@ -210,7 +226,8 @@ export default async function TeamDetailPage({
 
   const regularSeason = (
     <div className="space-y-6">
-        <div className="grid gap-4 sm:grid-cols-5">
+        {/* スマホは 3+2 の2行（縦積みだと冒頭で縦幅を取りすぎる）。PC は従来どおり5列 */}
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 sm:gap-4">
           <StatCard
             label="ORtg"
             value={adv?.offRating.toFixed(1) ?? "-"}
@@ -279,23 +296,42 @@ export default async function TeamDetailPage({
           )}
         </div>
 
-        {/* ボール支配の帯 */}
-        {possSegments.length > 0 && (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <CardTitle>ボール支配</CardTitle>
-                <MetricLink anchor="possession" />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                シーズン総タッチ数のチーム内シェア（上位{TOP_N}人＋その他） · ボールが誰の手を経由するか · トレード選手はシーズン通算を現所属に計上
-              </p>
-            </CardHeader>
-            <CardContent>
-              <PossessionBand segments={possSegments} color={teamInfo.primaryColor} />
-            </CardContent>
-          </Card>
-        )}
+        {/* 守備4ファクター & ボール支配（PCでは横並び） */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          {defenseRows.length > 0 && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <CardTitle>守備4ファクター</CardTitle>
+                  <MetricLink anchor="defense-factors" />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  何で守るチームか — シュートを抑える・ボールを奪う・リバウンドで終わらせる・ファウルを与えない、のリーグ{factors.length}チーム中の順位
+                </p>
+              </CardHeader>
+              <CardContent>
+                <DefenseFactors rows={defenseRows} teams={factors.length} color={teamInfo.primaryColor} />
+              </CardContent>
+            </Card>
+          )}
+
+          {possSegments.length > 0 && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <CardTitle>ボール支配</CardTitle>
+                  <MetricLink anchor="possession" />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  シーズン総タッチ数のチーム内シェア（上位{TOP_N}人＋その他） · ボールが誰の手を経由するか · トレード選手はシーズン通算を現所属に計上
+                </p>
+              </CardHeader>
+              <CardContent>
+                <PossessionBand segments={possSegments} color={teamInfo.primaryColor} />
+              </CardContent>
+            </Card>
+          )}
+        </div>
 
         {/* チームスタッツ */}
         {pg && (
