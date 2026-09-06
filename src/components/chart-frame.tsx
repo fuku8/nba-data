@@ -88,7 +88,7 @@ export function ChartFrame({
             onClick={open}
             className="rounded-md border border-border px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           >
-            ⤢ 拡大・画像保存
+            画像保存
           </button>
         </div>
       </div>
