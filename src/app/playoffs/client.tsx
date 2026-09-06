@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { getTeamColor, getTeamAbbr } from "@/lib/constants/teams";
 import type { PlayoffSeries, PlayoffPlayerPerGame } from "@/lib/types";
 import { ROUND_NAME, type Bracket } from "@/lib/bracket";
+import { SegmentedName } from "@/components/segmented-name";
 
 // シリーズ詳細ページ（試合一覧→ボックススコア）へのパス
 const seriesHref = (s: PlayoffSeries) => `/playoffs/${s.team1}-${s.team2}`;
@@ -202,7 +203,7 @@ export function StatLeaders({ players, label, stat }: { players: LeaderRow[]; la
             {/* フル名が長い行は折り返す（切り詰めない）。min-w-0 が無いと値が押し出される */}
             <div className="flex items-center gap-2 min-w-0 flex-1">
               <span className="w-4 text-muted-foreground font-mono shrink-0">{i + 1}</span>
-              <Link href={`/players/${p.playerId}`} className="hover:underline font-medium min-w-0 leading-snug">{p.player}</Link>
+              <Link href={`/players/${p.playerId}`} className="hover:underline font-medium min-w-0 leading-snug"><SegmentedName name={p.player} /></Link>
               <Badge variant="outline" className="text-xs shrink-0" style={{ borderColor: getTeamColor(p.team) }}>{p.team}</Badge>
             </div>
             <span className="font-mono font-semibold shrink-0">{p[stat].toFixed(1)}</span>

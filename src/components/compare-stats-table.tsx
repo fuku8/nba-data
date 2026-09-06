@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { X } from "lucide-react";
 import { bestIndexes, diffFavors, formatDiff, type Better } from "@/lib/compare-diff";
+import { SegmentedName } from "@/components/segmented-name";
 
 export type CompareStatRow<P> = {
   label: string;
@@ -15,8 +16,9 @@ export type CompareStatRow<P> = {
 
 const BEST_COLOR = "#10b981"; // その項目で最も良い値
 
-// 選手名列は左固定（他ページの表と同じ）。スマホはフル名を切り詰めず折り返す
-const STICKY = "sticky left-0 z-10 bg-card min-w-[6.5em] max-w-[120px] sm:max-w-none";
+// 選手名列は左固定（他ページの表と同じ）。スマホはフル名を切り詰めず「・」「＝」で折り返す。
+// 14em は NAME_WRAP の 12em ＋ 選手色の丸とすき間のぶん
+const STICKY = "sticky left-0 z-10 bg-card min-w-[14em] max-w-[14em] sm:max-w-none";
 
 // 表示桁で丸めてから優劣・差分を判定する（表示上同値なのに色が付く矛盾の防止）
 function rounded<P>(row: CompareStatRow<P>, p: P): number | null {
@@ -44,8 +46,10 @@ export function CompareStatsTable<P extends { playerId: number; player: string }
     }
   }
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+    <div>
+      {/* 注記はスクロールの器の外に置く（横スクロールで一緒に流れないように） */}
+      <div className="overflow-x-auto">
+      <table className="w-full text-xs sm:text-sm">
         <thead>
           <tr className="border-b">
             <th className={`text-left py-2 px-3 ${STICKY}`}>選手</th>
@@ -63,7 +67,7 @@ export function CompareStatsTable<P extends { playerId: number; player: string }
               <td className={`py-2 px-3 font-medium leading-snug sm:whitespace-nowrap ${STICKY}`}>
                 <Link href={`/players/${p.playerId}`} className="flex items-center gap-2 hover:underline">
                   <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: colors[j] }} />
-                  <span className="min-w-0">{p.player}</span>
+                  <span className="min-w-0"><SegmentedName name={p.player} /></span>
                 </Link>
               </td>
               {rows.map((row) => (
@@ -106,6 +110,7 @@ export function CompareStatsTable<P extends { playerId: number; player: string }
           )}
         </tbody>
       </table>
+      </div>
       <p className="mt-2 text-xs text-muted-foreground">
         緑の太字はその項目で最も良い値（2人以上のとき。GP・MPGは向きがないため対象外、DRtgは低いほど良い向きで判定）。
         2人比較のときは最下行に差を表示し、色は有利な側の選手色。

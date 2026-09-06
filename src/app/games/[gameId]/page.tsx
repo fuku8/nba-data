@@ -7,6 +7,7 @@ import { getTeamColor } from "@/lib/constants/teams";
 import { findBoxScore, boxScoreGameIds } from "@/lib/data/games";
 import { PhaseBadge } from "@/components/phase-switch";
 import { withFullNames } from "@/lib/data/names-ja";
+import { SegmentedName } from "@/components/segmented-name";
 
 export const dynamicParams = false;
 
@@ -252,7 +253,7 @@ function PlayerTable({ players, tricode, teamStats }: { players: PlayerStats[]; 
         <thead>
           <tr className="border-b bg-muted/30">
             {/* min-w が無いと w-full の表がスマホで名前列を min-content（1〜2文字）まで潰す */}
-            <th className="text-left py-2 px-3 font-medium text-muted-foreground sticky left-0 z-10 bg-card min-w-[6.5em]">選手</th>
+            <th className="text-left py-2 px-3 font-medium text-muted-foreground sticky left-0 z-10 bg-card min-w-[12em]">選手</th>
             <th className="py-2 px-2 text-center text-muted-foreground">POS</th>
             <th className="py-2 px-2 text-center text-muted-foreground">MIN</th>
             <th className="py-2 px-2 text-center font-semibold">PTS</th>
@@ -294,9 +295,9 @@ function PlayerTable({ players, tricode, teamStats }: { players: PlayerStats[]; 
             const pm = p.plusMinusPoints ?? 0;
             return (
               <tr key={p.personId} className="border-b last:border-0 hover:bg-muted/20">
-                <td className="py-2 px-3 font-medium sticky left-0 z-10 bg-card min-w-[6.5em] max-w-[120px] sm:max-w-none leading-snug">
+                <td className="py-2 px-3 font-medium sticky left-0 z-10 bg-card min-w-[12em] max-w-[12em] sm:max-w-none leading-snug">
                   <Link href={`/players/${p.personId}`} className="block hover:underline">
-                    {p.player}
+                    <SegmentedName name={p.player} />
                   </Link>
                 </td>
                 <td className="py-2 px-2 text-center text-muted-foreground">{p.position || "—"}</td>

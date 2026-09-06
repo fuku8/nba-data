@@ -25,6 +25,7 @@ import {
 import { SortableHeader } from "@/components/sortable-header";
 import { QuadrantMap, MAP_HELP, type QuadrantDot } from "@/components/quadrant-map";
 import { STICKY_RANK, STICKY_NAME, NAME_WRAP } from "@/lib/table-classes";
+import { SegmentedName } from "@/components/segmented-name";
 import { getTeamColor } from "@/lib/constants/teams";
 import type { PlayerPerGame, PlayerAdvanced, SortConfig } from "@/lib/types";
 import { PhaseSwitch } from "@/components/phase-switch";
@@ -259,7 +260,7 @@ export function PlayersClient({
                         <TableCell className={`text-muted-foreground ${STICKY_RANK}`}>{page * PAGE_SIZE + i + 1}</TableCell>
                         <TableCell className={`${STICKY_NAME} ${NAME_WRAP}`}>
                           <Link href={`/players/${p.playerId}`} className="block hover:underline font-medium">
-                            {namesJa[p.playerId] ?? p.player}
+                            <SegmentedName name={namesJa[p.playerId] ?? p.player} />
                           </Link>
                           <Link href={`/teams/${p.team}`} className="sm:hidden text-muted-foreground hover:underline">{p.team}</Link>
                         </TableCell>
@@ -333,7 +334,7 @@ export function PlayersClient({
                         <TableCell className={`text-muted-foreground ${STICKY_RANK}`}>{page * PAGE_SIZE + i + 1}</TableCell>
                         <TableCell className={`${STICKY_NAME} ${NAME_WRAP}`}>
                           <Link href={`/players/${p.playerId}`} className="block hover:underline font-medium">
-                            {namesJa[p.playerId] ?? p.player}
+                            <SegmentedName name={namesJa[p.playerId] ?? p.player} />
                           </Link>
                           <Link href={`/teams/${p.team}`} className="sm:hidden text-muted-foreground hover:underline">{p.team}</Link>
                         </TableCell>

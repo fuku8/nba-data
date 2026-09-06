@@ -18,6 +18,7 @@ import {
   sortTeamRosterRows,
 } from "@/lib/team-roster-sorting";
 import { NAME_WRAP } from "@/lib/table-classes";
+import { SegmentedName } from "@/components/segmented-name";
 
 // ランク列が無い表なので left-0 で固定（選手一覧の STICKY_NAME は left-8）
 const STICKY = "sticky left-0 z-10 bg-card max-w-[120px] sm:max-w-none";
@@ -166,7 +167,7 @@ export function TeamRosterTable({ rows }: { rows: TeamRosterRow[] }) {
                   href={`/players/${row.playerId}`}
                   className="block hover:underline font-medium"
                 >
-                  {row.player}
+                  <SegmentedName name={row.player} />
                 </Link>
               </TableCell>
               <TableCell className="text-right font-mono">{row.gp}</TableCell>

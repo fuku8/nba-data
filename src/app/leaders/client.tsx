@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { getTeamColor } from "@/lib/constants/teams";
 import type { PlayerPerGame, PlayerAdvanced } from "@/lib/types";
+import { SegmentedName } from "@/components/segmented-name";
 
 const TOP_N = 20;
 
@@ -37,7 +38,7 @@ function LeaderBoard({
             <div className="flex items-center gap-2 min-w-0 flex-1">
               <span className="w-6 text-right text-muted-foreground font-mono shrink-0">{i + 1}</span>
               <Link href={`/players/${e.playerId}`} className="font-medium hover:underline min-w-0 leading-snug">
-                {e.player}
+                <SegmentedName name={e.player} />
               </Link>
               <Badge variant="outline" className="text-xs shrink-0" style={{ borderColor: getTeamColor(e.team) }}>
                 {e.team}

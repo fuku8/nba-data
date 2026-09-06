@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTypeLeaderboard } from "@/lib/data/player-types";
 import { playerNameJa } from "@/lib/data/names-ja";
+import { SegmentedName } from "@/components/segmented-name";
 import { MetricLink } from "@/components/metric-link";
 import { SeasonTitle } from "@/components/season-title";
 import { currentSeason } from "@/lib/season";
@@ -22,7 +23,7 @@ function Board({ players }: { players: { id: number; name: string; score: number
           <span className="w-5 text-right font-mono text-muted-foreground shrink-0">{i + 1}</span>
           {/* フル名は切り詰めず折り返す（他の表・リストと同方針） */}
           <Link href={`/players/${p.id}`} className="hover:underline flex-1 min-w-0 leading-snug">
-            {p.name}
+            <SegmentedName name={p.name} />
           </Link>
           <span className="font-mono font-semibold shrink-0">{(p.score * 100).toFixed(1)}</span>
         </li>
