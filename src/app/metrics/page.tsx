@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { currentSeason, poYear } from "@/lib/season";
 import { pageMeta } from "@/lib/metadata";
@@ -149,6 +151,15 @@ const SECTIONS: MetricSection[] = [
 ];
 
 export default function MetricsPage() {
+  // 配布 CSV の一覧（ビルド時に data/ 直下を読む。prebuild が同じ集合を public/data/ へコピーするので常に一致。
+  // boxscores/・shots/ 等のサブディレクトリは対象外 — 集計表は直下の CSV に揃っている）
+  const dataDir = path.join(process.cwd(), "data");
+  const csvFiles = fs
+    .readdirSync(dataDir)
+    .filter((f) => f.endsWith(".csv"))
+    .sort()
+    .map((f) => ({ name: f, kb: Math.ceil(fs.statSync(path.join(dataDir, f)).size / 1024) }));
+
   // センター寄せ。本文をベースサイズにしたぶん幅も 3xl→4xl に拡大（2026-09-05）
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -171,6 +182,24 @@ export default function MetricsPage() {
           <p>データの出典は NBA公式スタッツ（NBA.com/Stats）です。取得には nba_api を使用しています。</p>
           <p>データは毎日自動取得し、各ページの図表に反映しています。</p>
           <p>NBA および各チームとは無関係の、非公式のサイトです。</p>
+          <details className="pt-1.5">
+            <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
+              データのダウンロード（CSV {csvFiles.length}件）
+            </summary>
+            <ul className="mt-2 grid gap-1 sm:grid-cols-2 text-sm">
+              {csvFiles.map((f) => (
+                <li key={f.name}>
+                  <a href={`/data/${f.name}`} download className="font-mono hover:underline">
+                    {f.name}
+                  </a>
+                  <span className="ml-1.5 text-xs text-muted-foreground">{f.kb} KB</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-xs text-muted-foreground">
+              出典: NBA.com/Stats（nba_api 経由）。個人の分析・学習用にご利用ください。二次利用の際は出典を明記してください。
+            </p>
+          </details>
         </CardContent>
       </Card>
 

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node node_modules/next/dist/bin/next dev",
+    "prebuild": "mkdir -p public/data && rm -f public/data/*.csv && cp data/*.csv public/data/",
     "build": "node node_modules/next/dist/bin/next build",
     "start": "node node_modules/next/dist/bin/next start",
     "lint": "eslint",

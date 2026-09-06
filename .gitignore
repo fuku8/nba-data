@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# CSV配布（prebuild で data/*.csv をコピー）
+/public/data/
+
 # production
 /build
 
