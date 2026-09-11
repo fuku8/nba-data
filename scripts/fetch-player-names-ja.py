@@ -16,7 +16,7 @@ import urllib.request
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
 API = "https://en.wikipedia.org/w/api.php"
-UA = "nba-data/1.0 (https://nba-data.pages.dev; player name localization)"
+UA = "nba-data/1.0 (https://number-shape.com; player name localization)"
 
 
 def langlinks_ja(titles: list[str]) -> dict[str, str]:

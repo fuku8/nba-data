@@ -8,7 +8,7 @@ import { SegmentedName } from "@/components/segmented-name";
 
 // metadata.ts の SITE_NAME / SITE_URL と揃える（あちらは lib/season 経由で fs に依存し client から import できない）
 const SITE_NAME = "スタッツのかたち";
-const SITE_HOST = "nba-data.pages.dev";
+const SITE_HOST = "number-shape.com";
 
 // 図表の拡大表示＋1枚PNG保存（plan §13-4 B。Baseball Savant の Save as Image と同型）。
 // 図をクリックで <dialog> に拡大し、ヘッダー（名前・チーム・図タイトル）とフッター（サイト名・出典）ごと

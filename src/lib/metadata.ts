@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { currentSeason, poYear } from "@/lib/season";
 import { PHASE_LABEL, type Phase } from "@/lib/phase";
 
-export const SITE_URL = "https://nba-data.pages.dev";
+export const SITE_URL = "https://number-shape.com";
 export const SITE_NAME = "スタッツのかたち";
 // OG 画像内の表記（画像は英数字のみで描く決定のため。og.tsx のコメント参照）
 export const SITE_NAME_EN = "Stats no Katachi";
