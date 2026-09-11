@@ -182,6 +182,13 @@ export default function MetricsPage() {
           <p>データの出典は NBA公式スタッツ（NBA.com/Stats）です。取得には nba_api を使用しています。</p>
           <p>データは毎日自動取得し、各ページの図表に反映しています。</p>
           <p>NBA および各チームとは無関係の、非公式のサイトです。</p>
+          <p>
+            データの誤りに気づかれた場合や、掲載についてのご意見・ご感想は、
+            <a href="https://forms.gle/dgPPvebvMC1yoCdu5" className="underline hover:text-foreground">
+              お問い合わせフォーム
+            </a>
+            からお寄せください。確認のうえすみやかに対応します。
+          </p>
           <details className="pt-1.5">
             <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
               データのダウンロード（CSV {csvFiles.length}件）
