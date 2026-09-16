@@ -5,7 +5,13 @@ REPO_DIR="/Users/arakawahiroaki/nba-data"
 cd "$REPO_DIR"
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] fetch start"
-/opt/anaconda3/bin/python3 scripts/fetch-nba-data.py
+# 失敗時はコアCSV・boxscoresも戻して中断（tracking/shotsと同じ「部分更新をコミットしない」不変を対称化。run-1指摘）
+/opt/anaconda3/bin/python3 scripts/fetch-nba-data.py || {
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] core fetch failed -> revert data/ and clean boxscores, abort"
+  /usr/bin/git checkout -q -- data/ 2>/dev/null || true
+  /usr/bin/git clean -fdq data/boxscores
+  exit 1
+}
 # ハッスル・トラッキング（API 5呼び出し）は毎日、ショットチャート（46呼び出し）は日曜のみ。
 # /types と選手タイプ判定は data/shots/ に依存するため、シーズン中に更新しないとタイプが一切出ない（plan.md §12-4）
 # 失敗時は部分更新（一部CSVだけ新しい・PARTIAL保存のshots）をコミットしないよう、そのスクリプトの出力だけ HEAD に戻して続行する

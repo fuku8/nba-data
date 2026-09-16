@@ -4,6 +4,7 @@ Basketball Reference スクレイピングの完全代替。
 """
 import os
 import json
+import re
 import sys
 import time
 from datetime import datetime, timedelta, timezone
@@ -31,6 +32,9 @@ API_RETRIES = int(os.environ.get("NBA_API_RETRIES", "3"))
 API_TIMEOUT_SEC = int(os.environ.get("NBA_API_TIMEOUT_SEC", "30"))
 API_BACKOFF_SEC = int(os.environ.get("NBA_API_BACKOFF_SEC", "5"))
 BOXSCORE_DIR = os.path.join(DATA_DIR, "boxscores")
+# NBAのgameIdは10桁数字。リモート応答由来の値をファイルパスに使う前の必須ガード
+# （../等を含む値がboxscores/外への書き込みになるのを防ぐ。fetch-shotcharts.pyのint(pid)と同じ趣旨）
+GAME_ID_RE = re.compile(r"^\d{10}$")
 REQUEST_HEADERS = {
     **STATS_HEADERS,
     "Origin": "https://www.nba.com",
@@ -417,7 +421,10 @@ def fetch_games() -> tuple[bool, list[str]]:
                 )
                 added = len(po_games) - before
                 print(f"  ✓ scoreboard 補完: {len(scoreboard_games)} 試合確認, {added} 試合追加")
-            po_game_ids = po_games["GAME_ID"].astype(str).unique().tolist()
+            raw_ids = po_games["GAME_ID"].astype(str).unique().tolist()
+            po_game_ids = [g for g in raw_ids if GAME_ID_RE.fullmatch(g)]
+            for bad in sorted(set(raw_ids) - set(po_game_ids)):
+                print(f"  ! 不正な GAME_ID を破棄: {bad!r}")
             po_games.to_csv(os.path.join(DATA_DIR, "po_games.csv"), index=False)
             print(f"  ✓ po_games.csv: {len(po_games)} 試合, {len(po_game_ids)} gameId")
     except Exception as e:
@@ -507,13 +514,17 @@ def fetch_boxscores(po_game_ids: list[str]) -> bool:
     success = 0
 
     for game_id in po_game_ids:
+        if not GAME_ID_RE.fullmatch(str(game_id)):  # 多層防御（fetch_gamesで濾過済みだが直接呼び出しにも備える）
+            print(f"  ! 不正な GAME_ID をスキップ: {game_id!r}")
+            continue
         out_path = os.path.join(BOXSCORE_DIR, f"{game_id}.json")
-        if os.path.exists(out_path):  # 差分取得（Final=3のみスキップ、試合中に保存されたものは再取得）
+        if os.path.exists(out_path):  # 差分取得（Final=3かつ選手スタッツあり のみスキップ。試合中保存・選手欠落は再取得）
             try:
                 with open(out_path) as f:
-                    if json.load(f).get("gameStatus") == 3:
-                        success += 1
-                        continue
+                    existing = json.load(f)
+                if existing.get("gameStatus") == 3 and existing.get("players"):
+                    success += 1
+                    continue
             except Exception:
                 pass  # 壊れたファイルは再取得
 
@@ -629,7 +640,8 @@ def fetch_boxscores(po_game_ids: list[str]) -> bool:
             print(f"  ✗ boxscore {game_id}: {e}")
 
     print(f"  ✓ boxscores: {success}/{len(po_game_ids)} 生成/確認済み")
-    return success > 0
+    # success > 0 だと1/20成功でもOK判定になり、不完全な状態が翌日のadd-allで本番へ昇格する（run-1指摘）
+    return success == len(po_game_ids)
 
 
 # ─── main ──────────────────────────────────────────────────

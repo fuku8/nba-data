@@ -14,25 +14,34 @@ export function readCsvFile(filename: string, season?: string): string[][] {
   return parseCsv(content);
 }
 
-function parseCsv(content: string): string[][] {
-  const lines = content.trim().split("\n");
-  return lines.map((line) => {
-    const values: string[] = [];
-    let current = "";
-    let inQuotes = false;
-    for (const char of line) {
-      if (char === '"') {
-        inQuotes = !inQuotes;
-      } else if (char === "," && !inQuotes) {
-        values.push(current.trim());
-        current = "";
-      } else {
-        current += char;
-      }
-    }
-    values.push(current.trim());
-    return values;
-  });
+// RFC 4180準拠の全文ステートマシン。書き手（pandas to_csv / csv.writer）と方言を一致させる:
+// クォート内の改行はフィールド内容のまま（行分割しない）、"" はエスケープ解除。
+// 行分割を先に行う旧実装は、合法クォート内の改行1つでレコードが捏造される（検証レポート run-1）
+export function parseCsv(content: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let cur = "";
+  let inQuotes = false;
+  for (let i = 0; i < content.length; i++) {
+    const c = content[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (content[i + 1] === '"') { cur += '"'; i++; } else inQuotes = false;
+      } else cur += c;
+    } else if (c === '"') {
+      inQuotes = true;
+    } else if (c === ",") {
+      row.push(cur.trim()); cur = "";
+    } else if (c === "\n" || c === "\r") {
+      if (c === "\r" && content[i + 1] === "\n") i++;
+      row.push(cur.trim()); cur = "";
+      if (row.length > 1 || row[0] !== "") rows.push(row);
+      row = [];
+    } else cur += c;
+  }
+  row.push(cur.trim());
+  if (row.length > 1 || row[0] !== "") rows.push(row);
+  return rows;
 }
 
 export function csvToObjects(rows: string[][]): Record<string, string>[] {
@@ -75,15 +84,11 @@ export function dataStamp(fnames: string[], season?: string): string {
 
 export function getLatestGameDate(season?: string): string {
   try {
-    const filepath = path.join(seasonDir(season ?? currentSeason()), "games.csv");
-    if (!fs.existsSync(filepath)) return "不明";
-    const content = fs.readFileSync(filepath, "utf-8");
-    const lines = content.trim().split("\n");
-    if (lines.length < 2) return "不明";
-    // Header: GAME_ID,GAME_DATE,...  — GAME_DATE is column index 1
-    const lastLine = lines[lines.length - 1];
-    const parts = lastLine.split(",");
-    return parts[1]?.trim() || "不明";
+    // parseCsv経由（クォート対応）。素のsplit(",")はクォート内カンマで日付列がずれる
+    const rows = readCsvFile("games.csv", season);
+    if (rows.length < 2) return "不明";
+    const dateIdx = rows[0].indexOf("GAME_DATE");
+    return (dateIdx >= 0 ? rows[rows.length - 1][dateIdx]?.trim() : "") || "不明";
   } catch {
     return "不明";
   }

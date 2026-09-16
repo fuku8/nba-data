@@ -135,18 +135,5 @@ export function getDramaScores(season?: string): Map<string, number> {
   return map;
 }
 
-export function getLatestGameDate(): string {
-  const filepath = path.join(process.cwd(), "data", "games.csv");
-  if (!fs.existsSync(filepath)) return "不明";
-  try {
-    const content = fs.readFileSync(filepath, "utf-8");
-    const lines = content.trim().split("\n");
-    if (lines.length < 2) return "不明";
-    const lastLine = lines[lines.length - 1];
-    const cols = lastLine.split(",");
-    // GAME_DATE is the 2nd column (index 1)
-    return cols[1]?.trim() || "不明";
-  } catch {
-    return "不明";
-  }
-}
+// csv-utils の季対応・クォート対応版に統合（重複実装は素のsplit(",")でクォート内カンマに脆かった）
+export { getLatestGameDate } from "./csv-utils.ts";
