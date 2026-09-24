@@ -125,6 +125,15 @@
   }
   html {
     @apply font-sans;
+    /* Next はクライアント遷移のスクロール先決定で sticky ヘッダーを無視するため、
+       ヘッダー高ぶんを常時オフセットする（next/dist/docs link.md「Scroll offset with sticky headers」。
+       ハッシュ遷移にも効くので、アンカー側の scroll-mt はこのぶん差し引く） */
+    scroll-padding-top: 49px; /* スマホヘッダー h-12 + border */
+  }
+  @media (min-width: 640px) {
+    html {
+      scroll-padding-top: 85px; /* PCヘッダー 84px + border */
+    }
   }
   body.playoff-page {
     background-color: #3f3f46;

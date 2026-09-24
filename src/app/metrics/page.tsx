@@ -182,7 +182,7 @@ export default function MetricsPage() {
         </p>
       </div>
 
-      <Card id="about" className="scroll-mt-28">
+      <Card id="about" className="scroll-mt-7">
         <CardHeader>
           <CardTitle>このサイトについて</CardTitle>
         </CardHeader>
@@ -219,7 +219,7 @@ export default function MetricsPage() {
       </Card>
 
       {SECTIONS.map((s) => (
-        <Card key={s.id} id={s.id} className="scroll-mt-28">
+        <Card key={s.id} id={s.id} className="scroll-mt-7">
           <CardHeader>
             <CardTitle>{s.title}</CardTitle>
             <p className="text-sm text-muted-foreground">表示場所: {s.where}</p>

@@ -10,6 +10,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { ChartFrame } from "@/components/chart-frame";
 import { MetricLink } from "@/components/metric-link";
 
 export interface TerrainTeam {
@@ -239,7 +240,7 @@ function TerrainMap({ teams, axis, dims: D }: { teams: TerrainTeam[]; axis: Axis
   );
 }
 
-export function LeagueTerrain({ teams }: { teams: TerrainTeam[] }) {
+export function LeagueTerrain({ teams, context, asOf }: { teams: TerrainTeam[]; context: string; asOf?: string }) {
   // スマホ1枚のトグル用（PC並列側は両方常設なので使わない）
   const [axis, setAxis] = useState<AxisKey>("strength");
 
@@ -257,7 +258,9 @@ export function LeagueTerrain({ teams }: { teams: TerrainTeam[] }) {
               <CardDescription>{AXES[k].desc}</CardDescription>
             </CardHeader>
             <CardContent>
-              <TerrainMap teams={teams} axis={k} dims={DIMS.pair} />
+              <ChartFrame title={AXES[k].name} context={context} asOf={asOf}>
+                <TerrainMap teams={teams} axis={k} dims={DIMS.pair} />
+              </ChartFrame>
             </CardContent>
           </Card>
         ))}
@@ -283,7 +286,9 @@ export function LeagueTerrain({ teams }: { teams: TerrainTeam[] }) {
           <CardDescription>{AXES[axis].desc}</CardDescription>
         </CardHeader>
         <CardContent>
-          <TerrainMap teams={teams} axis={axis} dims={DIMS.narrow} />
+          <ChartFrame title={AXES[axis].name} context={context} asOf={asOf}>
+            <TerrainMap teams={teams} axis={axis} dims={DIMS.narrow} />
+          </ChartFrame>
         </CardContent>
       </Card>
     </>

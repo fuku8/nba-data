@@ -86,7 +86,7 @@ function RegularSeason({ season }: { season: string }) {
       {/* 空データ（繰越直後）は非表示。昨季最終図のフォールバックは §13-3 残課題(a) */}
       {terrain.length > 0 && (
         <section>
-          <LeagueTerrain teams={terrain} />
+          <LeagueTerrain teams={terrain} context={`Regular Season ${season}`} asOf={getLatestGameDate()} />
         </section>
       )}
 
