@@ -58,6 +58,8 @@ const median = (arr: number[]) => {
 function makeScale(vals: number[], outMin: number, outMax: number) {
   const lo = Math.min(...vals), hi = Math.max(...vals), pad = (hi - lo) * 0.08;
   const a = lo - pad, b = hi + pad;
+  // 全値一致（シーズン極序盤など）は 0/0 で NaN になるため中央に置く（Codexレビュー a282ee9 指摘）
+  if (b - a === 0) return () => (outMin + outMax) / 2;
   return (v: number) => outMin + (outMax - outMin) * ((v - a) / (b - a));
 }
 

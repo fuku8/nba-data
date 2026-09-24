@@ -83,9 +83,12 @@ function RegularSeason({ season }: { season: string }) {
         <p className="text-muted-foreground mt-1">{games.length}試合消化・データ反映: {getLatestGameDate()} (米国東部時間)</p>
       </div>
 
-      <section>
-        <LeagueTerrain teams={terrain} />
-      </section>
+      {/* 空データ（繰越直後）は非表示。昨季最終図のフォールバックは §13-3 残課題(a) */}
+      {terrain.length > 0 && (
+        <section>
+          <LeagueTerrain teams={terrain} />
+        </section>
+      )}
 
       {lastGames.length > 0 && (
         <section className="rounded-lg border bg-card">
