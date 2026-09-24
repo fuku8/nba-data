@@ -47,8 +47,9 @@ const AXES = {
 } as const;
 
 // PC並列は正方形寄り・スマホ1枚は縦長（同じpx幅に縮めても文字が読める viewBox）
+// pair の viewBox はカード実幅約745pxに対する縮尺で点・文字が大きくなりすぎない値（2026-09-24調整）
 const DIMS = {
-  pair:   { W: 520, H: 500, PAD: { l: 40, r: 44, t: 28, b: 40 }, font: 13, dotR: 7, axisFont: 13 },
+  pair:   { W: 640, H: 520, PAD: { l: 44, r: 48, t: 28, b: 40 }, font: 12.5, dotR: 6.5, axisFont: 12.5 },
   narrow: { W: 520, H: 640, PAD: { l: 40, r: 44, t: 28, b: 40 }, font: 13, dotR: 7, axisFont: 13 },
 } as const;
 type Dims = (typeof DIMS)[keyof typeof DIMS];
@@ -261,27 +262,23 @@ export function LeagueTerrain({ teams }: { teams: TerrainTeam[] }) {
           </Card>
         ))}
       </div>
-      {/* スマホ: トグル切替の1枚 */}
+      {/* スマホ: 1枚表示。タイトル=表示中の図、右端はもう一方への切り替え誘導だけ
+          （タイトルとタブに同じ名称が並ぶ違和感と、タブ位置が折り返しでぶれる問題への対応。2026-09-24） */}
       <Card className="lg:hidden">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between gap-2 flex-wrap">
-            <span className="flex items-center gap-2">
+          <CardTitle className="flex items-center justify-between gap-2 flex-nowrap">
+            <span className="flex items-center gap-2 whitespace-nowrap">
               {AXES[axis].name}
               <MetricLink anchor="league-terrain" />
             </span>
-            <span className="inline-flex rounded-md border overflow-hidden" role="group" aria-label="地形図の切り替え">
-              {(["strength", "style"] as const).map((k) => (
-                <button
-                  key={k}
-                  type="button"
-                  aria-pressed={axis === k}
-                  onClick={() => setAxis(k)}
-                  className={`px-3 py-1.5 text-sm font-normal ${axis === k ? "bg-accent font-semibold" : "text-muted-foreground"}`}
-                >
-                  {AXES[k].name}
-                </button>
-              ))}
-            </span>
+            <button
+              type="button"
+              onClick={() => setAxis(axis === "strength" ? "style" : "strength")}
+              aria-label={`${AXES[axis === "strength" ? "style" : "strength"].name}に切り替え`}
+              className="shrink-0 rounded-md border px-3 py-1.5 text-sm font-normal text-muted-foreground hover:bg-accent transition-colors whitespace-nowrap"
+            >
+              {AXES[axis === "strength" ? "style" : "strength"].name} →
+            </button>
           </CardTitle>
           <CardDescription>{AXES[axis].desc}</CardDescription>
         </CardHeader>
