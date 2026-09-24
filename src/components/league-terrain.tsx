@@ -26,10 +26,12 @@ export interface TerrainTeam {
 
 type AxisKey = "strength" | "style";
 
+// sub=タイトル下の1行（軸名のみ）、desc=図の下の説明（スマホのファーストビューで図を隠さない配置。2026-09-24指示）
 const AXES = {
   strength: {
     name: "強さの地形",
-    desc: "攻撃レーティング (ORtg) × 守備レーティング (DRtg・上ほど失点が少ない)。右上ほど攻守とも上位。点線は30チームの中央値・重なる点は見やすさのため僅かに離しています。点をタップすると成績・もう一度タップでチームページへ。",
+    sub: "OFレーティング × DFレーティング",
+    desc: "右上ほど攻守とも上位。点線は30チームの中央値・重なる点は見やすさのため僅かに離しています。点をタップすると成績・もう一度タップでチームページへ。",
     x: (t: TerrainTeam) => t.ortg,
     y: (t: TerrainTeam) => t.drtg,
     yInvert: true, // DRtg は小さいほど上
@@ -38,7 +40,8 @@ const AXES = {
   },
   style: {
     name: "スタイルの地形",
-    desc: "ペース (PACE・推定ポゼッション/48min) × 攻撃レーティング (ORtg)。右上ほど速くて効率的。点線は30チームの中央値・重なる点は見やすさのため僅かに離しています。点をタップすると成績・もう一度タップでチームページへ。",
+    sub: "ペース × OFレーティング",
+    desc: "右上ほど速くて効率的（ペース=48分あたりの推定ポゼッション数）。点線は30チームの中央値・重なる点は見やすさのため僅かに離しています。点をタップすると成績・もう一度タップでチームページへ。",
     x: (t: TerrainTeam) => t.pace,
     y: (t: TerrainTeam) => t.ortg,
     yInvert: false,
@@ -255,12 +258,13 @@ export function LeagueTerrain({ teams, context, asOf }: { teams: TerrainTeam[]; 
                 {AXES[k].name}
                 <MetricLink anchor="league-terrain" />
               </CardTitle>
-              <CardDescription>{AXES[k].desc}</CardDescription>
+              <CardDescription>{AXES[k].sub}</CardDescription>
             </CardHeader>
             <CardContent>
               <ChartFrame title={AXES[k].name} context={context} asOf={asOf}>
                 <TerrainMap teams={teams} axis={k} dims={DIMS.pair} />
               </ChartFrame>
+              <p className="mt-2 text-sm text-muted-foreground">{AXES[k].desc}</p>
             </CardContent>
           </Card>
         ))}
@@ -283,12 +287,13 @@ export function LeagueTerrain({ teams, context, asOf }: { teams: TerrainTeam[]; 
               {AXES[axis === "strength" ? "style" : "strength"].name} →
             </button>
           </CardTitle>
-          <CardDescription>{AXES[axis].desc}</CardDescription>
+          <CardDescription>{AXES[axis].sub}</CardDescription>
         </CardHeader>
         <CardContent>
           <ChartFrame title={AXES[axis].name} context={context} asOf={asOf}>
             <TerrainMap teams={teams} axis={axis} dims={DIMS.narrow} />
           </ChartFrame>
+          <p className="mt-2 text-sm text-muted-foreground">{AXES[axis].desc}</p>
         </CardContent>
       </Card>
     </>
