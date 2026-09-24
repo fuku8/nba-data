@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { PhaseTabsList } from "@/components/phase-switch";
-import { getStandings } from "@/lib/data/teams";
+import { LeagueTerrain, type TerrainTeam } from "@/components/league-terrain";
+import { getStandings, getTeamAdvanced } from "@/lib/data/teams";
+import { getGames } from "@/lib/data/games";
 import { getPlayerPerGame } from "@/lib/data/players";
 import { getLatestGameDate, getPoLastGameDate } from "@/lib/data/csv-utils";
 import { getTeamColor } from "@/lib/constants/teams";
@@ -43,16 +45,61 @@ function ConferenceTable({ title, teams }: { title: string; teams: TeamStanding[
 
 function RegularSeason({ season }: { season: string }) {
   const standings = getStandings();
-  const players = withFullNames(getPlayerPerGame().filter((p) => p.gp >= 30 && p.team !== "TOT"));
+  const games = getGames();
+  // リーダーの母集団: 序盤は誰も30試合に達しないため「最多消化チームの半分」を下限にする
+  // （30試合に届いたら以後は30で固定。bleague-data minGp と同型の暫定ゲート）
+  const allPlayers = withFullNames(getPlayerPerGame().filter((p) => p.team !== "TOT"));
+  const minGp = Math.min(30, Math.max(1, Math.floor(Math.max(0, ...standings.map((s) => s.wins + s.losses)) / 2)));
+  const players = allPlayers.filter((p) => p.gp >= minGp);
   const conf = (c: TeamStanding["conference"]) =>
     standings.filter((s) => s.conference === c).sort((a, b) => a.playoffRank - b.playoffRank || b.winPct - a.winPct);
+
+  // リーグの地形図: team_advanced × standings を teamId で結合
+  const byId = new Map(standings.map((s) => [s.teamId, s]));
+  const terrain: TerrainTeam[] = getTeamAdvanced().flatMap((t) => {
+    const s = byId.get(t.teamId);
+    if (!s) return [];
+    return [{
+      abbr: s.teamAbbr,
+      nameJa: teamNameJa(s.teamAbbr) ?? t.teamName,
+      color: getTeamColor(s.teamAbbr),
+      ortg: t.offRating,
+      drtg: t.defRating,
+      pace: t.pace,
+      wins: s.wins,
+      losses: s.losses,
+    }];
+  });
+
+  // 昨夜の結果帯: 最終取得日の全試合を1行の帯で（詳細は /games）
+  const lastDate = games.length > 0 ? games[games.length - 1].gameDate : "";
+  const lastGames = games.filter((g) => g.gameDate === lastDate);
+  const lastDateShort = lastDate ? `${parseInt(lastDate.slice(5, 7), 10)}/${parseInt(lastDate.slice(8, 10), 10)}` : "";
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">NBA {season} Regular Season</h1>
-        <p className="text-muted-foreground mt-1">データ反映: {getLatestGameDate()} (米国東部時間)</p>
+        <p className="text-muted-foreground mt-1">{games.length}試合消化・データ反映: {getLatestGameDate()} (米国東部時間)</p>
       </div>
+
+      <section>
+        <LeagueTerrain teams={terrain} />
+      </section>
+
+      {lastGames.length > 0 && (
+        <section className="rounded-lg border bg-card">
+          <div className="overflow-x-auto whitespace-nowrap px-4 py-2.5 text-sm">
+            <span className="mr-3 text-muted-foreground">{lastDateShort}</span>
+            {lastGames.map((g) => (
+              <span key={g.gameId} className="mr-4 text-muted-foreground">
+                <span className="font-semibold text-foreground">{g.homeTeam} {g.homePts}</span>-{g.awayPts} {g.awayTeam}
+              </span>
+            ))}
+            <Link href="/games" className="text-muted-foreground hover:underline">試合結果へ →</Link>
+          </div>
+        </section>
+      )}
 
       <section>
         <div className="flex items-center justify-between mb-3">
