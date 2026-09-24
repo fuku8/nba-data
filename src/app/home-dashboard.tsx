@@ -91,15 +91,20 @@ function RegularSeason({ season }: { season: string }) {
       )}
 
       {lastGames.length > 0 && (
-        <section className="rounded-lg border bg-card">
-          <div className="overflow-x-auto whitespace-nowrap px-4 py-2.5 text-sm">
-            <span className="mr-3 text-muted-foreground">{lastDateShort}</span>
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold">
+              試合結果 <span className="text-sm font-normal text-muted-foreground">{lastDateShort}</span>
+            </h2>
+            <Link href="/games" className="text-sm text-muted-foreground hover:underline">すべて見る →</Link>
+          </div>
+          {/* スマホ=1行横スクロール、PC=折り返して全件表示（1行スクロールは窮屈・末尾まで見えない） */}
+          <div className="rounded-lg border bg-card px-4 py-3 text-sm overflow-x-auto whitespace-nowrap sm:whitespace-normal">
             {lastGames.map((g) => (
-              <span key={g.gameId} className="mr-4 text-muted-foreground">
+              <span key={g.gameId} className="mr-5 inline-block whitespace-nowrap leading-7 text-muted-foreground">
                 <span className="font-semibold text-foreground">{g.homeTeam} {g.homePts}</span>-{g.awayPts} {g.awayTeam}
               </span>
             ))}
-            <Link href="/games" className="text-muted-foreground hover:underline">試合結果へ →</Link>
           </div>
         </section>
       )}

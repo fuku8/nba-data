@@ -26,20 +26,22 @@ type AxisKey = "strength" | "style";
 
 const AXES = {
   strength: {
-    note: "横=攻撃レーティング (ORtg)・縦=守備レーティング (DRtg・上ほど失点が少ない)。点線は30チームの中央値。右上が攻守とも上位。重なる点は見やすさのため僅かに離しています。",
+    title: "ORtg × DRtg",
+    note: "右上ほど攻守とも上位。点線は30チームの中央値。重なる点は見やすさのため僅かに離しています。",
     x: (t: TerrainTeam) => t.ortg,
     y: (t: TerrainTeam) => t.drtg,
     yInvert: true, // DRtg は小さいほど上
     xLabel: "攻撃レーティング (ORtg) →",
-    yLabel: "← 守備レーティング (DRtg)",
+    yLabel: "守備レーティング (DRtg)・上ほど失点が少ない",
   },
   style: {
-    note: "横=ペース (推定ポゼッション/48min)・縦=攻撃レーティング (ORtg)。点線は30チームの中央値。右上が速くて効率的。重なる点は見やすさのため僅かに離しています。",
+    title: "PACE × ORtg",
+    note: "右上ほど速くて効率的。点線は30チームの中央値。重なる点は見やすさのため僅かに離しています。",
     x: (t: TerrainTeam) => t.pace,
     y: (t: TerrainTeam) => t.ortg,
     yInvert: false,
     xLabel: "ペース (PACE) →",
-    yLabel: "攻撃レーティング (ORtg) ↑",
+    yLabel: "攻撃レーティング (ORtg) →",
   },
 } as const;
 
@@ -196,8 +198,9 @@ export function LeagueTerrain({ teams }: { teams: TerrainTeam[] }) {
   return (
     <div className="rounded-lg border bg-card">
       <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-3">
-        <h2 className="text-lg font-semibold flex items-center gap-2">
+        <h2 className="text-lg font-semibold flex items-baseline gap-2 flex-wrap">
           リーグの地形図
+          <span className="text-sm font-normal text-muted-foreground">{ax.title}</span>
           <MetricLink anchor="league-terrain" />
         </h2>
         <div className="inline-flex rounded-md border overflow-hidden" role="group" aria-label="地形図の軸">
@@ -230,8 +233,19 @@ export function LeagueTerrain({ teams }: { teams: TerrainTeam[] }) {
         >
           <line x1={mx} y1={D.PAD.t - 6} x2={mx} y2={D.H - D.PAD.b + 6} stroke="currentColor" strokeOpacity={0.25} strokeDasharray="4 3" />
           <line x1={D.PAD.l - 6} y1={my} x2={D.W - D.PAD.r + 6} y2={my} stroke="currentColor" strokeOpacity={0.25} strokeDasharray="4 3" />
-          <text x={D.W - D.PAD.r + 4} y={D.H - 8} textAnchor="end" fontSize={D.axisFont} fill="currentColor" fillOpacity={0.6}>{ax.xLabel}</text>
-          <text x={8} y={18} fontSize={D.axisFont} fill="currentColor" fillOpacity={0.6}>{ax.yLabel}</text>
+          {/* 横軸=下辺中央、縦軸=左辺に沿わせて回転（QuadrantMap と同じ流儀）。DRtg は向きが逆なので矢印でなく言葉で示す */}
+          <text x={(D.PAD.l + D.W - D.PAD.r) / 2} y={D.H - 8} textAnchor="middle" fontSize={D.axisFont} fill="currentColor" fillOpacity={0.6}>{ax.xLabel}</text>
+          <text
+            x={14}
+            y={(D.PAD.t + D.H - D.PAD.b) / 2}
+            textAnchor="middle"
+            fontSize={D.axisFont}
+            fill="currentColor"
+            fillOpacity={0.6}
+            transform={`rotate(-90 14 ${(D.PAD.t + D.H - D.PAD.b) / 2})`}
+          >
+            {ax.yLabel}
+          </text>
           {teams.map((t, i) => (
             <g
               key={t.abbr}
