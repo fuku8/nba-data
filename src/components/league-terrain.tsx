@@ -251,8 +251,9 @@ function TerrainMap({ teams, axis, dims: D, highlight }: { teams: TerrainTeam[];
           style={{
             transform: dotTransform(i),
             opacity: anim === "start" ? 0 : hi >= 0 && i !== hi ? 0.4 : 1,
-            transition: anim === "start" ? "none" : "transform .75s cubic-bezier(.22,.9,.3,1), opacity .4s",
-            transitionDelay: anim === "run" ? `${i * 12}ms` : "0ms",
+            // 遅延は shorthand 内に書く（transition と transitionDelay の併用は React が警告し、その警告の
+            // コードフレーム描画が Next 16 の多バイト文字バグ（vercel/next.js#98178）で dev サーバーを落とす）
+            transition: anim === "start" ? "none" : `transform .75s cubic-bezier(.22,.9,.3,1) ${anim === "run" ? i * 12 : 0}ms, opacity .4s ${anim === "run" ? i * 12 : 0}ms`,
             cursor: "pointer",
           }}
           onClick={(e) => { e.stopPropagation(); tapDot(i); }}
