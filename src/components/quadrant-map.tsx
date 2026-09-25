@@ -148,7 +148,7 @@ export function QuadrantMap({
   const passive = selected == null && hovered == null && highlight != null;
   const shownDot = shownId != null ? dots.find((d) => idOf(d) === shownId) : undefined;
 
-  // ラベル位置: 点の右横（縦は点と同じ高さ）。右にはみ出すなら左横。縦にはみ出す分はクランプ
+  // ラベル位置（PC）: 点の右横（縦は点と同じ高さ）。右にはみ出すなら左横。縦にはみ出す分はクランプ。スマホ幅は点の上下（下記）
   // 点の真横に置くのは、点からラベルへ真っ直ぐ動く経路が「点とラベルを結ぶ矩形」に収まり、途中の別の点に取られないようにするため
   let labelX = 0;
   let labelY = 0;
@@ -160,12 +160,19 @@ export function QuadrantMap({
     labelWidth = textW(labelText, 6.2) + 16; // ponytail: SVGテキスト幅の概算（getBBox計測はしない）
     const dotX = sx(shownDot.x);
     const dotY = sy(shownDot.y);
-    labelX = dotX + 12;
-    if (labelX + labelWidth > W - PAD.r) labelX = dotX - labelWidth - 12;
-    if (labelX < 0) labelX = 2;
-    labelY = dotY + labelHeight / 2;
-    if (labelY - labelHeight < 0) labelY = labelHeight;
-    if (labelY > H) labelY = H;
+    if (narrow) {
+      // スマホ幅はラベルが横に収まらず（幅 約250 / viewBox 400）左端クランプで点を覆うので、点の上（上に無ければ下）に置く
+      labelX = Math.min(Math.max(dotX - labelWidth / 2, 2), W - 2 - labelWidth);
+      labelY = dotY - 12;
+      if (labelY - labelHeight < 0) labelY = dotY + 12 + labelHeight;
+    } else {
+      labelX = dotX + 12;
+      if (labelX + labelWidth > W - PAD.r) labelX = dotX - labelWidth - 12;
+      if (labelX < 0) labelX = 2;
+      labelY = dotY + labelHeight / 2;
+      if (labelY - labelHeight < 0) labelY = labelHeight;
+      if (labelY > H) labelY = H;
+    }
   }
 
   // 当たり判定は点ごとの要素ではなく SVG 全体で受け、ポインタ位置から最寄りの点（HIT_R 以内）を選ぶ
