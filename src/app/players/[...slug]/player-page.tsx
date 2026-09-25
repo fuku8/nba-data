@@ -21,6 +21,7 @@ import { ChartFrame } from "@/components/chart-frame";
 import { SeasonSwitch } from "@/components/season-switch";
 import { SeasonTitle } from "@/components/season-title";
 import { PhaseTabsList } from "@/components/phase-switch";
+import { PlayerUsageMap } from "@/components/player-usage-map";
 import { playerNameJa, teamNameJa } from "@/lib/data/names-ja";
 import { PhaseCompareBars, RS_COLOR, PO_COLOR } from "@/components/phase-compare-bars";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
@@ -56,6 +57,7 @@ function VisualGroup({
   swing,
   season,
   frame,
+  usageMap,
 }: {
   title: string;
   season: string;
@@ -74,6 +76,8 @@ function VisualGroup({
   badges: TypeBadge[] | null;
   swing: PoSwing | null;
   frame: { name: string; team: string; asOf?: string };
+  /** 「使われ方 × 効率」マップ（RS のみ・League Percentile と同じ GP 下限を満たすとき） */
+  usageMap?: { playerId: number; team: string } | null;
 }) {
   const hasWaffle = pts3 + pts2 + ptsFt > 0;
   const hasShots = shots.length > 0;
@@ -121,21 +125,29 @@ function VisualGroup({
           </div>
         </div>
       )}
+      {/* 位置の図2枚: 使われ方×効率（2次元・全体像）→ League Percentile（1次元・部門別）の順で PC は横並び。
+          マップを全幅に置くと高さ930pxで他の図の4倍の面積になり主役に見えるため（2026-09-25 指摘）。
+          マップが左なのは「図から見せる」＋背の低い Percentile を右に置いた方が収まりがよいため（同日指示） */}
       {pctRows && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <CardTitle>League Percentile</CardTitle>
-              <MetricLink anchor="percentile" />
-            </div>
-            <p className="text-xs text-muted-foreground">{pctNote}</p>
-          </CardHeader>
-          <CardContent>
-            <ChartFrame title="League Percentile" context={title} name={frame.name} team={frame.team} asOf={frame.asOf}>
-              <PercentileBars rows={pctRows} />
-            </ChartFrame>
-          </CardContent>
-        </Card>
+        <div className={`grid gap-6 ${usageMap ? "lg:grid-cols-2" : ""}`}>
+          {usageMap && (
+            <PlayerUsageMap playerId={usageMap.playerId} team={usageMap.team} season={season} minGp={MIN_GP} context={title} frame={frame} />
+          )}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <CardTitle>League Percentile</CardTitle>
+                <MetricLink anchor="percentile" />
+              </div>
+              <p className="text-xs text-muted-foreground">{pctNote}</p>
+            </CardHeader>
+            <CardContent>
+              <ChartFrame title="League Percentile" context={title} name={frame.name} team={frame.team} asOf={frame.asOf}>
+                <PercentileBars rows={pctRows} />
+              </ChartFrame>
+            </CardContent>
+          </Card>
+        </div>
       )}
       {(radarItems || hasWaffle || hasShots || hustleItems || motion) && (
         <div className="grid gap-6 md:grid-cols-2">
@@ -675,6 +687,7 @@ export async function renderPlayer(playerId: string, season: string) {
               season={season}
               pctNote={`GP${MIN_GP}以上の選手内での位置（100が最上位）`}
               pctRows={pctRows}
+              usageMap={pctRows ? { playerId: playerIdNum, team: pg.team } : null}
               radarItems={radarItems}
               vScore={vScore}
               pts3={pts3}
@@ -736,6 +749,7 @@ export async function renderPlayer(playerId: string, season: string) {
           season={season}
           pctNote={`GP${MIN_GP}以上の選手内での位置（100が最上位）`}
           pctRows={pctRows}
+          usageMap={pctRows ? { playerId: playerIdNum, team: pg.team } : null}
           radarItems={radarItems}
           vScore={vScore}
           pts3={pts3}

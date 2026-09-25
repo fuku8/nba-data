@@ -49,6 +49,7 @@ export function QuadrantMap({
   quadrantLabels,
   labelTop = 0,
   clipTop = 0,
+  highlight,
 }: {
   dots: QuadrantDot[];
   xLabel: string;
@@ -61,6 +62,8 @@ export function QuadrantMap({
   labelTop?: number;
   /** y の上位 N 人を上端の余白帯に置き、N+1 番目の値を軸の上限にする。外れ値1人で全体が潰れる図の見栄え用（ホバー値は実値） */
   clipTop?: number;
+  /** 選手ページ用: この点（playerId-team）を強調し、他の点は40%に落とす。名前と値のラベルは常時表示（ホバー・固定が無いとき） */
+  highlight?: string;
 }) {
   // 識別子は playerId-team（移籍で同一選手が2チーム分の点になり得るため）
   const idOf = (d: QuadrantDot) => `${d.playerId}-${d.team}`;
@@ -106,6 +109,7 @@ export function QuadrantMap({
 
   const topBy = (key: "x" | "y") => [...dots].sort((a, b) => b[key] - a[key]).slice(0, labelTop).map(idOf);
   const alwaysLabeled = new Set([...topBy("x"), ...topBy("y")]);
+  alwaysLabeled.delete(highlight ?? ""); // 強調点は名前入りの箱を常時出すので、ランドマークの名前は重ねない
   // 常時ラベルの重なり回避: 下から順に置き、先に置いたラベルと x が重なり y が近ければ 11px ずつ上へ逃がす（上端に届いたら下へ）
   const LABEL_H = 11;
   const corners =
@@ -138,8 +142,10 @@ export function QuadrantMap({
     nameLabels.set(idOf(d), { x: end ? cx - 6 : cx + 6, y, end });
   }
 
-  // 固定（クリック）を優先し、無ければホバー中の点
-  const shownId = selected ?? hovered;
+  // 固定（クリック）を優先し、無ければホバー中の点、それも無ければ強調点
+  const shownId = selected ?? hovered ?? highlight ?? null;
+  // 強調点のフォールバック表示中は箱をポインタに対して透過させる（常時表示の箱が覆う点をホバー・クリックできるように。Codexレビュー指摘）
+  const passive = selected == null && hovered == null && highlight != null;
   const shownDot = shownId != null ? dots.find((d) => idOf(d) === shownId) : undefined;
 
   // ラベル位置: 点の右横（縦は点と同じ高さ）。右にはみ出すなら左横。縦にはみ出す分はクランプ
@@ -184,7 +190,7 @@ export function QuadrantMap({
   const onPointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
     const pt = e.pointerType === "mouse" ? toViewBox(e) : null;
     if (!pt) return;
-    if (shownDot) {
+    if (shownDot && !passive) {
       const dx = sx(shownDot.x);
       const dy = sy(shownDot.y);
       const inCorridor =
@@ -222,9 +228,16 @@ export function QuadrantMap({
             {q.text}
           </text>
         ))}
-        {dots.map((d) => (
+        {/* 強調点は最後に描いて他の点の上に出す */}
+        {[...dots].sort((a, b) => Number(idOf(a) === highlight) - Number(idOf(b) === highlight)).map((d) => (
           <g key={idOf(d)}>
-            <circle cx={sx(d.x)} cy={sy(d.y)} r={4} fill={getTeamColor(d.team)} fillOpacity={0.85} />
+            <circle
+              cx={sx(d.x)}
+              cy={sy(d.y)}
+              r={idOf(d) === highlight ? 7 : 4}
+              fill={getTeamColor(d.team)}
+              fillOpacity={highlight ? (idOf(d) === highlight ? 1 : 0.4) : 0.85}
+            />
             {nameLabels.has(idOf(d)) && (
               <text
                 x={nameLabels.get(idOf(d))!.x}
@@ -244,6 +257,7 @@ export function QuadrantMap({
           <Link
             href={`/players/${shownDot.playerId}`}
             className="cursor-pointer [&_text]:hover:underline"
+            style={passive ? { pointerEvents: "none" } : undefined}
             onClick={(e) => e.stopPropagation()}
           >
             <rect
@@ -253,8 +267,8 @@ export function QuadrantMap({
               height={labelHeight}
               rx={4}
               fill="var(--popover)"
-              stroke="currentColor"
-              strokeOpacity={0.15}
+              stroke={shownId === highlight ? getTeamColor(shownDot.team) : "currentColor"}
+              strokeOpacity={shownId === highlight ? 1 : 0.15}
             />
             <text x={labelX + 8} y={labelY - labelHeight / 2 + 4} fontSize={11} fill="var(--popover-foreground)">
               {labelText}
