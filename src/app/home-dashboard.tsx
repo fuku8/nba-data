@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { PhaseTabsList } from "@/components/phase-switch";
-import { LeagueTerrain, type TerrainTeam } from "@/components/league-terrain";
-import { getStandings, getTeamAdvanced } from "@/lib/data/teams";
+import { LeagueTerrain } from "@/components/league-terrain";
+import { getStandings, getTerrainTeams } from "@/lib/data/teams";
 import { getGames } from "@/lib/data/games";
 import { getPlayerPerGame } from "@/lib/data/players";
 import { getLatestGameDate, getPoLastGameDate } from "@/lib/data/csv-utils";
@@ -54,22 +54,7 @@ function RegularSeason({ season }: { season: string }) {
   const conf = (c: TeamStanding["conference"]) =>
     standings.filter((s) => s.conference === c).sort((a, b) => a.playoffRank - b.playoffRank || b.winPct - a.winPct);
 
-  // リーグの地形図: team_advanced × standings を teamId で結合
-  const byId = new Map(standings.map((s) => [s.teamId, s]));
-  const terrain: TerrainTeam[] = getTeamAdvanced().flatMap((t) => {
-    const s = byId.get(t.teamId);
-    if (!s) return [];
-    return [{
-      abbr: s.teamAbbr,
-      nameJa: teamNameJa(s.teamAbbr) ?? t.teamName,
-      color: getTeamColor(s.teamAbbr),
-      ortg: t.offRating,
-      drtg: t.defRating,
-      pace: t.pace,
-      wins: s.wins,
-      losses: s.losses,
-    }];
-  });
+  const terrain = getTerrainTeams();
 
   // 昨夜の結果帯: 最終取得日の全試合を1行の帯で（詳細は /games）
   const lastDate = games.length > 0 ? games[games.length - 1].gameDate : "";

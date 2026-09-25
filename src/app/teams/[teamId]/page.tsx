@@ -6,11 +6,12 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { getStandings, getTeamAdvanced, getTeamPerGame, getTeamPointsGini, getTeamDefenseFactors, getTeamOffenseFactors, GINI_MIN_MP } from "@/lib/data/teams";
+import { getStandings, getTeamAdvanced, getTeamPerGame, getTeamPointsGini, getTeamDefenseFactors, getTeamOffenseFactors, getTerrainTeams, GINI_MIN_MP } from "@/lib/data/teams";
 import { getPlayerPerGame, getPlayerAdvanced, getPlayerTotals } from "@/lib/data/players";
 import { getTeamMargins, getLatestGameDate } from "@/lib/data/games";
 import { ChartFrame } from "@/components/chart-frame";
 import { SeasonHeartbeat } from "@/components/season-heartbeat";
+import { LeagueTerrain } from "@/components/league-terrain";
 import { LorenzCurve } from "@/components/lorenz-curve";
 import { PossessionBand } from "@/components/possession-band";
 import { FactorRanks, type FactorRankRow } from "@/components/factor-ranks";
@@ -83,6 +84,8 @@ export default async function TeamDetailPage({
   const pg = perGame.find((p) => getTeamAbbr(p.teamName) === abbr);
 
   const margins = getTeamMargins(abbr);
+  // リーグの地形図（トップと同じ2図）に当該チームだけ強調して掲載（2026-09-25指示）
+  const terrain = getTerrainTeams();
 
   // ワンマン度: チーム内得点分布のGini係数（MIN200以上でゴミ時間出場を除外）とリーグ内順位
   const giniByTeam = getTeamPointsGini();
@@ -276,6 +279,11 @@ export default async function TeamDetailPage({
             sub="Player Impact Estimate"
           />
         </div>
+
+        {/* リーグの地形図: 当該チームの点だけ強調・他は40%（データ空＝繰越直後は非表示） */}
+        {terrain.some((t) => t.abbr === abbr) && (
+          <LeagueTerrain teams={terrain} context={rsContext} asOf={frame.asOf} highlight={abbr} />
+        )}
 
         {/* シーズン心電図 & ワンマン度（PCでは横並び） */}
         <div className="grid gap-6 lg:grid-cols-2">

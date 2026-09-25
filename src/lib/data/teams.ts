@@ -1,5 +1,7 @@
 import { readCsvFile, csvToObjects, num, dataStamp, phaseFile, type DataCtx } from "./csv-utils";
-import { getTeamAbbr } from "@/lib/constants/teams";
+import { getTeamAbbr, getTeamColor } from "@/lib/constants/teams";
+import { teamNameJa } from "./names-ja";
+import type { TerrainTeam } from "@/components/league-terrain";
 import { getPlayerTotals } from "./players";
 import type { TeamStanding, TeamPerGame, TeamAdvanced, PlayerTotals } from "@/lib/types";
 
@@ -179,4 +181,23 @@ export function getTeamPointsGini(ctx: DataCtx = {}): { team: string; gini: numb
 
   giniCache.set(key, { stamp, value });
   return value;
+}
+
+// リーグの地形図（トップ・チームページ共用）: team_advanced × standings を teamId で結合
+export function getTerrainTeams(): TerrainTeam[] {
+  const byId = new Map(getStandings().map((s) => [s.teamId, s]));
+  return getTeamAdvanced().flatMap((t) => {
+    const s = byId.get(t.teamId);
+    if (!s) return [];
+    return [{
+      abbr: s.teamAbbr,
+      nameJa: teamNameJa(s.teamAbbr) ?? t.teamName,
+      color: getTeamColor(s.teamAbbr),
+      ortg: t.offRating,
+      drtg: t.defRating,
+      pace: t.pace,
+      wins: s.wins,
+      losses: s.losses,
+    }];
+  });
 }
