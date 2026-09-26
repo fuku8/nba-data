@@ -45,7 +45,7 @@ export function PlayerUsageMap({
           <MetricLink anchor="usg-ts" />
         </div>
         <p className="text-xs text-muted-foreground">
-          USG%（攻撃をどれだけ背負うか）× TS%（得点効率）・GP{minGp}以上の{dots ? `${dots.length}人` : "選手"}の中での位置・点線は中央値 · {MAP_HELP}
+          USG%（攻撃をどれだけ背負うか）× TS%（得点効率）：GP{minGp}以上の{dots ? `${dots.length}人` : "選手"}の中での位置・点線は中央値 · {MAP_HELP}
         </p>
       </CardHeader>
       <CardContent>

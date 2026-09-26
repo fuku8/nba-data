@@ -178,7 +178,7 @@ export function PlayersClient({
           <CardHeader>
             <CardTitle>使われ方 × 効率マップ</CardTitle>
             <CardDescription>
-              USG%（攻撃をどれだけ背負うか）× TS%（得点効率）・各チーム出場時間上位{mapTeamTop}人の{usageEfficiencyDots.length}人・点線は中央値 · {MAP_HELP}
+              USG%（攻撃をどれだけ背負うか）× TS%（得点効率）：各チーム出場時間上位{mapTeamTop}人の{usageEfficiencyDots.length}人・点線は中央値 · {MAP_HELP}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -198,7 +198,7 @@ export function PlayersClient({
           <CardHeader>
             <CardTitle>シューターマップ</CardTitle>
             <CardDescription>
-              3P試投/G × 3P%・GP{minGp}以上かつ3PA/G {shooterMin3pa.toFixed(1)}以上の{shooterDots.length}人（試投が少ない選手のノイズを除外）・点線は中央値 · {MAP_HELP}
+              3P試投/G × 3P%：GP{minGp}以上かつ3PA/G {shooterMin3pa.toFixed(1)}以上の{shooterDots.length}人（試投が少ない選手のノイズを除外）・点線は中央値 · {MAP_HELP}
             </CardDescription>
           </CardHeader>
           <CardContent>
