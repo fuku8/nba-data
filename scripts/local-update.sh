@@ -4,6 +4,12 @@ set -euo pipefail
 REPO_DIR="/Users/arakawahiroaki/nba-data"
 cd "$REPO_DIR"
 
+# 実行証跡: 開始1行・終了1行を logs/run.log に残す。末尾が start のままなら前回が終わっていない
+RUN_LOG=logs/run.log
+tail -n1 "$RUN_LOG" 2>/dev/null | grep -q ' start$' && echo "[$(date '+%Y-%m-%d %H:%M:%S')] WARN previous run has no end line" | tee -a "$RUN_LOG"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] start" >> "$RUN_LOG"
+trap 'rc=$?; echo "[$(date "+%Y-%m-%d %H:%M:%S")] end rc=$rc" >> "$RUN_LOG"' EXIT
+
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] fetch start"
 # 失敗時はコアCSV・boxscoresも戻して中断（tracking/shotsと同じ「部分更新をコミットしない」不変を対称化。run-1指摘）
 /opt/anaconda3/bin/python3 scripts/fetch-nba-data.py || {
