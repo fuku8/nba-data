@@ -298,7 +298,7 @@ export default async function TeamDetailPage({
               </CardHeader>
               <CardContent>
                 <ChartFrame title="Season Heartbeat" context={rsContext} name={frame.name} team={frame.team} asOf={frame.asOf}>
-                  <SeasonHeartbeat games={margins} />
+                  <SeasonHeartbeat games={margins} minGames={82} />
                 </ChartFrame>
               </CardContent>
             </Card>
