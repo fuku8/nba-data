@@ -36,24 +36,21 @@ diff -rq data/shots data/2025-26/shots && diff -rq data/boxscores data/2025-26/b
 
 # 2. 差分があれば揃える。日次取得で AGE と hustle の小数桁が動くだけなので、
 #    確定時点の値（スナップショット）を正とし、直下をスナップショットで戻す。
-#    16:00 の日次取得が走ると再びずれるので、2〜6 は同じ日の 16:00 前に終える。
+#    16:00 の日次取得が走ると再びずれるので、2〜5 は同じ日の 16:00 前に終える。
 cp data/2025-26/*.csv data/
 
 # 3. 繰越（確認プロンプトで y）
 scripts/rollover.sh 2025-26 2026-27
 
-# 4. 日本語名の対応表を更新（新人・two-way を Wikipedia 日本語版から追加。無い選手は NAME_JA 空＝英語名で表示。plan §13-1）
-python3 scripts/fetch-player-names-ja.py
-
-# 5. ビルド検証（静的エクスポート。落ちる場合は下の「既知の落とし穴」）
+# 4. ビルド検証（静的エクスポート。落ちる場合は下の「既知の落とし穴」）
 npm run build
 
-# 6. コミット・push（データ更新コミットとは分ける）
+# 5. コミット・push（データ更新コミットとは分ける）
 git add data/ && git commit -m "data: rollover 2025-26 -> 2026-27"
 git push origin main   # SSH が使えない環境では HTTPS URL を明示
 ```
 
-### 5 のビルドで確認すること
+### 4 のビルドで確認すること
 
 | 確認項目 | 期待 |
 |---|---|
@@ -68,6 +65,32 @@ git push origin main   # SSH が使えない環境では HTTPS URL を明示
 - `logs/update.log`（16:00 実行後）: RS 取得が 0 選手で「✓」になっていること。PO 取得（`po_player_per_game`）が毎日「✗」で落ちる場合は例外の扱いを見直す（`plan.md` §12 Phase 0 の未確認事項）。hustle は失敗時に自動で HEAD に戻るので「hustle failed -> revert」は正常。
 - Cloudflare Pages のビルドが通っていること（GitHub `main` の push 後）。
 - 開幕後の初回取得で `player_per_game.csv` に行が入り、`MIN_GP` の下限（`plan.md` §12「序盤のGP下限」）で League Percentile が出ること。
+
+## 開幕後: 選手プロフィールと日本語名の更新
+
+**繰越の当日ではなく、開幕後の初回取得で `player_per_game.csv` に新季の選手が入ってから行う**（2026-10-01 ふくたろう指示）。繰越直後は新季の名簿が空で、ルーキー・新加入の選手がまだ居ないため、そこで回しても何も増えない。新しい選手の追加と、前季から暫定のままの表記の見直しを一度に済ませる。
+
+```bash
+cd ~/nba-data
+
+# 1. 新しい選手のプロフィールを追加（日次取得には入っていない。1回50件なので「未取得 0」になるまで繰り返す）
+python3 scripts/fetch-player-profiles.py --dry-run   # 未取得の件数を見る
+python3 scripts/fetch-player-profiles.py
+
+# 2. 暫定表記を引き直したい選手は、data/player_names_ja.csv の NAME_JA を空にする
+#    （SOURCE を空にするだけでは引き直されない。スクリプトは NAME_JA が入っていて
+#     SOURCE が wikipedia-ja 以外の行をそのまま保つ）
+
+# 3. 日本語名の対応表を更新（Wikipedia 日本語版。無い選手は NAME_JA 空＝英語名で表示。plan §13-1）
+python3 scripts/fetch-player-names-ja.py
+
+# 4. ビルド → コミット・push（データ更新コミットとは分ける）
+npm run build
+```
+
+- 対応表の対象は `player_profiles.csv` に居る選手。このファイルは累積で、繰越でも消さないので、リーグを去った選手の日本語名は残る（過去季ページで使う）。
+- 3 のあと NAME_JA が空の選手は英語名で表示される。音写を入れるなら SOURCE を「暫定」にして手で書く。
+- シーズン中に契約した選手（two-way など）も日次取得ではプロフィール・日本語名が入らない。気づいたら同じ手順を回す。
 
 ## 既知の落とし穴（静的エクスポート）
 

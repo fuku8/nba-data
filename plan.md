@@ -817,7 +817,7 @@ sumo-data `src/lib/midokoro.ts` の型（ビルド時に最大3枚を決定論�
 
 **表記の基準（ふくたろう決定）**: 「日本語の Web で流通している表記」＝検索に当たる表記。母語の発音への忠実さは基準にしない（「クレイチー」のような、正確でも誰も検索しない表記を作らない）。Wikipedia 日本語版の記事名を第一基準にし、無い選手は暫定の音写（出所列に「暫定」）。媒体間の「ヴィ／ビ」程度の揺れは検索が吸収するので追わない。慣例は Wikipedia 日本語版に合わせる: V は「ビ」（ビクター・ウェンバンヤマ）、Jr. は「ジュニア」、II/III は「2世／3世」、ハイフン姓は「＝」。
 
-**データ**（2026-09-02 作成）: `data/player_names_ja.csv`（PLAYER_ID, NAME_EN, NAME_JA, SOURCE）582 人、`data/team_names_ja.csv` 30 チーム。生成は `scripts/fetch-player-names-ja.py`: en.wikipedia の言語間リンク（en→ja）で 424 人、ja.wikipedia の全文検索＋英語版への逆リンク一致で追加、残り 158 人は Claude の音写を「暫定」として保存。再実行しても manual／暫定 の行は保つ。NBA Rakuten の選手ページ（URL が NBA の選手 ID）も候補だったが、作業環境から DNS が引けず未使用。**毎季の繰越後に再実行**して新人・two-way を足す（`ROLLOVER.md` に記載）。暫定 158 人のうち主力級（Fontecchio・Bona・Larsson・Shead・楊瀚森・Dickinson）は日本語記事が立った時点で自動で置き換わる（暫定行は保つ仕様なので、置き換えたいときは SOURCE を空にして再実行）。
+**データ**（2026-09-02 作成）: `data/player_names_ja.csv`（PLAYER_ID, NAME_EN, NAME_JA, SOURCE）582 人、`data/team_names_ja.csv` 30 チーム。生成は `scripts/fetch-player-names-ja.py`: en.wikipedia の言語間リンク（en→ja）で 424 人、ja.wikipedia の全文検索＋英語版への逆リンク一致で追加、残り 158 人は Claude の音写を「暫定」として保存。再実行しても manual／暫定 の行は保つ。NBA Rakuten の選手ページ（URL が NBA の選手 ID）も候補だったが、作業環境から DNS が引けず未使用。**開幕後の初回取得のあとに再実行**して新人・two-way を足す（2026-10-01 変更: 繰越直後は新季の名簿が空のため。先に `fetch-player-profiles.py` が要る。手順は `ROLLOVER.md`「開幕後」）。暫定 158 人のうち主力級（Fontecchio・Bona・Larsson・Shead・楊瀚森・Dickinson）は日本語記事が立った時点で自動で置き換わる（暫定行は保つ仕様なので、置き換えたいときは **NAME_JA を空にして**再実行。2026-10-01 訂正: スクリプトは「NAME_JA あり かつ SOURCE が wikipedia-ja 以外」を保つので、SOURCE を空にするだけでは引き直されず、「自動で置き換わる」も誤り）。
 
 **段階**:
 1. ✅（2026-09-03 実装）対応表 → title・description・比較ページ検索（カタカナでも英字でも当たる）に使う。表示は変えない。検索流入とサイト内検索の利得はここで取れる → 検証: 本番 HTML の `<title>` に日本語名、比較ページで「ヨキッチ」入力が当たる
