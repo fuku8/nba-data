@@ -1,6 +1,6 @@
 "use client";
 
-// トップページのヒーロー「強さの地形」「スタイルの地形」（plan.md §13-3 2026-09-24決定・同日改訂）
+// トップページのヒーロー「ORtg × DRtg（強さの地形）」「PACE × ORtg（スタイルの地形）」（plan.md §13-3 2026-09-24決定・同日改訂）
 // 30チームの四象限散布図。PCは2図並列（players のマップ2枚と同じ型）、スマホはトグル切替の1枚。
 // - 造語は使わない: 軸ラベルは流通用語の併記形のみ・象限ラベルなし（メモリ no-coined-terms-for-nba-vocab）
 // - タップ1回目=点の近くにポップアップ・2回目=チームページへ（QuadrantMap と同じ操作系。図の外に出すと気づかれない）
@@ -27,11 +27,13 @@ export interface TerrainTeam {
 
 type AxisKey = "strength" | "style";
 
-// sub=タイトル下の1行（軸名のみ）、desc=図の下の説明（スマホのファーストビューで図を隠さない配置。2026-09-24指示）
+// title=流通している指標名（タイトル・スマホの切替ボタン）、name=タイトル下に添える図の呼び名（2026-10-01指示:
+// 「スタイルの地形」だけでは何の図か分からない。NBAファンには指標名のほうが通じる）、
+// desc=図の下の説明（スマホのファーストビューで図を隠さない配置。2026-09-24指示）
 const AXES = {
   strength: {
+    title: "ORtg × DRtg",
     name: "強さの地形",
-    sub: "OFレーティング × DFレーティング",
     desc: "右上ほど攻守とも上位。点線は30チームの中央値・重なる点は見やすさのため僅かに離しています。点をタップすると成績・もう一度タップでチームページへ。",
     x: (t: TerrainTeam) => t.ortg,
     y: (t: TerrainTeam) => t.drtg,
@@ -40,8 +42,8 @@ const AXES = {
     yLabel: "守備レーティング (DRtg)・上ほど失点が少ない",
   },
   style: {
+    title: "PACE × ORtg",
     name: "スタイルの地形",
-    sub: "ペース × OFレーティング",
     desc: "右上ほど速くて効率的（ペース=48分あたりの推定ポゼッション数）。点線は30チームの中央値・重なる点は見やすさのため僅かに離しています。点をタップすると成績・もう一度タップでチームページへ。",
     x: (t: TerrainTeam) => t.pace,
     y: (t: TerrainTeam) => t.ortg,
@@ -227,7 +229,7 @@ function TerrainMap({ teams, axis, dims: D, highlight }: { teams: TerrainTeam[];
       viewBox={`0 0 ${D.W} ${D.H}`}
       className="w-full"
       role="img"
-      aria-label={`${ax.name}（30チームの散布図）`}
+      aria-label={`${ax.title}（${ax.name}・30チームの散布図）`}
       onClick={() => setSelected(null)}
     >
       <line x1={mx} y1={D.PAD.t - 6} x2={mx} y2={D.H - D.PAD.b + 6} stroke="currentColor" strokeOpacity={0.25} strokeDasharray="4 3" />
@@ -295,13 +297,13 @@ export function LeagueTerrain({ teams, context, asOf, highlight }: { teams: Terr
           <Card key={k}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                {AXES[k].name}
+                {AXES[k].title}
                 <MetricLink anchor="league-terrain" />
               </CardTitle>
-              <CardDescription>{AXES[k].sub}</CardDescription>
+              <CardDescription>{AXES[k].name}</CardDescription>
             </CardHeader>
             <CardContent>
-              <ChartFrame title={AXES[k].name} context={context} asOf={asOf} name={hiTeam?.nameJa} team={hiTeam?.abbr}>
+              <ChartFrame title={`${AXES[k].title}（${AXES[k].name}）`} context={context} asOf={asOf} name={hiTeam?.nameJa} team={hiTeam?.abbr}>
                 <TerrainMap teams={teams} axis={k} dims={DIMS.pair} highlight={highlight} />
               </ChartFrame>
               <p className="mt-2 text-sm text-muted-foreground">{AXES[k].desc}</p>
@@ -315,22 +317,22 @@ export function LeagueTerrain({ teams, context, asOf, highlight }: { teams: Terr
         <CardHeader>
           <CardTitle className="flex items-center justify-between gap-2 flex-nowrap">
             <span className="flex items-center gap-2 whitespace-nowrap">
-              {AXES[axis].name}
+              {AXES[axis].title}
               <MetricLink anchor="league-terrain" />
             </span>
             <button
               type="button"
               onClick={() => setAxis(axis === "strength" ? "style" : "strength")}
-              aria-label={`${AXES[axis === "strength" ? "style" : "strength"].name}に切り替え`}
+              aria-label={`${AXES[axis === "strength" ? "style" : "strength"].title}に切り替え`}
               className="shrink-0 rounded-md border px-3 py-1.5 text-sm font-normal text-muted-foreground hover:bg-accent transition-colors whitespace-nowrap"
             >
-              {AXES[axis === "strength" ? "style" : "strength"].name} →
+              {AXES[axis === "strength" ? "style" : "strength"].title} →
             </button>
           </CardTitle>
-          <CardDescription>{AXES[axis].sub}</CardDescription>
+          <CardDescription>{AXES[axis].name}</CardDescription>
         </CardHeader>
         <CardContent>
-          <ChartFrame title={AXES[axis].name} context={context} asOf={asOf} name={hiTeam?.nameJa} team={hiTeam?.abbr}>
+          <ChartFrame title={`${AXES[axis].title}（${AXES[axis].name}）`} context={context} asOf={asOf} name={hiTeam?.nameJa} team={hiTeam?.abbr}>
             <TerrainMap teams={teams} axis={axis} dims={DIMS.narrow} highlight={highlight} />
           </ChartFrame>
           <p className="mt-2 text-sm text-muted-foreground">{AXES[axis].desc}</p>
