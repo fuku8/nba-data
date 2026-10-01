@@ -29,11 +29,13 @@ type AxisKey = "strength" | "style";
 
 // title=流通している指標名（タイトル・スマホの切替ボタン）、name=タイトル下に添える図の呼び名（2026-10-01指示:
 // 「スタイルの地形」だけでは何の図か分からない。NBAファンには指標名のほうが通じる）、
+// lead=呼び名に続ける1行説明（何を見る図か。読み方・注記・操作は desc 側に置き、重ねない）、
 // desc=図の下の説明（スマホのファーストビューで図を隠さない配置。2026-09-24指示）
 const AXES = {
   strength: {
     title: "ORtg × DRtg",
     name: "強さの地形",
+    lead: "ORtgとDRtgから見る攻守の強さ",
     desc: "右上ほど攻守とも上位。点線は30チームの中央値・重なる点は見やすさのため僅かに離しています。点をタップすると成績・もう一度タップでチームページへ。",
     x: (t: TerrainTeam) => t.ortg,
     y: (t: TerrainTeam) => t.drtg,
@@ -44,6 +46,7 @@ const AXES = {
   style: {
     title: "PACE × ORtg",
     name: "スタイルの地形",
+    lead: "PACEとORtgから見る速さと効率",
     desc: "右上ほど速くて効率的（ペース=48分あたりの推定ポゼッション数）。点線は30チームの中央値・重なる点は見やすさのため僅かに離しています。点をタップすると成績・もう一度タップでチームページへ。",
     x: (t: TerrainTeam) => t.pace,
     y: (t: TerrainTeam) => t.ortg,
@@ -300,7 +303,7 @@ export function LeagueTerrain({ teams, context, asOf, highlight }: { teams: Terr
                 {AXES[k].title}
                 <MetricLink anchor="league-terrain" />
               </CardTitle>
-              <CardDescription>{AXES[k].name}</CardDescription>
+              <CardDescription>{AXES[k].name}：{AXES[k].lead}</CardDescription>
             </CardHeader>
             <CardContent>
               <ChartFrame title={`${AXES[k].title}（${AXES[k].name}）`} context={context} asOf={asOf} name={hiTeam?.nameJa} team={hiTeam?.abbr}>
@@ -329,7 +332,7 @@ export function LeagueTerrain({ teams, context, asOf, highlight }: { teams: Terr
               {AXES[axis === "strength" ? "style" : "strength"].title} →
             </button>
           </CardTitle>
-          <CardDescription>{AXES[axis].name}</CardDescription>
+          <CardDescription>{AXES[axis].name}：{AXES[axis].lead}</CardDescription>
         </CardHeader>
         <CardContent>
           <ChartFrame title={`${AXES[axis].title}（${AXES[axis].name}）`} context={context} asOf={asOf} name={hiTeam?.nameJa} team={hiTeam?.abbr}>
