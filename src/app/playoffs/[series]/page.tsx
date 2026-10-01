@@ -9,41 +9,51 @@ import { teamNameJa } from "@/lib/data/names-ja";
 import { gameDetailUrl } from "@/lib/game-url";
 import { PhaseBadge } from "@/components/phase-switch";
 import { ROUND_NAME } from "@/lib/bracket";
+import { allSeasons, currentSeason, poYear } from "@/lib/season";
 import { dramaFlames } from "@/lib/drama";
 
 export const dynamicParams = false;
 
-// slug は po_series.csv の並びどおり "team1-team2"（例: NYK-ATL）
+// slug は po_series.csv の並びどおり "team1-team2"（例: NYK-ATL）。現季→過去季の順で探す。
+// RS 中は現季の po_series.csv が無く、現季だけだと generateStaticParams が空になって静的エクスポートが
+// ビルドできない（/games/[gameId] と同じ落とし穴。ROLLOVER.md）。同じ組み合わせが複数季にあれば新しい季が勝つ
 function findSeries(slug: string) {
-  return getPlayoffSeries().find((s) => `${s.team1}-${s.team2}` === slug);
+  for (const season of allSeasons()) {
+    const s = getPlayoffSeries(season).find((x) => `${x.team1}-${x.team2}` === slug);
+    if (s) return { s, season };
+  }
+  return null;
 }
 
 export function generateStaticParams() {
-  return getPlayoffSeries().map((s) => ({ series: `${s.team1}-${s.team2}` }));
+  const slugs = allSeasons().flatMap((season) => getPlayoffSeries(season).map((s) => `${s.team1}-${s.team2}`));
+  return [...new Set(slugs)].map((series) => ({ series }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ series: string }> }): Promise<Metadata> {
   const { series } = await params;
-  const s = findSeries(series);
-  if (!s) return {};
+  const found = findSeries(series);
+  if (!found) return {};
+  const { s, season } = found;
   const ja1 = teamNameJa(s.team1) ?? s.team1;
   const ja2 = teamNameJa(s.team2) ?? s.team2;
   return pageMeta({
-    title: `${ja1} vs ${ja2}（${ROUND_NAME[s.round]}）· ${phaseTitle("po")}`,
-    description: `${phaseTitle("po")} ${ROUND_NAME[s.round]} ${s.team1}-${s.team2} の全試合結果と各試合のボックススコア。`,
+    title: `${ja1} vs ${ja2}（${ROUND_NAME[s.round]}）· ${phaseTitle("po", season)}`,
+    description: `${phaseTitle("po", season)} ${ROUND_NAME[s.round]} ${s.team1}-${s.team2} の全試合結果と各試合のボックススコア。`,
     path: `/playoffs/${series}`,
   });
 }
 
 export default async function SeriesPage({ params }: { params: Promise<{ series: string }> }) {
   const { series } = await params;
-  const s = findSeries(series);
-  if (!s) notFound();
+  const found = findSeries(series);
+  if (!found) notFound();
+  const { s, season } = found;
 
-  const games = getGames({ phase: "po" })
+  const games = getGames({ phase: "po", season })
     .filter((g) => (g.homeTeam === s.team1 && g.awayTeam === s.team2) || (g.homeTeam === s.team2 && g.awayTeam === s.team1))
     .sort((a, b) => a.gameDate.localeCompare(b.gameDate));
-  const drama = getDramaScores();
+  const drama = getDramaScores(season);
 
   const ja1 = teamNameJa(s.team1) ?? s.team1;
   const ja2 = teamNameJa(s.team2) ?? s.team2;
@@ -61,7 +71,7 @@ export default async function SeriesPage({ params }: { params: Promise<{ series:
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Link href="/playoffs" className="hover:underline">← プレーオフ</Link>
         <PhaseBadge phase="po" />
-        <span>· {ROUND_NAME[s.round]}</span>
+        <span>· {season === currentSeason() ? "" : `${poYear(season)} `}{ROUND_NAME[s.round]}</span>
       </div>
 
       <div>

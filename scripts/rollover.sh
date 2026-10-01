@@ -20,6 +20,8 @@ cd "$(dirname "$0")/.."
 fail=0
 for f in data/*.csv; do
   b=$(basename "$f")
+  # 日本語名の対応表と名簿（現在の所属）は季に依らず data/ 直下だけに置く（スナップショットに無いので比較しない）
+  [[ "$b" == *_names_ja.csv || "$b" == player_teams.csv ]] && continue
   cmp -s "$f" "data/$OLD/$b" || { echo "DIFF: $b"; fail=1; }
 done
 for d in shots boxscores; do

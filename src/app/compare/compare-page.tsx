@@ -1,7 +1,8 @@
 import { getPlayerPerGame, getPlayerAdvanced, getPlayerTotals } from "@/lib/data/players";
 import { isPlayoffDataAvailable } from "@/lib/data/playoffs";
 import { getPlayerHustle, getPlayerSpeed } from "@/lib/data/tracking";
-import { MIN_GP, PO_MIN_GP } from "@/lib/data/player-types";
+import { rsMinGp, PO_MIN_GP } from "@/lib/data/player-types";
+import { compareListMinGp } from "@/lib/data/min-gp";
 import { playerNameJa } from "@/lib/data/names-ja";
 import type { Phase } from "@/lib/phase";
 import { currentSeason } from "@/lib/season";
@@ -18,9 +19,10 @@ export function renderCompare(phase: Phase) {
   const poAvailable = isPlayoffDataAvailable();
   if (phase === "po" && !poAvailable) return <PreSeasonNotice />;
   const ctx = { phase };
-  // 検索対象のGP下限（RS10・PO4）。レーダー母集団はサイト共通のローテ選手下限（RS20・PO4）
-  const listMinGp = phase === "po" ? PO_MIN_GP : 10;
-  const poolMinGp = phase === "po" ? PO_MIN_GP : MIN_GP;
+  // 検索対象のGP下限（RS10・PO4）。レーダー母集団はサイト共通のローテ選手下限（RS20・PO4）。
+  // RS は序盤だけ下がる（rsMinGp・compareListMinGp。min-gp.ts）
+  const poolMinGp = phase === "po" ? PO_MIN_GP : rsMinGp();
+  const listMinGp = phase === "po" ? PO_MIN_GP : compareListMinGp();
   const perGame = getPlayerPerGame(ctx).filter((p) => p.team !== "TOT" && p.gp >= listMinGp);
   const advById = new Map(
     getPlayerAdvanced(ctx)

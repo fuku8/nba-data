@@ -54,3 +54,6 @@ logs/
 
 # Python
 __pycache__/
+
+# fetch-nba-data.py の名簿保存の一時ファイル（保存に失敗すると残る。日次の git add data/ に入れない）
+/data/*.tmp

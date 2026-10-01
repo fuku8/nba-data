@@ -15,6 +15,7 @@ from nba_api.stats.endpoints import (
     leaguedashteamstats,
     leaguedashplayerstats,
     leaguegamefinder,
+    commonallplayers,
     scoreboardv2,
     boxscoresummaryv3,
     boxscoretraditionalv3,
@@ -646,6 +647,38 @@ def fetch_boxscores(po_game_ids: list[str]) -> bool:
 
 # ─── main ──────────────────────────────────────────────────
 
+# ─── 8. 所属チーム（名簿） ───────────────────────────────────
+
+def fetch_rosters() -> bool:
+    """各選手の現在の所属チーム（CommonAllPlayers・1回の呼び出し）を player_teams.csv に保存する。
+    成績行のチームは「最後に出場したチーム」なので、移籍して未出場の選手は旧チームのままになる。
+    名簿は出場が無くても所属が分かるので、選手ページの所属表示に使う。"""
+    try:
+        df = get_data_frames(
+            "rosters",
+            lambda: make_endpoint(commonallplayers.CommonAllPlayers, is_only_current_season=1, league_id="00", season=SEASON),
+        )[0]
+        df = df[(df["ROSTERSTATUS"] == 1) & (df["TEAM_ABBREVIATION"] != "")]
+        # 取得異常（空・一部だけ）で所属表示を全員ぶん消さない。30チーム×13人でも390行ある
+        if len(df) < 300:
+            raise ValueError(f"名簿が少なすぎる: {len(df)} 行")
+        out = pd.DataFrame({
+            "PLAYER_ID":         df["PERSON_ID"],
+            "PLAYER_NAME":       df["DISPLAY_FIRST_LAST"],
+            "TEAM_ABBREVIATION": df["TEAM_ABBREVIATION"],
+        })
+        # 一時ファイルに書いてから置き換える。この取得は失敗しても日次更新を止めないので、書き込み途中で落ちて
+        # 欠けた名簿が残ると、そのままコミットされて「所属なし」の誤表示になる（Codex レビュー 2026-10-01）
+        path = os.path.join(DATA_DIR, "player_teams.csv")
+        out.to_csv(path + ".tmp", index=False)
+        os.replace(path + ".tmp", path)
+        print(f"  ✓ player_teams.csv: {len(out)} 選手・{out['TEAM_ABBREVIATION'].nunique()} チーム")
+        return True
+    except Exception as e:
+        print(f"  ✗ rosters: {e}")
+        return False
+
+
 def main():
     os.makedirs(DATA_DIR, exist_ok=True)
     configure_nba_api_session()
@@ -698,6 +731,13 @@ def main():
     print(f"総実行時間: {format_elapsed(total_elapsed)}")
     if ok != len(results):
         sys.exit(1)
+
+    # 名簿は上の取得がすべて成功したときだけ取る（失敗した回は local-update.sh が data/ を戻すので、名簿だけ
+    # 新しくしない）。結果サマリーには入れない: 失敗しても前回の player_teams.csv が残り、所属表示が1日古く
+    # なるだけなので、名簿の失敗で日次更新全体を止めない
+    print("\n=== 8. 所属チーム（名簿） ===")
+    sleep("rosters")
+    run_timed_step("rosters", fetch_rosters)
 
 
 if __name__ == "__main__":

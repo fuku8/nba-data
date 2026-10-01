@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getPlayerPerGame, getPlayerAdvanced, getPlayerProfile, getPlayerTotals } from "@/lib/data/players";
+import { getPlayerPerGame, getPlayerAdvanced, getPlayerProfile, getPlayerTotals, currentTeam, rosterTeamMap } from "@/lib/data/players";
 import { getPlayoffPlayerPerGame, getPlayoffPlayerAdvanced, getPlayoffPlayerTotals } from "@/lib/data/playoffs";
 import { getTeamColor, getTeamInfo } from "@/lib/constants/teams";
 import { PercentileBars, percentileOf, type PercentileRow } from "@/components/percentile-bars";
@@ -12,19 +12,19 @@ import { ShotChart } from "@/components/shot-chart";
 import { getPlayerShots, type Shot } from "@/lib/data/shots";
 import { getPlayerHustle, getPlayoffPlayerHustle, getPlayerSpeed, getPlayoffPlayerSpeed, getPlayerPossessions, getPlayoffPlayerPossessions, type PlayerHustle, type PlayerSpeed, type PlayerPossessions } from "@/lib/data/tracking";
 import { MetricLink } from "@/components/metric-link";
-import { getPlayerTypes, getPoSwing, MIN_GP, PO_MIN_GP, type TypeBadge, type PoSwing } from "@/lib/data/player-types";
+import { getPlayerTypes, getPoSwing, rsMinGp, PO_MIN_GP, type TypeBadge, type PoSwing } from "@/lib/data/player-types";
 import { getSimilarPlayers } from "@/lib/data/similar";
 import { allSeasons, currentSeason, poYear } from "@/lib/season";
 import { getLatestGameDate } from "@/lib/data/games";
 import { getPoLastGameDate } from "@/lib/data/csv-utils";
 import { ChartFrame } from "@/components/chart-frame";
-import { SeasonSwitch } from "@/components/season-switch";
 import { SeasonTitle } from "@/components/season-title";
 import { PhaseTabsList } from "@/components/phase-switch";
 import { PlayerUsageMap } from "@/components/player-usage-map";
 import { playerNameJa, teamNameJa } from "@/lib/data/names-ja";
 import { PhaseCompareBars, RS_COLOR, PO_COLOR } from "@/components/phase-compare-bars";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ChevronRight } from "lucide-react";
 
 function fmtHeight(h: string): string {
   const [ft, inch] = h.split("-").map(Number);
@@ -37,6 +37,8 @@ function fmtWeight(w: string): string {
   if (isNaN(lbs)) return w;
   return `${Math.round(lbs * 0.453592)} kg`;
 }
+
+const fmtPct = (v: number | undefined | null) => (v != null && v !== 0) ? (v * 100).toFixed(1) + "%" : "-";
 
 // パーセンタイル・レーダー・ワッフルを「Playoffs / Regular Season」の期間別グループで表示する
 function VisualGroup({
@@ -131,7 +133,7 @@ function VisualGroup({
       {pctRows && (
         <div className={`grid gap-6 ${usageMap ? "lg:grid-cols-2" : ""}`}>
           {usageMap && (
-            <PlayerUsageMap playerId={usageMap.playerId} team={usageMap.team} season={season} minGp={MIN_GP} context={title} frame={frame} />
+            <PlayerUsageMap playerId={usageMap.playerId} team={usageMap.team} season={season} minGp={rsMinGp(season)} context={title} frame={frame} />
           )}
           <Card>
             <CardHeader>
@@ -271,6 +273,7 @@ function VisualGroup({
 // 指定シーズンに RS か PO の成績がある選手ID（generateStaticParams 用）
 // RS vs PO: 同じ選手の「リーグ内の位置」を並べる。生の数値は出場時間と相手の強さで必ずずれるので比べない
 function CompareGroup({
+  minGp,
   poGp,
   pctRows,
   poPctRows,
@@ -285,6 +288,7 @@ function CompareGroup({
   motion,
   poMotion,
 }: {
+  minGp: number;
   poGp: number;
   pctRows: PercentileRow[];
   poPctRows: PercentileRow[];
@@ -311,7 +315,7 @@ function CompareGroup({
     <section className="space-y-4">
       <h2 className="text-lg font-semibold">RS vs PO</h2>
       <p className="text-xs text-muted-foreground">
-        値はいずれもリーグ内の位置（100が最上位）。RS はGP{MIN_GP}以上の選手内、PO はGP{PO_MIN_GP}以上のPO出場選手内で、母集団が違う。
+        値はいずれもリーグ内の位置（100が最上位）。RS はGP{minGp}以上の選手内、PO はGP{PO_MIN_GP}以上のPO出場選手内で、母集団が違う。
         この選手の PO は{poGp}試合{poGp < 8 ? "（試合数が少なく値は荒れやすい）" : ""}。
       </p>
       <Card>
@@ -390,22 +394,40 @@ function CompareGroup({
   );
 }
 
-export function playerIdsOf(season: string): number[] {
-  return [...new Set([...getPlayerPerGame({ season }), ...getPlayoffPlayerPerGame(season)].map((p) => p.playerId))];
+// どの季かに RS 成績がある全選手ID。選手ページは選手1人＝1ページで、季ごとの URL は持たない（plan.md §13-10）。
+// ponytail: ページは RS 行を前提に組む（見出し・チーム・図）ので、生成対象も RS に揃える。PO にしか成績が無い選手は
+// 対象外（2025-26 には居ない。Codex レビュー 2026-10-01 指摘: PO も数えると生成されるのに 404 になる）。
+// 出たら buildSeason を PO 行だけでも組めるようにする
+export function allPlayerIds(): number[] {
+  return [...new Set(allSeasons().flatMap((season) => getPlayerPerGame({ season }).map((p) => p.playerId)))];
 }
 
-// シーズンはパス区分（/players/[id] = 現季、/players/[id]/2025-26 = 過去季）。page.tsx と [season]/page.tsx から呼ぶ（plan.md §12-11）
-export async function renderPlayer(playerId: string, season: string) {
+// 選手ページの現在の所属チーム（見出し・メタデータ共通）。チームページのロスターと同じ currentTeam() だけで決める
+// （名簿が空のときだけ別の決め方をすると、選手ページとロスターが食い違う。Codex レビュー 2026-10-01）
+export function currentTeamOf(playerId: number, fallback: string | null): string | null {
+  return currentTeam(rosterTeamMap(), playerId, fallback);
+}
+
+// 成績（RS）のある最新の季とその行。見出し・メタデータ・OG 画像が同じ季を指すように共通化
+export function latestSeasonOf(playerId: number) {
+  for (const season of allSeasons()) {
+    const rows = getPlayerPerGame({ season });
+    const pg = rows.find((p) => p.playerId === playerId && p.team !== "TOT") ?? rows.find((p) => p.playerId === playerId);
+    if (pg) return { season, pg };
+  }
+  return null;
+}
+
+// 1シーズン分の集計と図表（RS｜PO｜比較タブ＋Advanced Stats）。その季に RS 成績が無い選手は null
+function buildSeason(playerIdNum: number, season: string, nameJa: string | undefined) {
   const ctx = { season };
-  const playerIdNum = parseInt(playerId, 10);
-  if (isNaN(playerIdNum)) notFound();
-  const nameJa = playerNameJa(playerIdNum);
+  // RS の GP 下限。現季の序盤だけ下がる（リーグ最多GPの半分・最低5。plan.md §12-4）
+  const minGp = rsMinGp(season);
 
   const allPerGame = getPlayerPerGame(ctx);
   const allAdvanced = getPlayerAdvanced(ctx);
   const allPoPerGame = getPlayoffPlayerPerGame(season);
   const allPoAdvanced = getPlayoffPlayerAdvanced(season);
-  const profile = getPlayerProfile(playerIdNum, season);
 
   const pg = allPerGame.find((p) => p.playerId === playerIdNum && p.team !== "TOT")
     || allPerGame.find((p) => p.playerId === playerIdNum);
@@ -416,11 +438,7 @@ export async function renderPlayer(playerId: string, season: string) {
   const poAdv = allPoAdvanced.find((p) => p.playerId === playerIdNum && p.team !== "TOT")
     || allPoAdvanced.find((p) => p.playerId === playerIdNum);
 
-  if (!pg) notFound();
-
-  const teamInfo = getTeamInfo(pg.team);
-
-  const fmtPct = (v: number | undefined | null) => (v != null && v !== 0) ? (v * 100).toFixed(1) + "%" : "-";
+  if (!pg) return null;
 
   // リーグ内パーセンタイル（母集団: 1選手1行。トレード選手はTOT行=フルシーズンを採用）
   // GP下限はRS=20/82試合、PO=4試合（1シリーズ弱）で母集団を回転選手に絞る（player-types.tsと共通）
@@ -457,8 +475,8 @@ export async function renderPlayer(playerId: string, season: string) {
 
   const pgFull = allPerGame.find((p) => p.playerId === playerIdNum && p.team === "TOT") ?? pg;
   const advFull = allAdvanced.find((p) => p.playerId === playerIdNum && p.team === "TOT") ?? adv;
-  const pctRows = pgFull.gp >= MIN_GP
-    ? buildPctRows(pgFull, advFull, dedupe(allPerGame, MIN_GP), dedupe(allAdvanced, MIN_GP))
+  const pctRows = pgFull.gp >= minGp
+    ? buildPctRows(pgFull, advFull, dedupe(allPerGame, minGp), dedupe(allAdvanced, minGp))
     : null;
   const poPctRows = poEligible
     ? buildPctRows(poPg, poAdv, dedupe(allPoPerGame, PO_MIN_GP), dedupe(allPoAdvanced, PO_MIN_GP))
@@ -518,7 +536,7 @@ export async function renderPlayer(playerId: string, season: string) {
       pct: percentileOf(pool.map(get), get(row)),
     }));
   };
-  const hustleItems = buildHustle(getPlayerHustle(ctx), MIN_GP);
+  const hustleItems = buildHustle(getPlayerHustle(ctx), minGp);
   const poHustleItems = poEligible ? buildHustle(getPlayoffPlayerHustle(season), PO_MIN_GP) : null;
 
   // 運動量（Phase 4・RS/PO）。スコアは走行距離/試合と平均速度のパーセンタイル平均。
@@ -547,7 +565,7 @@ export async function renderPlayer(playerId: string, season: string) {
       score: (distPct + speedPct) / 2,
     };
   };
-  const motion = buildMotion(getPlayerSpeed(ctx), getPlayerPossessions(ctx), MIN_GP);
+  const motion = buildMotion(getPlayerSpeed(ctx), getPlayerPossessions(ctx), minGp);
   const poMotion = poEligible ? buildMotion(getPlayoffPlayerSpeed(season), getPlayoffPlayerPossessions(season), PO_MIN_GP) : null;
 
   // 似たタイプの選手: スタッツのユークリッド距離が近い3名へのリンク
@@ -563,121 +581,8 @@ export async function renderPlayer(playerId: string, season: string) {
   };
   const poFrame = { ...frame, ...(isCurrent ? { asOf: getPoLastGameDate() } : {}) };
 
-
-  // シーズン積み重ね表（新しい順）。各シーズンとも RS 行→PO 行の順（図のタブの既定 RS と揃える。plan.md §12-3 の「進行中フェーズを上」は取りやめ）
-  const findRow = <T extends { playerId: number; team: string }>(all: T[]) =>
-    all.find((p) => p.playerId === playerIdNum && p.team !== "TOT") ?? all.find((p) => p.playerId === playerIdNum);
-  // ponytail: 過去シーズン分はリクエストごとにCSVを読み直す（1シーズン=2ファイル）。アーカイブが5季を超えたらローダー側でメモ化する
-  const statRows = allSeasons().flatMap((s) => {
-    const rs = findRow(s === season ? allPerGame : getPlayerPerGame({ season: s }));
-    const po = findRow(s === season ? allPoPerGame : getPlayoffPlayerPerGame(s));
-    const rows = [
-      ...(rs ? [{ key: `${s}-rs`, season: s, label: `${s} Regular Season`, row: rs, accent: false }] : []),
-      ...(po ? [{ key: `${s}-po`, season: s, label: `${s} Playoffs`, row: po, accent: true }] : []),
-    ];
-    return rows;
-  });
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <SeasonTitle season={season} />
-      <div className="flex items-center gap-4">
-        <div
-          className="h-16 w-16 rounded-xl flex items-center justify-center text-white text-xl font-bold"
-          style={{ backgroundColor: getTeamColor(pg.team) }}
-        >
-          {pg.player.split(" ").map((n) => n[0]).join("").slice(0, 2)}
-        </div>
-        <div>
-          {/* 日本語名主・英語名従（plan §13-1 段階2）。対応表に無い選手は英語名のみ */}
-          <h1 className="text-3xl font-bold tracking-tight">{nameJa ?? pg.player}</h1>
-          {nameJa && <p className="text-sm text-muted-foreground">{pg.player}</p>}
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Link href={`/teams/${pg.team}`} className="hover:underline flex items-center gap-1.5">
-              <div className="h-3 w-3 rounded-full" style={{ backgroundColor: getTeamColor(pg.team) }} />
-              {teamNameJa(pg.team) ?? teamInfo?.name ?? pg.team}
-            </Link>
-            <span>·</span>
-            <span>Age {pg.age}</span>
-          </div>
-          {profile && (
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground flex-wrap">
-              {[
-                profile.jersey ? `#${profile.jersey}` : null,
-                profile.position ? profile.position.split("-")[0] : null,
-                profile.height ? fmtHeight(profile.height) : null,
-                profile.weight ? fmtWeight(profile.weight) : null,
-                profile.birthdate ? profile.birthdate : null,
-                profile.fromYear > 0 ? `NBA ${profile.fromYear}年〜` : null,
-              ]
-                .filter(Boolean)
-                .map((item, idx, arr) => (
-                  <span key={item} className="flex items-center gap-1.5">
-                    {item}
-                    {idx < arr.length - 1 && <span>·</span>}
-                  </span>
-                ))}
-            </div>
-          )}
-        </div>
-        <div className="ml-auto self-start flex items-center gap-2">
-        <SeasonSwitch season={season} basePath={`/players/${playerIdNum}`} />
-        {similarIds && similarIds.length > 0 && (
-          <Link
-            href={`/compare?ids=${[playerIdNum, ...similarIds].join(",")}`}
-            className="inline-flex h-7 items-center gap-1 rounded-md border border-border bg-background px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-          >
-            似たタイプの選手 ↗
-          </Link>
-        )}
-        </div>
-      </div>
-
-      {/* Stats */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <CardTitle>Stats</CardTitle>
-            {poPg && <Badge className="bg-orange-500 text-white border-0 text-xs">Playoffs</Badge>}
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b">
-                <tr>
-                  <th className="text-left py-2 pr-4 font-medium text-muted-foreground w-32">シーズン</th>
-                  {["GP", "PTS", "REB", "AST", "STL", "BLK", "TOV", "FG%", "3P%", "FT%", "MIN"].map((h) => (
-                    <th key={h} className="py-2 px-3 text-center font-medium text-muted-foreground">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {statRows.map((r) => (
-                  <tr key={r.key} className={`border-b last:border-0 ${r.season === season ? "" : "opacity-60"}`}>
-                    <td className={`py-2 pr-4 whitespace-nowrap ${r.accent ? "font-semibold text-orange-400" : "font-medium text-muted-foreground"}`}>{r.label}</td>
-                    <td className="py-2 px-3 text-center font-mono">{r.row.gp}</td>
-                    <td className="py-2 px-3 text-center font-mono font-semibold">{r.row.pts.toFixed(1)}</td>
-                    <td className="py-2 px-3 text-center font-mono">{r.row.trb.toFixed(1)}</td>
-                    <td className="py-2 px-3 text-center font-mono">{r.row.ast.toFixed(1)}</td>
-                    <td className="py-2 px-3 text-center font-mono">{r.row.stl.toFixed(1)}</td>
-                    <td className="py-2 px-3 text-center font-mono">{r.row.blk.toFixed(1)}</td>
-                    <td className="py-2 px-3 text-center font-mono">{r.row.tov.toFixed(1)}</td>
-                    <td className="py-2 px-3 text-center font-mono">{fmtPct(r.row.fgPct)}</td>
-                    <td className="py-2 px-3 text-center font-mono">{fmtPct(r.row.threePtPct)}</td>
-                    <td className="py-2 px-3 text-center font-mono">{fmtPct(r.row.ftPct)}</td>
-                    <td className="py-2 px-3 text-center font-mono">{r.row.mpg.toFixed(1)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ビジュアル: トップ・チーム詳細と同じ RS｜PO タブ（既定 RS）。PO の図が出せない（GP不足・未出場）ときはタブなしで RS だけ */}
-      {poEligible ? (
+  // ビジュアル: トップ・チーム詳細と同じ RS｜PO タブ（既定 RS）。PO の図が出せない（GP不足・未出場）ときはタブなしで RS だけ
+  const visuals = poEligible ? (
         <Tabs defaultValue="rs" className="gap-6">
           <PhaseTabsList compare={canCompare} />
           <TabsContent value="rs">
@@ -685,7 +590,7 @@ export async function renderPlayer(playerId: string, season: string) {
               frame={frame}
               title={`Regular Season ${season}`}
               season={season}
-              pctNote={`GP${MIN_GP}以上の選手内での位置（100が最上位）`}
+              pctNote={`GP${minGp}以上の選手内での位置（100が最上位）`}
               pctRows={pctRows}
               usageMap={pctRows ? { playerId: playerIdNum, team: pg.team } : null}
               radarItems={radarItems}
@@ -725,6 +630,7 @@ export async function renderPlayer(playerId: string, season: string) {
           {canCompare && (
             <TabsContent value="compare">
               <CompareGroup
+                minGp={minGp}
                 poGp={poPg!.gp}
                 pctRows={pctRows!}
                 poPctRows={poPctRows!}
@@ -747,7 +653,7 @@ export async function renderPlayer(playerId: string, season: string) {
           frame={frame}
           title={`Regular Season ${season}`}
           season={season}
-          pctNote={`GP${MIN_GP}以上の選手内での位置（100が最上位）`}
+          pctNote={`GP${minGp}以上の選手内での位置（100が最上位）`}
           pctRows={pctRows}
           usageMap={pctRows ? { playerId: playerIdNum, team: pg.team } : null}
           radarItems={radarItems}
@@ -762,10 +668,9 @@ export async function renderPlayer(playerId: string, season: string) {
           badges={rsBadges}
           swing={null}
         />
-      )}
+      );
 
-      {/* Advanced Stats */}
-      {(adv || poAdv) && (
+  const advanced = (adv || poAdv) && (
         <Card>
           <CardHeader>
             <CardTitle>Advanced Stats</CardTitle>
@@ -819,6 +724,226 @@ export async function renderPlayer(playerId: string, season: string) {
             )}
           </CardContent>
         </Card>
+      );
+
+  return {
+    season,
+    pg,
+    poPg,
+    similarIds,
+    node: (
+      <div className="space-y-6">
+        {visuals}
+        {advanced}
+      </div>
+    ),
+  };
+}
+
+// 選手主体の1ページ（plan.md §13-10）。見出しと既定表示は常に今季で、図表は季のタブで切り替える。
+// 今季まだ出場が無い選手・リーグを去った選手も、このページが残る（季ごとの URL にすると、繰越直後に
+// /players/[id] の大半が 404 になる）。その場合の今季は成績0の行と「出場なし」で、図は出さない。過去季の図は
+// その季のタブを選んだときだけ出す（入口は過去季の出場が無いルーキー等と同じにする。2026-10-01 ふくたろう指示）
+// ponytail: 過去季の図表は RSC ペイロードに全季ぶん載る（HTML 本体は表示中のタブだけ）。2季ぶんの実測で
+// 1季あたり中央値約90KB・最大約135KB 増（2026-10-01。中央値 338KB・最大 705KB）。Googlebot が読む HTML の上限は
+// 非圧縮 2MB なので、試投の多い選手は過去季10前後で届く。そのときはショットチャートの点を短いパス
+// （M x,y h0＋丸い線端）にするか、過去季を JSON で遅延読み込みにする
+export async function renderPlayer(playerId: string) {
+  const playerIdNum = parseInt(playerId, 10);
+  if (isNaN(playerIdNum)) notFound();
+  const nameJa = playerNameJa(playerIdNum);
+
+  const views = allSeasons()
+    .map((s) => buildSeason(playerIdNum, s, nameJa))
+    .filter((v): v is NonNullable<typeof v> => v != null);
+  if (views.length === 0) notFound();
+  const cur = currentSeason();
+  // views[0] は成績のある最新の季。今季に出場があれば今季、無ければ過去季（チーム・名前の表示に使う）
+  const hasCurrent = views[0].season === cur;
+  const { season, pg, poPg, similarIds } = views[0];
+  // プロフィールは選手単位の情報なので、現季（累積ファイル）→過去季スナップショットの順で最初に見つかったものを使う
+  const profile = allSeasons().map((s) => getPlayerProfile(playerIdNum, s)).find((p) => p != null);
+  // 所属は名簿（出場が無くても分かる）から出す。成績行のチームは最後に出場したチームなので、移籍して未出場の
+  // 選手が旧チームのままになり、チームのロスターと食い違う（2026-10-01 ふくたろう指摘）。名簿に居なければ
+  // 「所属なし（最後に成績のある季 そのチーム）」
+  const team = currentTeamOf(playerIdNum, hasCurrent ? pg.team : null) ?? null;
+  const teamInfo = team ? getTeamInfo(team) : undefined;
+
+  // スタッツ表: 最新の季を表示し、それより前の季は畳む。各季とも RS 行→PO 行の順（図のタブの既定 RS と揃える）。
+  // キャリア通算行は持たない（plan.md §13-10 作業指示3）
+  const rowsOf = (v: (typeof views)[number]) => [
+    { key: `${v.season}-rs`, label: `${v.season} Regular Season`, row: v.pg, accent: false },
+    ...(v.poPg ? [{ key: `${v.season}-po`, label: `${v.season} Playoffs`, row: v.poPg, accent: true }] : []),
+  ];
+  const pastRows = (hasCurrent ? views.slice(1) : views).flatMap(rowsOf);
+  // チーム列: その季に出場したチーム。季ごとに所属が違うことが表の中で分かるようにする（2026-10-01 指示）
+  const teamCell = (abbr: string | null) => (
+    <td className="py-2 px-3 whitespace-nowrap font-mono">
+      {abbr ? (
+        <span className="inline-flex items-center gap-1.5" title={teamNameJa(abbr) ?? abbr}>
+          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: getTeamColor(abbr) }} />
+          {abbr}
+        </span>
+      ) : "-"}
+    </td>
+  );
+  const statRow = (r: ReturnType<typeof rowsOf>[number]) => (
+    <tr key={r.key} className="border-b last:border-0">
+      <td className={`py-2 pr-4 whitespace-nowrap ${r.accent ? "font-semibold text-orange-400" : "font-medium text-muted-foreground"}`}>{r.label}</td>
+      {teamCell(r.row.team)}
+      <td className="py-2 px-3 text-center font-mono">{r.row.gp}</td>
+      <td className="py-2 px-3 text-center font-mono font-semibold">{r.row.pts.toFixed(1)}</td>
+      <td className="py-2 px-3 text-center font-mono">{r.row.trb.toFixed(1)}</td>
+      <td className="py-2 px-3 text-center font-mono">{r.row.ast.toFixed(1)}</td>
+      <td className="py-2 px-3 text-center font-mono">{r.row.stl.toFixed(1)}</td>
+      <td className="py-2 px-3 text-center font-mono">{r.row.blk.toFixed(1)}</td>
+      <td className="py-2 px-3 text-center font-mono">{r.row.tov.toFixed(1)}</td>
+      <td className="py-2 px-3 text-center font-mono">{fmtPct(r.row.fgPct)}</td>
+      <td className="py-2 px-3 text-center font-mono">{fmtPct(r.row.threePtPct)}</td>
+      <td className="py-2 px-3 text-center font-mono">{fmtPct(r.row.ftPct)}</td>
+      <td className="py-2 px-3 text-center font-mono">{r.row.mpg.toFixed(1)}</td>
+    </tr>
+  );
+
+  // 図表のタブ: 今季の出場が無ければ、先頭に「出場なし」の今季を置く
+  const tabs = [
+    ...(hasCurrent ? [] : [{
+      season: cur,
+      node: (
+        <p className="rounded-xl border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
+          {cur} は出場なし（図表はありません）
+        </p>
+      ),
+    }]),
+    ...views.map((v) => ({ season: v.season, node: v.node })),
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <SeasonTitle season={cur} />
+      <div className="flex items-center gap-4">
+        <div
+          className="h-16 w-16 rounded-xl flex items-center justify-center text-white text-xl font-bold"
+          style={{ backgroundColor: getTeamColor(team ?? pg.team) }}
+        >
+          {pg.player.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+        </div>
+        <div>
+          {/* 日本語名主・英語名従（plan §13-1 段階2）。対応表に無い選手は英語名のみ */}
+          <h1 className="text-3xl font-bold tracking-tight">{nameJa ?? pg.player}</h1>
+          {nameJa && <p className="text-sm text-muted-foreground">{pg.player}</p>}
+          <div className="flex items-center gap-2 text-muted-foreground">
+            {team ? (
+              <Link href={`/teams/${team}`} className="hover:underline flex items-center gap-1.5">
+                <div className="h-3 w-3 rounded-full" style={{ backgroundColor: getTeamColor(team) }} />
+                {teamNameJa(team) ?? teamInfo?.name ?? team}
+              </Link>
+            ) : (
+              <span>所属なし（{season} {teamNameJa(pg.team) ?? pg.team}）</span>
+            )}
+            {/* 年齢は成績行の値なので、今季の行があるときだけ出す（過去季の年齢を今の年齢として出さない） */}
+            {hasCurrent && (
+              <>
+                <span>·</span>
+                <span>Age {pg.age}</span>
+              </>
+            )}
+          </div>
+          {profile && (
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground flex-wrap">
+              {[
+                profile.jersey ? `#${profile.jersey}` : null,
+                profile.position ? profile.position.split("-")[0] : null,
+                profile.height ? fmtHeight(profile.height) : null,
+                profile.weight ? fmtWeight(profile.weight) : null,
+                profile.birthdate ? profile.birthdate : null,
+                profile.fromYear > 0 ? `NBA ${profile.fromYear}年〜` : null,
+              ]
+                .filter(Boolean)
+                .map((item, idx, arr) => (
+                  <span key={item} className="flex items-center gap-1.5">
+                    {item}
+                    {idx < arr.length - 1 && <span>·</span>}
+                  </span>
+                ))}
+            </div>
+          )}
+        </div>
+        {/* 比較ページは現季のデータだけを持つので、最新の成績が過去季の選手には出さない */}
+        {season === currentSeason() && similarIds && similarIds.length > 0 && (
+          <Link
+            href={`/compare?ids=${[playerIdNum, ...similarIds].join(",")}`}
+            className="ml-auto self-start inline-flex h-7 items-center gap-1 rounded-md border border-border bg-background px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          >
+            似たタイプの選手 ↗
+          </Link>
+        )}
+      </div>
+
+      {/* Stats */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <CardTitle>Stats</CardTitle>
+            {hasCurrent && poPg && <Badge className="bg-orange-500 text-white border-0 text-xs">Playoffs</Badge>}
+          </div>
+        </CardHeader>
+        {/* 過去季の行はチェックボックス1つで開閉する（:has() で tbody を出し分け。JS なし・列幅は1つの表なので揃う） */}
+        <CardContent className="group/stats">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="border-b">
+                <tr>
+                  <th className="text-left py-2 pr-4 font-medium text-muted-foreground w-32">シーズン</th>
+                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">チーム</th>
+                  {["GP", "PTS", "REB", "AST", "STL", "BLK", "TOV", "FG%", "3P%", "FT%", "MIN"].map((h) => (
+                    <th key={h} className="py-2 px-3 text-center font-medium text-muted-foreground">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {hasCurrent ? rowsOf(views[0]).map(statRow) : (
+                  <tr className="border-b last:border-0">
+                    <td className="py-2 pr-4 whitespace-nowrap font-medium text-muted-foreground">{cur} Regular Season</td>
+                    {teamCell(team)}
+                    {["0", "0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "-", "-", "-", "0.0"].map((v, i) => (
+                      <td key={i} className={`py-2 px-3 text-center font-mono ${i === 1 ? "font-semibold" : ""}`}>{v}</td>
+                    ))}
+                  </tr>
+                )}
+              </tbody>
+              {pastRows.length > 0 && (
+                <tbody className="hidden border-t group-has-[:checked]/stats:table-row-group">{pastRows.map(statRow)}</tbody>
+              )}
+            </table>
+          </div>
+          {pastRows.length > 0 && (
+            <label className="mt-3 inline-flex cursor-pointer items-center gap-1 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring/50">
+              <input type="checkbox" className="peer sr-only" />
+              <ChevronRight className="size-3.5 transition-transform peer-checked:rotate-90" aria-hidden />
+              過去シーズン
+            </label>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* 図表と Advanced Stats: 季のタブで切り替える（既定は今季）。季が1つだけならタブなし */}
+      {tabs.length > 1 ? (
+        <Tabs defaultValue={tabs[0].season} className="gap-6">
+          <TabsList aria-label="シーズン">
+            {tabs.map((t) => (
+              <TabsTrigger key={t.season} value={t.season} className="px-3">{t.season}</TabsTrigger>
+            ))}
+          </TabsList>
+          {tabs.map((t) => (
+            // 今季出場なしの選手は、既定のパネルが「出場なし」の1行だけになる。過去季の図を表示しないまま HTML に
+            // 残して、ページ本体が空に近くならないようにする（keepMounted。見た目は変わらない。2026-10-01 決定）
+            <TabsContent key={t.season} value={t.season} keepMounted={!hasCurrent}>{t.node}</TabsContent>
+          ))}
+        </Tabs>
+      ) : (
+        tabs[0].node
       )}
     </div>
   );

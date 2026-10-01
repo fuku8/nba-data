@@ -33,7 +33,7 @@ const SECTIONS: MetricSection[] = [
     title: "League Percentile（リーグ内パーセンタイル）",
     where: "選手ページ",
     what: "各スタッツが「リーグの中でどの位置か」を0〜100で表したもの。100が最上位。数字の大小を覚えていなくても、バーの位置と色（青=低い・赤=高い）だけで選手の強み・弱みが分かります。",
-    how: "母集団はレギュラーシーズンがGP20試合以上、プレーオフがGP4試合以上の選手。同値は半分ずつ数えるmid-rank方式。TOV（ターンオーバー）だけは「少なさ」に反転しているので、右にあるほどミスが少ない選手です。",
+    how: "母集団はレギュラーシーズンがGP20試合以上（シーズン序盤はリーグ最多出場試合数の半分・最低5試合）、プレーオフがGP4試合以上の選手。同値は半分ずつ数えるmid-rank方式。TOV（ターンオーバー）だけは「少なさ」に反転しているので、右にあるほどミスが少ない選手です。",
     read: "全部門が右に寄る選手はオールラウンダー。1部門だけ突出する選手はスペシャリスト。プレーオフは出場者全員が主力級のため、レギュラーシーズンより値が下がるのが普通です。",
   },
   {
@@ -159,7 +159,9 @@ const SECTIONS: MetricSection[] = [
 ];
 
 export default function MetricsPage() {
-  // 配布 CSV の一覧（ビルド時に data/ 直下を読む。prebuild が同じ集合を public/data/ へコピーするので常に一致。
+  // 配布 CSV の一覧（ビルド時に data/ 直下を読む。package.json の build が同じ集合を public/data/ へコピーするので常に一致。
+  // コピーは prebuild ではなく build 本体に置く: npm の前後スクリプトが走らない環境（ignore-scripts）だとコピーされず、
+  // 配布リンクが全部 404 になる（2026-10-01 に本番で確認）。
   // boxscores/・shots/ 等のサブディレクトリは対象外 — 集計表は直下の CSV に揃っている）
   const dataDir = path.join(process.cwd(), "data");
   const csvFiles = fs

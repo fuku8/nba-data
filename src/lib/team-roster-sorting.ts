@@ -31,6 +31,7 @@ export interface TeamRosterRow {
   defRating: number | null;
   netRating: number | null;
   tsPct: number | null;
+  noPage?: boolean; // 選手ページが無い（どの季にも成績が無い）選手。名前をリンクにしない
 }
 
 export const DEFAULT_TEAM_ROSTER_SORT: SortConfig = {

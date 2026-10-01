@@ -1,12 +1,12 @@
 // 似たタイプの選手
 //
-// 母集団: サイト内の相対評価（パーセンタイル・タイプ判定）と同じ基準（team!=="TOT" && gp>=MIN_GP）。
+// 母集団: サイト内の相対評価（パーセンタイル・タイプ判定）と同じ基準（team!=="TOT" && gp>=rsMinGp(season)）。
 // 試合数が少なすぎる選手はper-gameスタッツのノイズが大きく、数値の偶然一致で類似に出てしまうため除外する。
 // 特徴量をこの母集団のz-scoreに標準化し、ユークリッド距離が最小の選手を返す。
 
 import { getPlayerPerGame, getPlayerAdvanced } from "./players";
 import type { DataCtx } from "./csv-utils";
-import { MIN_GP } from "./player-types";
+import { compareListMinGp, rsMinGp } from "./min-gp";
 import type { PlayerPerGame, PlayerAdvanced } from "@/lib/types";
 
 type FeatureGetter = (pg: PlayerPerGame, adv: PlayerAdvanced | undefined) => number | null;
@@ -54,15 +54,17 @@ function zVector(pg: PlayerPerGame, adv: PlayerAdvanced | undefined, stats: { me
 export function getSimilarPlayers(playerId: number, count = 3, ctx: DataCtx = {}): number[] | null {
   const allPerGame = getPlayerPerGame(ctx);
   const allAdvanced = getPlayerAdvanced(ctx);
-  const population = allPerGame.filter((p) => p.team !== "TOT" && p.gp >= MIN_GP);
+  const minGp = rsMinGp(ctx.season);
+  const population = allPerGame.filter((p) => p.team !== "TOT" && p.gp >= minGp);
   if (population.length === 0) return null;
 
   const targetPg = pickRow(allPerGame, playerId);
-  if (!targetPg) return null;
+  // 比較ページの検索対象に居ない選手には出さない（リンク先で本人が選択から落ち、候補だけが並ぶ。Codex レビュー 2026-10-01）
+  if (!targetPg || targetPg.gp < compareListMinGp(ctx.season)) return null;
   const targetAdv = pickRow(allAdvanced, playerId);
 
   const advById = new Map(
-    allAdvanced.filter((p) => p.team !== "TOT" && p.gp >= MIN_GP).map((p) => [p.playerId, p])
+    allAdvanced.filter((p) => p.team !== "TOT" && p.gp >= minGp).map((p) => [p.playerId, p])
   );
 
   const stats = FEATURES.map((get) =>

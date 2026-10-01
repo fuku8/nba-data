@@ -161,14 +161,18 @@ export function TeamRosterTable({ rows }: { rows: TeamRosterRow[] }) {
         </TableHeader>
         <TableBody>
           {sortedRows.map((row) => (
-            <TableRow key={row.player} className="hover:bg-accent/50">
+            <TableRow key={row.playerId} className="hover:bg-accent/50">
               <TableCell className={`${STICKY} ${NAME_WRAP}`}>
-                <Link
-                  href={`/players/${row.playerId}`}
-                  className="block hover:underline font-medium"
-                >
-                  <SegmentedName name={row.player} />
-                </Link>
+                {row.noPage ? (
+                  <span className="block font-medium"><SegmentedName name={row.player} /></span>
+                ) : (
+                  <Link
+                    href={`/players/${row.playerId}`}
+                    className="block hover:underline font-medium"
+                  >
+                    <SegmentedName name={row.player} />
+                  </Link>
+                )}
               </TableCell>
               <TableCell className="text-right font-mono">{row.gp}</TableCell>
               <TableCell className="text-right font-mono">{row.mpg.toFixed(1)}</TableCell>
@@ -178,10 +182,10 @@ export function TeamRosterTable({ rows }: { rows: TeamRosterRow[] }) {
               <TableCell className="text-right font-mono">{row.stl.toFixed(1)}</TableCell>
               <TableCell className="text-right font-mono">{row.blk.toFixed(1)}</TableCell>
               <TableCell className="text-right font-mono">
-                {row.fgPct != null ? `${(row.fgPct * 100).toFixed(1)}%` : "-"}
+                {row.gp > 0 && row.fgPct != null ? `${(row.fgPct * 100).toFixed(1)}%` : "-"}
               </TableCell>
               <TableCell className="text-right font-mono">
-                {row.threePtPct != null ? `${(row.threePtPct * 100).toFixed(1)}%` : "-"}
+                {row.gp > 0 && row.threePtPct != null ? `${(row.threePtPct * 100).toFixed(1)}%` : "-"}
               </TableCell>
               <TableCell className="text-right font-mono">
                 {row.offRating?.toFixed(1) ?? "-"}

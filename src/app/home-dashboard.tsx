@@ -11,6 +11,7 @@ import { teamNameJa, withFullNames } from "@/lib/data/names-ja";
 import { isPlayoffDataAvailable, getPlayoffSeries, getPlayoffPlayerPerGame, getPlayoffBracket } from "@/lib/data/playoffs";
 import { PlayoffsTopClient, StatLeaders } from "@/app/playoffs/client";
 import { currentSeason } from "@/lib/season";
+import { leaderMinGp } from "@/lib/data/min-gp";
 import type { TeamStanding } from "@/lib/types";
 
 // 東西横並びの順位表（スマホでも2列。略称＋勝敗＋勝率だけに絞って1列150px程度に収める）
@@ -46,10 +47,9 @@ function ConferenceTable({ title, teams }: { title: string; teams: TeamStanding[
 function RegularSeason({ season }: { season: string }) {
   const standings = getStandings();
   const games = getGames();
-  // リーダーの母集団: 序盤は誰も30試合に達しないため「最多消化チームの半分」を下限にする
-  // （30試合に届いたら以後は30で固定。bleague-data minGp と同型の暫定ゲート）
+  // リーダーの母集団: 序盤は誰も30試合に達しないため「最多出場の半分」を下限にする（/leaders と共通。min-gp.ts）
   const allPlayers = withFullNames(getPlayerPerGame().filter((p) => p.team !== "TOT"));
-  const minGp = Math.min(30, Math.max(1, Math.floor(Math.max(0, ...standings.map((s) => s.wins + s.losses)) / 2)));
+  const minGp = leaderMinGp();
   const players = allPlayers.filter((p) => p.gp >= minGp);
   const conf = (c: TeamStanding["conference"]) =>
     standings.filter((s) => s.conference === c).sort((a, b) => a.playoffRank - b.playoffRank || b.winPct - a.winPct);

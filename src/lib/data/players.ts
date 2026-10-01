@@ -162,3 +162,20 @@ export function getAllPlayerProfiles(season?: string): PlayerProfile[] {
 export function getPlayerProfile(playerId: number, season?: string): PlayerProfile | undefined {
   return getAllPlayerProfiles(season).find((p) => p.playerId === playerId);
 }
+
+// 現在の所属チーム（名簿。data/player_teams.csv・現季のみ）。成績行のチームは「最後に出場したチーム」なので、
+// 移籍して未出場の選手は名簿でしか新しい所属が分からない。ファイルが無い間は空（呼び出し側は成績行に戻る）
+export function getRoster(): { playerId: number; player: string; team: string }[] {
+  return csvToObjects(readCsvFile("player_teams.csv"))
+    .filter((d) => d["TEAM_ABBREVIATION"])
+    .map((d) => ({ playerId: num(d["PLAYER_ID"]), player: d["PLAYER_NAME"] || "", team: d["TEAM_ABBREVIATION"] }));
+}
+
+// 現在の所属チーム＝名簿のチーム。名簿に居ない選手は、今季の出場があっても「所属なし」（null）。
+// ロスター表は NBA の名簿そのまま、という1つの決まりにする（2026-10-01 ふくたろう決定。出場後に解雇された選手を
+// 最後のチームに残す案は不採用）。選手ページの見出しとチームページのロスターが同じこの関数を使う。
+// 名簿が空（ファイルが無い）のときだけ fallback（成績行のチーム）を返す
+export function currentTeam(roster: Map<number, string>, playerId: number, fallback: string | null): string | null {
+  return roster.size === 0 ? fallback : roster.get(playerId) ?? null;
+}
+export const rosterTeamMap = () => new Map(getRoster().map((r) => [r.playerId, r.team]));

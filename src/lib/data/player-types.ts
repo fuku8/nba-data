@@ -8,6 +8,7 @@ import { readCsvFile, csvToObjects, num, dataStamp, type Phase } from "./csv-uti
 import { percentileOf } from "@/components/percentile-bars";
 import { versatilityScore } from "@/components/versatility-radar";
 import { getPlayerShots } from "./shots";
+import { MIN_GP, rsMinGp } from "./min-gp";
 
 export type Season = Phase; // 旧名。フェーズ（RS/PO）のこと。年度は season 引数で別に渡す
 
@@ -21,8 +22,9 @@ export interface PoSwing {
   delta: number; // TS%変化 − リーグ（対象プール）平均変化。単位は割合（0.09 = +9pt）
 }
 
-// RS/POの母集団を回転選手に絞るGP下限。選手ページ側のパーセンタイル母集団と共通
-export const MIN_GP = 20;
+// RS/POの母集団を回転選手に絞るGP下限。選手ページ側のパーセンタイル母集団と共通。
+// RS は現季の序盤だけ下がる（rsMinGp。min-gp.ts）
+export { MIN_GP, rsMinGp };
 export const PO_MIN_GP = 4;
 
 // 特徴キー: パーセンタイル化して使う
@@ -99,6 +101,7 @@ export function getPlayerTypes(phase: Phase, season?: string): Map<number, Typed
   const hit = cache.get(key);
   if (hit && hit.stamp === stamp) return hit.value;
 
+  const minGp = phase === "po" ? f.minGp : rsMinGp(season);
   const pg = loadCsv(f.pg, season);
   const adv = loadCsv(f.adv, season);
   const hustle = loadCsv(f.hustle, season);
@@ -107,7 +110,7 @@ export function getPlayerTypes(phase: Phase, season?: string): Map<number, Typed
   // 全データが揃うローテーション選手のみ
   const raw = new Map<number, Record<FeatKey, number>>();
   for (const [id, p] of pg) {
-    if (num(p["GP"]) < f.minGp) continue;
+    if (num(p["GP"]) < minGp) continue;
     const a = adv.get(id);
     const h = hustle.get(id);
     const ps = poss.get(id);

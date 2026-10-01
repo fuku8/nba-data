@@ -12,7 +12,7 @@
 
 - NBA API は開幕前の新シーズンを問い合わせると選手スタッツ・試合が 0 行で返る（順位表だけ 30 チーム 0-0）。2026-09-02 に `LeagueDashPlayerStats` / `LeagueGameFinder` の 2026-27 で実測。
 - 繰越の翌日 16:00 の日次取得で RS の CSV がヘッダーのみに上書きされ、開幕まで RS 各ページ（トップ・選手一覧・リーダーズ・チーム）は「<新季> Regular Season」見出しのまま空表になる。「開幕前」表示があるのは PO ページ（`/playoffs`・`/*/po`）だけ。
-- 現季の選手 URL `/players/<id>` は静的パラメータが空になり 404 になる（`/players/<id>/<旧季>` は残る）。
+- 選手ページは1人1ページ（`/players/<id>`・過去季はページ内のタブ）なので、繰越後も全選手のページが残る（2026-10-01 変更。それまでは現季に成績が無い選手の `/players/<id>` が 404 になり、`/players/<id>/<旧季>` だけが残る作りだった）。
 - 一方、繰越を遅らせて失うものは無い。日次取得は旧季を取り続けるだけで、確定済みの値は AGE（誕生日）と hustle の丸め以外は動かない。
 
 開幕日は毎年変わるので NBA 公式の schedule で確認する（例年 10 月下旬）。
@@ -34,10 +34,14 @@ cd ~/nba-data
 for f in data/*.csv; do cmp -s "$f" "data/2025-26/$(basename "$f")" || echo "DIFF: $f"; done
 diff -rq data/shots data/2025-26/shots && diff -rq data/boxscores data/2025-26/boxscores
 
-# 2. 差分があれば揃える。日次取得で AGE と hustle の小数桁が動くだけなので、
+# 2. 差分があれば揃える。日次取得で AGE と hustle の小数桁、日曜の取得で shots の並び順が動くだけなので、
 #    確定時点の値（スナップショット）を正とし、直下をスナップショットで戻す。
 #    16:00 の日次取得が走ると再びずれるので、2〜5 は同じ日の 16:00 前に終える。
+#    player_names_ja.csv・team_names_ja.csv・player_teams.csv（名簿＝現在の所属）はスナップショットに無い
+#    （季に依らず data/ 直下だけに置く）。rollover.sh はこの3つを比較しない。
+#    player_teams.csv は繰越後の最初の日次取得で新季の名簿に入れ替わる。
 cp data/2025-26/*.csv data/
+cp data/2025-26/shots/*.json data/shots/
 
 # 3. 繰越（確認プロンプトで y）
 scripts/rollover.sh 2025-26 2026-27
@@ -58,9 +62,11 @@ git push origin main   # SSH が使えない環境では HTTPS URL を明示
 |---|---|
 | `out/playoffs.html` | 「プレーオフ開幕前」 |
 | `out/index.html` | 見出しが「2026-27 Regular Season」 |
-| `out/players/203999/2025-26.html` | 2025-26 の RS が上・PO が下で出る |
+| `out/players/203999.html` | 今季未出場の選手でもページがあり、2025-26 の RS が上・PO が下で出る |
+| 今季出場のある選手の `out/players/<id>.html` | Stats 表は今季の行＋「過去シーズン」の畳み、図表は季のタブ（既定は今季） |
+| `out/playoffs/NYK-SAS.html` | 過去季（2025-26）のシリーズ詳細が残っている |
 | `out/games/0042500101.html` | 過去季（2025-26 PO）のボックススコアが残っている |
-| `out/og/players/2025-26/` | 過去季の選手 OG 画像がこのディレクトリに出る |
+| `out/og/players/` | 選手 OG 画像が1人1枚（582 件以上） |
 
 ### 翌日以降に確認すること
 
@@ -98,15 +104,15 @@ npm run build
 
 繰越後の状態を模擬してビルドしたとき、以下の 2 件でビルドが落ちた（2026-09-02・`38ea369` で修正済み）。同種の変更を入れるときに再発しやすいので残す。
 
-1. **動的ルートの `generateStaticParams` が空になると `output: "export"` はビルド失敗にする**（「missing generateStaticParams()」。`next/dist/build/index.js` の `prerenderedRoutes.length > 0` 判定）。`/games/[gameId]` は boxscore（PO のみ取得）から params を作るため RS 期間中に空になった。→ 現季＋過去季から探す（`findBoxScore` / `boxScoreGameIds`）。新しい `[param]` ルートを足すときは「現季のデータが無い期間に params が空にならないか」を必ず考える。`/teams/[teamId]` は固定 30 チーム、`/players/[...slug]` は過去季も列挙するので安全。
-2. **Route Handler は拡張子なしのファイルで書き出される**ため、`og/players/<id>` と `og/players/<id>/<season>` が同名衝突して EISDIR。→ 過去季は `/og/players/<season>/<id>` に逆順化。`page.tsx` は `.html` が付くので衝突しない。
+1. **動的ルートの `generateStaticParams` が空になると `output: "export"` はビルド失敗にする**（「missing generateStaticParams()」。`next/dist/build/index.js` の `prerenderedRoutes.length > 0` 判定）。`/games/[gameId]` は boxscore（PO のみ取得）から params を作るため RS 期間中に空になった。→ 現季＋過去季から探す（`findBoxScore` / `boxScoreGameIds`）。新しい `[param]` ルートを足すときは「現季のデータが無い期間に params が空にならないか」を必ず考える。`/teams/[teamId]` は固定 30 チーム、`/players/[...slug]` は全季の選手を列挙するので安全。`/playoffs/[series]` は同じ理由で 2026-10-01 の模擬繰越ビルドが落ち、現季→過去季の順で探す形に直した。
+2. **Route Handler は拡張子なしのファイルで書き出される**ため、`og/players/<id>` と `og/players/<id>/<season>` が同名衝突して EISDIR。→ 過去季は `/og/players/<season>/<id>` に逆順化。`page.tsx` は `.html` が付くので衝突しない。（2026-10-01 に選手ページを1人1ページにしたので、季つきの OG URL は今は無い）
 
 模擬ビルドのやり方（本体を汚さない）:
 
 ```bash
 S=/tmp/nba-sim && mkdir -p $S && rsync -a --exclude .next --exclude .git --exclude out ~/nba-data/ $S/
 # node_modules はシンボリックリンク不可（Turbopack が "points out of the filesystem root" で拒否）。rsync で実体コピーする
-cd $S && scripts/rollover.sh 2025-26 2026-27 && npm run build
+cd $S && cp data/2025-26/*.csv data/ && cp data/2025-26/shots/*.json data/shots/ && scripts/rollover.sh 2025-26 2026-27 && npm run build
 # 翌日の取得後を模擬するなら RS CSV をヘッダーのみにしてもう一度 build
 for f in player_per_game player_totals player_advanced games team_per_game team_advanced; do head -1 data/$f.csv > data/$f.tmp && mv data/$f.tmp data/$f.csv; done
 npm run build

@@ -3,6 +3,7 @@ import { getPlayerPerGame, getPlayerAdvanced, getPlayerTotals } from "@/lib/data
 import { withDisplayNames, withFullNames } from "@/lib/data/names-ja";
 import { isPlayoffDataAvailable } from "@/lib/data/playoffs";
 import { PO_MIN_GP } from "@/lib/data/player-types";
+import { leaderMinGp } from "@/lib/data/min-gp";
 import type { Phase } from "@/lib/phase";
 import { PreSeasonNotice, PhaseSwitch } from "@/components/phase-switch";
 import { QuadrantMap, MAP_HELP, type QuadrantDot, type AxisFormat } from "@/components/quadrant-map";
@@ -16,8 +17,7 @@ import { getLatestGameDate } from "@/lib/data/games";
 import { getPoLastGameDate } from "@/lib/data/csv-utils";
 import { ChartFrame } from "@/components/chart-frame";
 
-// リーダーズのGP下限（RS30・PO4）
-const LEADER_MIN_GP = { rs: 30, po: PO_MIN_GP } as const;
+// リーダーズのGP下限（RS30・PO4）。RS は序盤だけ「最多出場の半分」に下がる（トップのリーダー3枚と同じゲート）
 
 // 図はこのページのリストにあるスタッツだけで組む（USG%・TS% は Efficiency、STL・BLK は Basic）
 function MapCard({
@@ -68,7 +68,7 @@ function MapCard({
 export function renderLeaders(phase: Phase) {
   const poAvailable = isPlayoffDataAvailable();
   if (phase === "po" && !poAvailable) return <PreSeasonNotice />;
-  const minGp = LEADER_MIN_GP[phase];
+  const minGp = phase === "po" ? PO_MIN_GP : leaderMinGp();
   // リストはフル日本語名、図ラベルだけ短縮名（略称→カタカナ姓）に収める（plan §13-1 段階3）
   const perGameRaw = getPlayerPerGame({ phase }).filter((p) => p.gp >= minGp && p.team !== "TOT");
   const advancedRaw = getPlayerAdvanced({ phase }).filter((p) => p.gp >= minGp && p.team !== "TOT");

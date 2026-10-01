@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { getStandings, getTeamAdvanced, getTeamPerGame, getTeamPointsGini, getTeamDefenseFactors, getTeamOffenseFactors, getTerrainTeams, GINI_MIN_MP } from "@/lib/data/teams";
-import { getPlayerPerGame, getPlayerAdvanced, getPlayerTotals } from "@/lib/data/players";
+import { getPlayerPerGame, getPlayerAdvanced, getPlayerTotals, getRoster, currentTeam } from "@/lib/data/players";
+import { allPlayerIds } from "@/app/players/[...slug]/player-page";
 import { getTeamMargins, getLatestGameDate } from "@/lib/data/games";
 import { ChartFrame } from "@/components/chart-frame";
 import { SeasonHeartbeat } from "@/components/season-heartbeat";
@@ -141,14 +142,25 @@ export default async function TeamDetailPage({
       ]
     : [];
 
-  const roster = allPlayers.filter((p) => p.team === abbr && p.gp >= 1);
+  // ロスター: NBA の名簿でこのチームの選手（所属の決め方は選手ページの見出しと同じ currentTeam）。今季まだ出場が
+  // 無い選手も成績0の行で載せる（載せないとロスターにならない）。出場後に名簿から外れた選手は載せない
+  // （2026-10-01 ふくたろう決定）。名簿ファイルが無いときだけ従来どおり「このチームで出場した選手」
+  const rosterList = getRoster();
+  const rosterMap = new Map(rosterList.map((r) => [r.playerId, r.team]));
+  // ponytail: 成績行は1選手1行（NBA API の形式）が前提。TOT＋チーム別の複数行の形式が来たら、TOT を除いた最後の
+  // 行だけを使う（同じ選手が同じ表に重複しない）。チーム別の内訳を出したくなったらここを直す
+  const playedRows = [...new Map(allPlayers.filter((p) => p.team !== "TOT" && p.gp >= 1).map((p) => [p.playerId, p])).values()];
+  const roster = playedRows.filter((p) => currentTeam(rosterMap, p.playerId, p.team) === abbr);
+  const played = new Set(playedRows.map((p) => p.playerId));
+  const withPage = new Set(allPlayerIds());
+  const unplayed = rosterList.filter((r) => r.team === abbr && !played.has(r.playerId));
   const rosterAdvanced = new Map(
-    allAdvanced.filter((p) => p.team === abbr).map((p) => [p.player, p])
+    allAdvanced.filter((p) => p.team !== "TOT").map((p) => [p.playerId, p])
   );
 
   // 表示名はフル日本語名（plan §13-1）。advanced 照合（英語名キー）の後に差し替える
-  const rosterRows = withFullNames(roster.map((player) => {
-    const advancedStats = rosterAdvanced.get(player.player);
+  const rosterRows = withFullNames([...roster.map((player) => {
+    const advancedStats = rosterAdvanced.get(player.playerId);
 
     return {
       playerId: player.playerId,
@@ -166,8 +178,16 @@ export default async function TeamDetailPage({
       defRating: advancedStats?.defRating ?? null,
       netRating: advancedStats?.netRating ?? null,
       tsPct: advancedStats?.tsPct ?? null,
+      noPage: false,
     };
-  }));
+  }), ...unplayed.map((r) => ({
+    playerId: r.playerId,
+    player: r.player,
+    gp: 0, mpg: 0, pts: 0, trb: 0, ast: 0, stl: 0, blk: 0, fgPct: 0, threePtPct: 0,
+    offRating: null, defRating: null, netRating: null, tsPct: null,
+    // 過去季にも成績が無い選手（ルーキー等）は選手ページがまだ無いので、名前をリンクにしない
+    noPage: !withPage.has(r.playerId),
+  }))]);
 
   // プレーオフ（出場チームのみ）。トップと同じ RS｜PO タブで出す（既定 RS・時期で変えない plan.md §12-2）
   const poAvailable = isPlayoffDataAvailable();

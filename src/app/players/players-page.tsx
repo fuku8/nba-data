@@ -1,6 +1,6 @@
 import { getPlayerPerGame, getPlayerAdvanced, getPlayerTotals } from "@/lib/data/players";
 import { isPlayoffDataAvailable } from "@/lib/data/playoffs";
-import { MIN_GP, PO_MIN_GP } from "@/lib/data/player-types";
+import { rsMinGp, PO_MIN_GP } from "@/lib/data/player-types";
 import type { Phase } from "@/lib/phase";
 import { currentSeason } from "@/lib/season";
 import { PreSeasonNotice } from "@/components/phase-switch";
@@ -19,7 +19,7 @@ const MAP_TEAM_TOP = 5;
 export function renderPlayers(phase: Phase) {
   const poAvailable = isPlayoffDataAvailable();
   if (phase === "po" && !poAvailable) return <PreSeasonNotice />;
-  const minGp = phase === "po" ? PO_MIN_GP : MIN_GP;
+  const minGp = phase === "po" ? PO_MIN_GP : rsMinGp();
   const perGame = getPlayerPerGame({ phase }).filter((p) => p.team !== "TOT");
   const advanced = getPlayerAdvanced({ phase }).filter((p) => p.team !== "TOT");
 
