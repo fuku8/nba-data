@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node node_modules/next/dist/bin/next dev",
-    "build": "mkdir -p public/data && rm -f public/data/*.csv && cp data/*.csv public/data/ && node node_modules/next/dist/bin/next build",
+    "build": "node node_modules/next/dist/bin/next build",
     "start": "node node_modules/next/dist/bin/next start",
     "lint": "eslint",
     "typecheck": "node node_modules/typescript/bin/tsc --noEmit",
