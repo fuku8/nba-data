@@ -17,10 +17,16 @@ export function rsMinGp(season?: string): number {
   return earlyMinGp(leagueMaxGp());
 }
 
-// 比較ページの検索対象になる RS の GP 下限（通常10）。序盤は母集団の下限を超えないようにする（検索対象が空にならないため）。
+// 比較ページの検索対象になる RS の GP 下限（通常10）。序盤は母集団の下限を超えないようにする。
+// 開幕直後、誰も母集団の下限（5試合）に届かない間は1試合以上を対象にする（約1週間、検索しても誰も出ない状態を避ける。
+// 2026-10-02 決定。その間はレーダーの母集団が空で、ハッスル比較は「対象外」の表示になる）
+export const earlyCompareMinGp = (leagueMaxGp: number) =>
+  leagueMaxGp < earlyMinGp(leagueMaxGp) ? 1 : Math.min(10, earlyMinGp(leagueMaxGp));
+
 // 選手ページの「似たタイプの選手」リンクも同じ値で出し分ける（比較ページに居ない選手からリンクを出さない）
 export function compareListMinGp(season?: string): number {
-  return Math.min(10, rsMinGp(season));
+  if (season && season !== currentSeason()) return Math.min(10, MIN_GP);
+  return earlyCompareMinGp(leagueMaxGp());
 }
 
 // リーダー（トップの3枚・/leaders）の GP 下限。序盤は誰も30試合に達しないため「最多の半分」にし、

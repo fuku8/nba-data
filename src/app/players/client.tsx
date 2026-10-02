@@ -66,7 +66,10 @@ export function PlayersClient({
   mapTeamTop: number;
 }) {
   const [search, setSearch] = useState("");
-  const [minGames, setMinGames] = useState(minGp); // 既定＝サイト共通のローテ選手下限（RS20/PO4）
+  // 既定＝サイト共通のローテ選手下限（RS20/PO4）。RS の序盤は下限が 5〜19 に下がり選択肢に無い値になるので、
+  // それ以下で最大の選択肢に丸める（開幕〜リーグ最多19試合までは 0＝全員、以後 10、20）。丸めないと開幕から約1週間は
+  // 表が空になり、セレクタも「Min N GP」でなく裸の数字になる（2026-10-02 模擬繰越で確認）
+  const [minGames, setMinGames] = useState(() => MIN_GAMES_OPTIONS[phase].filter((g) => g <= minGp).at(-1) ?? 0);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "pts", direction: "desc" });
   const [advSortConfig, setAdvSortConfig] = useState<SortConfig>({ key: "offRating", direction: "desc" });
   const [page, setPage] = useState(0);
@@ -160,7 +163,8 @@ export function PlayersClient({
           />
           <Select value={String(minGames)} onValueChange={(v) => { setMinGames(Number(v ?? String(minGp))); setPage(0); }}>
             <SelectTrigger className="w-32">
-              <SelectValue />
+              {/* 関数を渡さないと、選択肢のラベルでなく値そのもの（「20」）が出る */}
+              <SelectValue>{(v: string) => `Min ${v} GP`}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               {MIN_GAMES_OPTIONS[phase].map((g) => (
