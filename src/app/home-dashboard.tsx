@@ -11,6 +11,7 @@ import { teamNameJa, withFullNames } from "@/lib/data/names-ja";
 import { isPlayoffDataAvailable, getPlayoffSeries, getPlayoffPlayerPerGame, getPlayoffBracket } from "@/lib/data/playoffs";
 import { PlayoffsTopClient, StatLeaders } from "@/app/playoffs/client";
 import { currentSeason } from "@/lib/season";
+import { SeasonSwitch } from "@/components/season-switch";
 import { leaderMinGp } from "@/lib/data/min-gp";
 import type { TeamStanding } from "@/lib/types";
 
@@ -134,7 +135,7 @@ export function HomeDashboard({ defaultTab }: { defaultTab: "rs" | "po" }) {
         <RegularSeason season={season} />
       </TabsContent>
       <TabsContent value="po" className="text-base">
-        <PlayoffsTopClient series={getPlayoffSeries()} bracket={getPlayoffBracket()} players={players} updatedAt={getPoLastGameDate()} season={season} />
+        <PlayoffsTopClient series={getPlayoffSeries()} bracket={getPlayoffBracket()} players={players} updatedAt={getPoLastGameDate()} season={season} seasonSwitch={<SeasonSwitch season={season} basePath="/playoffs" />} />
       </TabsContent>
     </Tabs>
   );

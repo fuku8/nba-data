@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -18,6 +17,7 @@ import { SortableHeader } from "@/components/sortable-header";
 import { STICKY_RANK, STICKY_NAME } from "@/lib/table-classes";
 import type { SortConfig } from "@/lib/types";
 import { SeasonTitle } from "@/components/season-title";
+import { TeamLink } from "@/components/team-link";
 
 interface EnrichedStanding {
   teamName: string;
@@ -42,7 +42,17 @@ function getRankBadge(rank: number) {
   return null;
 }
 
-export function StandingsClient({ standings, season }: { standings: EnrichedStanding[]; season: string }) {
+export function StandingsClient({
+  standings,
+  season,
+  pastSeason,
+  seasonSwitch,
+}: {
+  standings: EnrichedStanding[];
+  season: string;
+  pastSeason?: string;
+  seasonSwitch?: React.ReactNode;
+}) {
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     key: "winPct",
     direction: "desc",
@@ -112,11 +122,11 @@ export function StandingsClient({ standings, season }: { standings: EnrichedStan
             <TableRow key={t.teamName} className="hover:bg-accent/50">
               <TableCell className={`text-muted-foreground ${STICKY_RANK}`}>{i + 1}</TableCell>
               <TableCell className={STICKY_NAME}>
-                <Link href={`/teams/${t.abbr}`} className="flex items-center gap-2 hover:underline font-medium">
+                <TeamLink abbr={t.abbr} pastSeason={pastSeason} className="flex items-center gap-2 hover:underline font-medium">
                   <div className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: getTeamColor(t.abbr) }} />
                   <span className="sm:hidden">{t.abbr}</span>
                   <span className="hidden sm:inline">{t.displayName}</span>
-                </Link>
+                </TeamLink>
               </TableCell>
               <TableCell className="text-right font-mono">{t.wins}</TableCell>
               <TableCell className="text-right font-mono">{t.losses}</TableCell>
@@ -142,7 +152,10 @@ export function StandingsClient({ standings, season }: { standings: EnrichedStan
     <div className="space-y-6">
       <div>
         <SeasonTitle season={season} phase="rs" />
-        <h1 className="text-3xl font-bold tracking-tight">順位表</h1>
+        <div className="flex items-center gap-3 flex-wrap">
+          <h1 className="text-3xl font-bold tracking-tight">順位表</h1>
+          {seasonSwitch}
+        </div>
       </div>
       <Tabs defaultValue="east">
         <TabsList>

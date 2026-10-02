@@ -24,6 +24,7 @@ import { PlayerUsageMap } from "@/components/player-usage-map";
 import { playerNameJa, teamNameJa } from "@/lib/data/names-ja";
 import { PhaseCompareBars, RS_COLOR, PO_COLOR } from "@/components/phase-compare-bars";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { HashTabs } from "@/components/hash-tabs";
 import { ChevronRight } from "lucide-react";
 
 function fmtHeight(h: string): string {
@@ -930,7 +931,8 @@ export async function renderPlayer(playerId: string) {
 
       {/* 図表と Advanced Stats: 季のタブで切り替える（既定は今季）。季が1つだけならタブなし */}
       {tabs.length > 1 ? (
-        <Tabs defaultValue={tabs[0].season} className="gap-6">
+        // 過去季のページから来たとき（/players/<id>#2025-26）は、その季のタブを開いた状態で始める
+        <HashTabs values={tabs.map((t) => t.season)} defaultValue={tabs[0].season} className="gap-6">
           <TabsList aria-label="シーズン">
             {tabs.map((t) => (
               <TabsTrigger key={t.season} value={t.season} className="px-3">{t.season}</TabsTrigger>
@@ -941,7 +943,7 @@ export async function renderPlayer(playerId: string) {
             // 残して、ページ本体が空に近くならないようにする（keepMounted。見た目は変わらない。2026-10-01 決定）
             <TabsContent key={t.season} value={t.season} keepMounted={!hasCurrent}>{t.node}</TabsContent>
           ))}
-        </Tabs>
+        </HashTabs>
       ) : (
         tabs[0].node
       )}

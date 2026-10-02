@@ -1,10 +1,10 @@
 import fs from "fs";
 import path from "path";
+import { SEASON_RE } from "./season-path.ts";
 
 // シーズンの単一の真実は data/season.txt（1行）。fetchスクリプトも同じファイルを読む。
 // 現シーズンのデータは data/ 直下、過去シーズンは data/<season>/ に置く（scripts/rollover.sh で繰越）
 const DATA_DIR = path.join(process.cwd(), "data");
-const SEASON_RE = /^\d{4}-\d{2}$/;
 
 export function currentSeason(): string {
   const s = fs.readFileSync(path.join(DATA_DIR, "season.txt"), "utf-8").trim();
@@ -36,4 +36,15 @@ export function seasonDir(season: string): string {
 // "2025-26" → 2026（POの開催年）
 export function poYear(season: string): number {
   return parseInt(season.slice(0, 4), 10) + 1;
+}
+
+// 過去季に残すページ（[[...season]] ルート。plan.md §13-10）の generateStaticParams: 今季（季なし）＋過去季。
+// 今季を必ず含むので、過去季が無い間も空にならない（空だと静的エクスポートのビルドが落ちる。ROLLOVER.md）
+export const seasonParams = () => [{ season: [] as string[] }, ...archivedSeasons().map((s) => ({ season: [s] }))];
+
+// [[...season]] の値から表示する季を決める。pastSeason は過去季のときだけ入る（リンクの出し分けに使う）。
+// 今季でも過去季でもなければ null
+export function resolveSeason(seg?: string[]): { season: string; pastSeason?: string } | null {
+  if (!seg || seg.length === 0) return { season: currentSeason() };
+  return seg.length === 1 && archivedSeasons().includes(seg[0]) ? { season: seg[0], pastSeason: seg[0] } : null;
 }

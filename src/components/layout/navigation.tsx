@@ -5,25 +5,28 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { navItems } from "./nav-items";
+import { navItemsFor } from "./nav-items";
+import { pastSeasonOf } from "@/lib/season-path";
 
 // スマホのアイコンナビは「試合」まで。プレーオフ以下はハンバーガーメニュー側に収める
 const MOBILE_ICON_COUNT = 6;
 
 function NavLink({
   href,
+  match,
   label,
   icon: Icon,
   pathname,
   className,
 }: {
   href: string;
+  match: string;
   label: string;
   icon: React.ElementType;
   pathname: string;
   className?: string;
 }) {
-  const isActive = pathname === href || (href !== "/" && pathname.startsWith(href));
+  const isActive = pathname.startsWith(match);
   return (
     <Link
       href={href}
@@ -39,8 +42,12 @@ function NavLink({
   );
 }
 
-export function Navigation() {
+// 過去季のページ（/standings/2025-26 など）では、季のラベル＋残すページ＋「今季へ」だけを出す（plan.md §13-10）。
+// currentSeason は layout（サーバー側）が data/season.txt から渡す
+export function Navigation({ currentSeason }: { currentSeason: string }) {
   const pathname = usePathname();
+  const pastSeason = pastSeasonOf(pathname, currentSeason);
+  const items = navItemsFor(pastSeason);
   const [menuOpen, setMenuOpen] = useState(false);
 
   // ページ遷移でメニューを閉じる
@@ -59,7 +66,10 @@ export function Navigation() {
           <img src="/logo-ns-mark.svg" alt="" className="sm:hidden h-7 w-auto" />
         </Link>
         <nav className="flex min-w-0 flex-1 items-center space-x-1 overflow-x-auto">
-          {navItems.map((item, i) => (
+          {pastSeason && (
+            <span className="shrink-0 rounded-md border px-2 py-1 text-xs font-semibold tabular-nums">{pastSeason}</span>
+          )}
+          {items.map((item, i) => (
             <NavLink
               key={item.href}
               {...item}
@@ -67,6 +77,11 @@ export function Navigation() {
               className={i >= MOBILE_ICON_COUNT ? "hidden sm:flex" : undefined}
             />
           ))}
+          {pastSeason && (
+            <Link href="/" className="shrink-0 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground whitespace-nowrap">
+              今季へ →
+            </Link>
+          )}
         </nav>
         <button
           type="button"
@@ -81,13 +96,13 @@ export function Navigation() {
       {/* スマホ全メニュー（テキスト付き） */}
       {menuOpen && (
         <nav className="sm:hidden border-t bg-background px-4 py-2" aria-label="全メニュー">
-          {navItems.map(({ href, label, icon: Icon }) => (
+          {items.map(({ href, match, label, icon: Icon }) => (
             <Link
               key={href}
               href={href}
               className={cn(
                 "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium",
-                pathname === href || pathname.startsWith(href)
+                pathname.startsWith(match)
                   ? "bg-accent text-accent-foreground"
                   : "text-muted-foreground"
               )}
@@ -99,5 +114,20 @@ export function Navigation() {
         </nav>
       )}
     </header>
+  );
+}
+
+// フッターの全ページ一覧。ヘッダーと同じく、過去季のページでは残すページだけを季つきで出す
+export function FooterNav({ currentSeason }: { currentSeason: string }) {
+  const pastSeason = pastSeasonOf(usePathname(), currentSeason);
+  return (
+    <nav aria-label="フッターメニュー" className="mt-6 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
+      {navItemsFor(pastSeason).map((item) => (
+        <Link key={item.href} href={item.href} className="hover:text-foreground">
+          {item.label}
+        </Link>
+      ))}
+      {pastSeason && <Link href="/" className="hover:text-foreground">今季へ →</Link>}
+    </nav>
   );
 }

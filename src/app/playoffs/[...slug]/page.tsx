@@ -2,53 +2,90 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { pageMeta, phaseTitle } from "@/lib/metadata";
-import { getPlayoffSeries } from "@/lib/data/playoffs";
+import { getPlayoffSeries, getPlayoffBracket, getPlayoffPlayerPerGame } from "@/lib/data/playoffs";
+import { getPoLastGameDate } from "@/lib/data/csv-utils";
 import { getGames, getDramaScores, findBoxScore } from "@/lib/data/games";
 import { getTeamColor } from "@/lib/constants/teams";
-import { teamNameJa } from "@/lib/data/names-ja";
+import { teamNameJa, withFullNames } from "@/lib/data/names-ja";
 import { gameDetailUrl } from "@/lib/game-url";
 import { PhaseBadge } from "@/components/phase-switch";
 import { ROUND_NAME } from "@/lib/bracket";
-import { allSeasons, currentSeason, poYear } from "@/lib/season";
+import { archivedSeasons, currentSeason, poYear } from "@/lib/season";
+import { seasonPath } from "@/lib/season-path";
 import { dramaFlames } from "@/lib/drama";
+import { TeamLink } from "@/components/team-link";
+import { SeasonSwitch } from "@/components/season-switch";
+import { PlayoffsTopClient } from "../client";
 
 export const dynamicParams = false;
 
-// slug は po_series.csv の並びどおり "team1-team2"（例: NYK-ATL）。現季→過去季の順で探す。
-// RS 中は現季の po_series.csv が無く、現季だけだと generateStaticParams が空になって静的エクスポートが
-// ビルドできない（/games/[gameId] と同じ落とし穴。ROLLOVER.md）。同じ組み合わせが複数季にあれば新しい季が勝つ
-function findSeries(slug: string) {
-  for (const season of allSeasons()) {
-    const s = getPlayoffSeries(season).find((x) => `${x.team1}-${x.team2}` === slug);
-    if (s) return { s, season };
-  }
-  return null;
+// slug の形（plan.md §13-10）:
+//   [X-Y]        今季のシリーズ詳細（X-Y は po_series.csv の並びどおり "team1-team2"。例: NYK-ATL）
+//   [季]         過去季のブラケット（/playoffs/2025-26。今季のブラケットは ../page.tsx）
+//   [季, X-Y]    過去季のシリーズ詳細（季を URL に入れるので、同じ組み合わせが別の季にあっても取り違えない）
+// s が null ならブラケット。該当なしは null
+function resolve(slug: string[]) {
+  const pastSeason = archivedSeasons().includes(slug[0]) ? slug[0] : undefined;
+  const season = pastSeason ?? currentSeason();
+  const rest = pastSeason ? slug.slice(1) : slug;
+  if (rest.length === 0) return { season, pastSeason, s: null };
+  if (rest.length !== 1) return null;
+  const s = getPlayoffSeries(season).find((x) => `${x.team1}-${x.team2}` === rest[0]);
+  return s ? { season, pastSeason, s } : null;
 }
 
+// RS 中は今季の po_series.csv が無いが、過去季のぶんがあるので空にならない
+// （空だと静的エクスポートがビルドできない。/games/[gameId] と同じ落とし穴。ROLLOVER.md）
 export function generateStaticParams() {
-  const slugs = allSeasons().flatMap((season) => getPlayoffSeries(season).map((s) => `${s.team1}-${s.team2}`));
-  return [...new Set(slugs)].map((series) => ({ series }));
+  const slugsOf = (season: string) => getPlayoffSeries(season).map((s) => `${s.team1}-${s.team2}`);
+  return [
+    ...slugsOf(currentSeason()).map((x) => ({ slug: [x] })),
+    ...archivedSeasons().flatMap((season) => [{ slug: [season] }, ...slugsOf(season).map((x) => ({ slug: [season, x] }))]),
+  ];
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ series: string }> }): Promise<Metadata> {
-  const { series } = await params;
-  const found = findSeries(series);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const found = resolve(slug);
   if (!found) return {};
   const { s, season } = found;
+  const path = `/playoffs/${slug.join("/")}`;
+  if (!s) {
+    return pageMeta({
+      title: phaseTitle("po", season),
+      description: `${phaseTitle("po", season)} のトーナメント表とシリーズ結果、スタッツリーダー。`,
+      path,
+      image: `/og/seasons/${season}/playoffs`,
+    });
+  }
   const ja1 = teamNameJa(s.team1) ?? s.team1;
   const ja2 = teamNameJa(s.team2) ?? s.team2;
   return pageMeta({
     title: `${ja1} vs ${ja2}（${ROUND_NAME[s.round]}）· ${phaseTitle("po", season)}`,
     description: `${phaseTitle("po", season)} ${ROUND_NAME[s.round]} ${s.team1}-${s.team2} の全試合結果と各試合のボックススコア。`,
-    path: `/playoffs/${series}`,
+    path,
   });
 }
 
-export default async function SeriesPage({ params }: { params: Promise<{ series: string }> }) {
-  const { series } = await params;
-  const found = findSeries(series);
+export default async function SeriesPage({ params }: { params: Promise<{ slug: string[] }> }) {
+  const { slug } = await params;
+  const found = resolve(slug);
   if (!found) notFound();
-  const { s, season } = found;
+  const { s, season, pastSeason } = found;
+
+  if (!s) {
+    return (
+      <PlayoffsTopClient
+        series={getPlayoffSeries(season)}
+        bracket={getPlayoffBracket(season)}
+        players={withFullNames(getPlayoffPlayerPerGame(season).filter((p) => p.team !== "TOT"))}
+        updatedAt={getPoLastGameDate(season)}
+        season={season}
+        pastSeason={pastSeason}
+        seasonSwitch={<SeasonSwitch season={season} basePath="/playoffs" />}
+      />
+    );
+  }
 
   const games = getGames({ phase: "po", season })
     .filter((g) => (g.homeTeam === s.team1 && g.awayTeam === s.team2) || (g.homeTeam === s.team2 && g.awayTeam === s.team1))
@@ -60,16 +97,16 @@ export default async function SeriesPage({ params }: { params: Promise<{ series:
   const linkCls = "inline-flex h-7 items-center gap-1 rounded-md border border-border bg-background px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50";
 
   const teamSide = (abbr: string, ja: string) => (
-    <Link href={`/teams/${abbr}`} className={`flex items-center gap-2 hover:underline ${s.winner === abbr ? "" : s.winner ? "opacity-60" : ""}`}>
+    <TeamLink abbr={abbr} pastSeason={pastSeason} className={`flex items-center gap-2 hover:underline ${s.winner === abbr ? "" : s.winner ? "opacity-60" : ""}`}>
       <span className="h-3 w-3 rounded-full shrink-0 inline-block" style={{ backgroundColor: getTeamColor(abbr) }} />
       {ja}
-    </Link>
+    </TeamLink>
   );
 
   return (
     <div className="space-y-6 max-w-3xl">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Link href="/playoffs" className="hover:underline">← プレーオフ</Link>
+        <Link href={seasonPath("/playoffs", pastSeason)} className="hover:underline">← プレーオフ</Link>
         <PhaseBadge phase="po" />
         <span>· {season === currentSeason() ? "" : `${poYear(season)} `}{ROUND_NAME[s.round]}</span>
       </div>

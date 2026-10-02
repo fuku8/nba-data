@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PHASE_LABEL, phasePath, type Phase } from "@/lib/phase";
+import { seasonPath } from "@/lib/season-path";
 
 // 数字の横に置く文脈ラベル。RS/POはグローバルな「モード」ではなくデータ側に付く（plan.md §12-2）
 export function PhaseBadge({ phase, className }: { phase: Phase; className?: string }) {
@@ -19,24 +20,28 @@ export function PhaseBadge({ phase, className }: { phase: Phase; className?: str
 }
 
 // ページ見出し横の RS｜PO セグメント。/players ⇔ /players/po のパスで切り替える（既定は常にRS）。
-// POデータが無いときは切替先が無いのでバッジだけを出す。params はクライアント側だけが読むクエリ（例: 比較の ids）
+// POデータが無いときは切替先が無いのでバッジだけを出す。params はクライアント側だけが読むクエリ（例: 比較の ids）。
+// pastSeason は過去季のページのときだけ渡す（切替先も同じ季: /leaders/2025-26 ⇔ /leaders/po/2025-26）
 export function PhaseSwitch({
   phase,
   poAvailable,
   basePath,
   params = {},
+  pastSeason,
 }: {
   phase: Phase;
   poAvailable: boolean;
   basePath: string;
   params?: Record<string, string | undefined>;
+  pastSeason?: string;
 }) {
   if (!poAvailable) return <PhaseBadge phase="rs" />;
   const href = (p: Phase) => {
     const q = new URLSearchParams();
     for (const [k, v] of Object.entries(params)) if (v) q.set(k, v);
     const s = q.toString();
-    return s ? `${phasePath(basePath, p)}?${s}` : phasePath(basePath, p);
+    const path = seasonPath(phasePath(basePath, p), pastSeason);
+    return s ? `${path}?${s}` : path;
   };
   return (
     <div role="group" aria-label="期間" className="inline-flex items-center rounded-lg border overflow-hidden text-sm font-semibold">

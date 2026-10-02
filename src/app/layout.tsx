@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import Link from "next/link";
 import "./globals.css";
-import { Navigation } from "@/components/layout/navigation";
-import { navItems } from "@/components/layout/nav-items";
+import { Navigation, FooterNav } from "@/components/layout/navigation";
+import { currentSeason } from "@/lib/season";
 import { SITE_URL, SITE_NAME } from "@/lib/metadata";
 
 export const metadata: Metadata = {
@@ -39,7 +39,7 @@ export default function RootLayout({
           gtag('js', new Date());
           gtag('config', 'G-W51Q1TQCNV');`}
         </Script>
-        <Navigation />
+        <Navigation currentSeason={currentSeason()} />
         <main className="container mx-auto px-4 py-6">{children}</main>
         <footer className="border-t mt-10">
           {/* 上下50pxはモック実測値。中の間隔はモックから詰めた: ロゴ→ナビ24px・ナビ→出典行20px（2026-09-05） */}
@@ -50,13 +50,7 @@ export default function RootLayout({
               <img src="/logo-ns1.svg" alt="スタッツのかたち The Shape of Numbers" className="h-7 sm:h-10 w-auto" />
             </Link>
             {/* 全ページの一覧はフッターが持つ（2026-09-03 決定） */}
-            <nav aria-label="フッターメニュー" className="mt-6 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
-              {navItems.map((item) => (
-                <Link key={item.href} href={item.href} className="hover:text-foreground">
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
+            <FooterNav currentSeason={currentSeason()} />
             {/* サイト名はすぐ上のロゴが持つため、この行からは削除（2026-09-05） */}
             <p className="mt-5 text-center text-xs text-muted-foreground">
               データ: NBA.com/Stats（毎日取得）

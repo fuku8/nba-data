@@ -1,5 +1,6 @@
 "use client";
 
+import { createContext, useContext } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,12 +8,19 @@ import { getTeamColor, getTeamAbbr } from "@/lib/constants/teams";
 import type { PlayoffSeries, PlayoffPlayerPerGame } from "@/lib/types";
 import { ROUND_NAME, type Bracket } from "@/lib/bracket";
 import { SegmentedName } from "@/components/segmented-name";
+import { TeamLink } from "@/components/team-link";
+import { playerHref, seasonPath } from "@/lib/season-path";
+
+// 過去季のブラケット（/playoffs/2025-26）を描いているときだけ、その季が入る。リンク先を同じ季に保つために使う
+// （シリーズ詳細・リーダーズは季つきの URL、チーム名はリンクなし、選手はその季のタブ。plan.md §13-10）
+const PastSeason = createContext<string | undefined>(undefined);
 
 // シリーズ詳細ページ（試合一覧→ボックススコア）へのパス
-const seriesHref = (s: PlayoffSeries) => `/playoffs/${s.team1}-${s.team2}`;
+const seriesHref = (s: PlayoffSeries, pastSeason?: string) => `${seasonPath("/playoffs", pastSeason)}/${s.team1}-${s.team2}`;
 
 // ── 木の1枠（PC幅）: 2行のコンパクト表示 ──────────────────────────
 function BracketSlot({ s }: { s: PlayoffSeries | null }) {
+  const pastSeason = useContext(PastSeason);
   if (!s) {
     return (
       <div className="h-full rounded-md border border-dashed border-border/60 flex items-center justify-center text-xs text-muted-foreground min-h-14">
@@ -28,17 +36,17 @@ function BracketSlot({ s }: { s: PlayoffSeries | null }) {
   return (
     // 枠全体がシリーズ詳細へのリンク（重ねたLink）。チーム名リンクは z-10 で上に残す
     <div className={`relative h-full rounded-md border bg-card px-2 py-1.5 text-sm min-h-14 flex flex-col justify-center gap-0.5 transition-colors hover:bg-accent/40 ${inProgress ? "border-orange-500/60" : ""}`}>
-      <Link href={seriesHref(s)} className="absolute inset-0" aria-label="シリーズ詳細" />
+      <Link href={seriesHref(s, pastSeason)} className="absolute inset-0" aria-label="シリーズ詳細" />
       {rows.map((t) => {
         const abbr = getTeamAbbr(t.name);
         const won = !inProgress && s.winner === t.name;
         const lost = !inProgress && !won;
         return (
           <div key={t.name} className={`flex items-center justify-between gap-2 ${lost ? "opacity-50" : ""}`}>
-            <Link href={`/teams/${abbr}`} className={`relative z-10 flex items-center gap-1.5 truncate hover:underline ${won ? "font-bold" : ""}`}>
+            <TeamLink abbr={abbr} pastSeason={pastSeason} className={`relative z-10 flex items-center gap-1.5 truncate hover:underline ${won ? "font-bold" : ""}`}>
               <span className="h-2.5 w-2.5 rounded-full shrink-0 inline-block" style={{ backgroundColor: getTeamColor(t.name) }} />
               {abbr}
-            </Link>
+            </TeamLink>
             <span className={`font-mono ${won ? "font-bold" : ""}`}>{t.wins}</span>
           </div>
         );
@@ -84,15 +92,16 @@ function BracketTree({ bracket }: { bracket: Bracket }) {
 
 // ── 縦リスト（モバイル幅）。最新ラウンドが先 ──────────────────────
 function SeriesCard({ s }: { s: PlayoffSeries }) {
+  const pastSeason = useContext(PastSeason);
   const inProgress = !s.winner;
 
   return (
     <Card className="relative overflow-hidden transition-colors hover:bg-accent/40">
-      <Link href={seriesHref(s)} className="absolute inset-0" aria-label="シリーズ詳細" />
+      <Link href={seriesHref(s, pastSeason)} className="absolute inset-0" aria-label="シリーズ詳細" />
       <CardContent className="pt-4 pb-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex flex-col items-center flex-1 min-w-0">
-            <Link href={`/teams/${getTeamAbbr(s.team1)}`} className="relative z-10 text-sm font-semibold truncate w-full flex items-center justify-center gap-1.5 hover:underline"><span className="h-2.5 w-2.5 rounded-full shrink-0 inline-block" style={{ backgroundColor: getTeamColor(s.team1) }} />{s.team1}</Link>
+            <TeamLink abbr={getTeamAbbr(s.team1)} pastSeason={pastSeason} className="relative z-10 text-sm font-semibold truncate w-full flex items-center justify-center gap-1.5 hover:underline"><span className="h-2.5 w-2.5 rounded-full shrink-0 inline-block" style={{ backgroundColor: getTeamColor(s.team1) }} />{s.team1}</TeamLink>
             <span className="text-3xl font-bold mt-1">{s.team1Wins}</span>
           </div>
           <div className="flex flex-col items-center px-2">
@@ -104,7 +113,7 @@ function SeriesCard({ s }: { s: PlayoffSeries }) {
             <span className="text-xs text-muted-foreground mt-1">{s.seriesStatus}</span>
           </div>
           <div className="flex flex-col items-center flex-1 min-w-0">
-            <Link href={`/teams/${getTeamAbbr(s.team2)}`} className="relative z-10 text-sm font-semibold truncate w-full flex items-center justify-center gap-1.5 hover:underline"><span className="h-2.5 w-2.5 rounded-full shrink-0 inline-block" style={{ backgroundColor: getTeamColor(s.team2) }} />{s.team2}</Link>
+            <TeamLink abbr={getTeamAbbr(s.team2)} pastSeason={pastSeason} className="relative z-10 text-sm font-semibold truncate w-full flex items-center justify-center gap-1.5 hover:underline"><span className="h-2.5 w-2.5 rounded-full shrink-0 inline-block" style={{ backgroundColor: getTeamColor(s.team2) }} />{s.team2}</TeamLink>
             <span className="text-3xl font-bold mt-1">{s.team2Wins}</span>
           </div>
         </div>
@@ -118,23 +127,25 @@ function SeriesCard({ s }: { s: PlayoffSeries }) {
 
 // 1行表示「NYK 4-1 SAS」。勝者太字・敗者薄く・進行中は橙枠
 function SeriesRow({ s }: { s: PlayoffSeries }) {
+  const pastSeason = useContext(PastSeason);
   const inProgress = !s.winner;
   const side = (name: string, right: boolean) => {
     const won = !inProgress && s.winner === name;
     return (
-      <Link
-        href={`/teams/${getTeamAbbr(name)}`}
+      <TeamLink
+        abbr={getTeamAbbr(name)}
+        pastSeason={pastSeason}
         className={`relative z-10 flex items-center gap-1.5 hover:underline ${right ? "flex-row-reverse" : ""} ${won ? "font-bold" : ""} ${!inProgress && !won ? "opacity-50" : ""}`}
       >
         <span className="h-2.5 w-2.5 rounded-full shrink-0 inline-block" style={{ backgroundColor: getTeamColor(name) }} />
         {getTeamAbbr(name)}
-      </Link>
+      </TeamLink>
     );
   };
   return (
     // 行全体がシリーズ詳細へのリンク（重ねたLink）。チーム名リンクは z-10 で上に残す
     <div className={`relative grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-md border bg-card px-3 py-2 text-sm transition-colors hover:bg-accent/40 ${inProgress ? "border-orange-500/60" : ""}`}>
-      <Link href={seriesHref(s)} className="absolute inset-0" aria-label="シリーズ詳細" />
+      <Link href={seriesHref(s, pastSeason)} className="absolute inset-0" aria-label="シリーズ詳細" />
       <div className="flex justify-end">{side(s.team1, false)}</div>
       <span className={`font-mono font-semibold tabular-nums ${inProgress ? "text-orange-500" : ""}`}>{s.team1Wins}-{s.team2Wins}</span>
       <div className="flex justify-start">{side(s.team2, true)}</div>
@@ -155,6 +166,7 @@ function LeadersGrid({ players }: { players: PlayoffPlayerPerGame[] }) {
 const SUMMARY_CLASS = "cursor-pointer text-sm font-semibold text-muted-foreground mb-1.5 select-none";
 
 function BracketList({ series, players }: { series: PlayoffSeries[]; players: PlayoffPlayerPerGame[] }) {
+  const pastSeason = useContext(PastSeason);
   // 木を持たない縦リストでは「いま何が起きているか」を先に出す＝最新ラウンドが先（plan.md §12-2）
   // ファイナル・カンファレンス決勝と進行中のラウンドは開き、終わった1・2回戦は畳む（スマホの縦長対策）。リーダーは RS タブと同じく常に開く
   return (
@@ -177,7 +189,7 @@ function BracketList({ series, players }: { series: PlayoffSeries[]; players: Pl
       <section>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold">スタッツリーダー</h2>
-          <Link href="/leaders/po" className="text-sm text-muted-foreground hover:underline">すべて見る →</Link>
+          <Link href={seasonPath("/leaders/po", pastSeason)} className="text-sm text-muted-foreground hover:underline">すべて見る →</Link>
         </div>
         <LeadersGrid players={players} />
       </section>
@@ -191,6 +203,7 @@ type LeaderRow = { playerId: number; player: string; team: string } & Record<Lea
 // トップ3のカード。RS/PO どちらの per-game 行でも使う（トップのRSタブと共用）。
 // サーバー側からも呼ぶので関数ではなく統計キーを受け取る
 export function StatLeaders({ players, label, stat }: { players: LeaderRow[]; label: string; stat: LeaderStat }) {
+  const pastSeason = useContext(PastSeason);
   const top3 = [...players].sort((a, b) => b[stat] - a[stat]).slice(0, 3);
   return (
     <Card>
@@ -203,7 +216,7 @@ export function StatLeaders({ players, label, stat }: { players: LeaderRow[]; la
             {/* フル名が長い行は折り返す（切り詰めない）。min-w-0 が無いと値が押し出される */}
             <div className="flex items-center gap-2 min-w-0 flex-1">
               <span className="w-4 text-muted-foreground font-mono shrink-0">{i + 1}</span>
-              <Link href={`/players/${p.playerId}`} className="hover:underline font-medium min-w-0 leading-snug"><SegmentedName name={p.player} /></Link>
+              <Link href={playerHref(p.playerId, pastSeason)} className="hover:underline font-medium min-w-0 leading-snug"><SegmentedName name={p.player} /></Link>
               <Badge variant="outline" className="text-xs shrink-0" style={{ borderColor: getTeamColor(p.team) }}>{p.team}</Badge>
             </div>
             <span className="font-mono font-semibold shrink-0">{p[stat].toFixed(1)}</span>
@@ -220,43 +233,52 @@ export function PlayoffsTopClient({
   players,
   updatedAt,
   season,
+  pastSeason,
+  seasonSwitch,
 }: {
   series: PlayoffSeries[];
   bracket: Bracket;
   players: PlayoffPlayerPerGame[];
   updatedAt?: string;
   season: string;
+  pastSeason?: string;
+  seasonSwitch?: React.ReactNode;
 }) {
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">NBA {season} Playoffs</h1>
-        <p className="text-muted-foreground mt-1">
-          プレーオフ ブラケット・スタッツ
-          {updatedAt && <span className="ml-3 text-xs">最終試合: {updatedAt} (ET)</span>}
-        </p>
-      </div>
-
-      <BracketTree bracket={bracket} />
-      <BracketList series={series} players={players} />
-      {bracket.unplaced.length > 0 && (
-        <section className="hidden lg:block">
-          <h2 className="text-lg font-semibold mb-3">その他のシリーズ</h2>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {bracket.unplaced.map((s) => (
-              <SeriesCard key={`${s.team1}-${s.team2}`} s={s} />
-            ))}
+    <PastSeason.Provider value={pastSeason}>
+      <div className="space-y-8">
+        <div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-3xl font-bold tracking-tight">NBA {season} Playoffs</h1>
+            {seasonSwitch}
           </div>
-        </section>
-      )}
-
-      <section className="hidden lg:block">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold">スタッツリーダー</h2>
-          <Link href="/leaders/po" className="text-sm text-muted-foreground hover:underline">すべて見る →</Link>
+          <p className="text-muted-foreground mt-1">
+            プレーオフ ブラケット・スタッツ
+            {updatedAt && <span className="ml-3 text-xs">最終試合: {updatedAt} (ET)</span>}
+          </p>
         </div>
-        <LeadersGrid players={players} />
-      </section>
-    </div>
+
+        <BracketTree bracket={bracket} />
+        <BracketList series={series} players={players} />
+        {bracket.unplaced.length > 0 && (
+          <section className="hidden lg:block">
+            <h2 className="text-lg font-semibold mb-3">その他のシリーズ</h2>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {bracket.unplaced.map((s) => (
+                <SeriesCard key={`${s.team1}-${s.team2}`} s={s} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        <section className="hidden lg:block">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold">スタッツリーダー</h2>
+            <Link href={seasonPath("/leaders/po", pastSeason)} className="text-sm text-muted-foreground hover:underline">すべて見る →</Link>
+          </div>
+          <LeadersGrid players={players} />
+        </section>
+      </div>
+    </PastSeason.Provider>
   );
 }

@@ -24,7 +24,8 @@ export function compareListMinGp(season?: string): number {
 }
 
 // リーダー（トップの3枚・/leaders）の GP 下限。序盤は誰も30試合に達しないため「最多の半分」にし、
-// 30 に届いたら以後は固定（bleague-data minGp と同型の暫定ゲート）
-export function leaderMinGp(): number {
+// 30 に届いたら以後は固定（bleague-data minGp と同型の暫定ゲート）。過去季は確定データなので 30
+export function leaderMinGp(season?: string): number {
+  if (season && season !== currentSeason()) return 30;
   return Math.min(30, Math.max(1, Math.floor(leagueMaxGp() / 2)));
 }

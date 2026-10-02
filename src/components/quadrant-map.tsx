@@ -11,6 +11,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getTeamColor } from "@/lib/constants/teams";
+import { playerHref } from "@/lib/season-path";
 
 export interface QuadrantDot {
   playerId: number;
@@ -50,6 +51,7 @@ export function QuadrantMap({
   labelTop = 0,
   clipTop = 0,
   highlight,
+  pastSeason,
 }: {
   dots: QuadrantDot[];
   xLabel: string;
@@ -64,6 +66,8 @@ export function QuadrantMap({
   clipTop?: number;
   /** 選手ページ用: この点（playerId-team）を強調し、他の点は40%に落とす。名前と値のラベルは常時表示（ホバー・固定が無いとき） */
   highlight?: string;
+  /** 過去季のページ（/leaders/2025-26）で渡す。選手ページへのリンクがその季のタブを開く */
+  pastSeason?: string;
 }) {
   // 識別子は playerId-team（移籍で同一選手が2チーム分の点になり得るため）
   const idOf = (d: QuadrantDot) => `${d.playerId}-${d.team}`;
@@ -212,7 +216,7 @@ export function QuadrantMap({
     const pt = toViewBox(e);
     const d = pt ? nearest(pt.x, pt.y) : null;
     if (!d) setSelected(null);
-    else if (shownId === idOf(d)) router.push(`/players/${d.playerId}`);
+    else if (shownId === idOf(d)) router.push(playerHref(d.playerId, pastSeason));
     else setSelected(idOf(d));
   };
 
@@ -262,7 +266,7 @@ export function QuadrantMap({
         {shownDot && (
           /* ラベル全体がリンク（枠内にポインタがある間は onPointerMove が保持する） */
           <Link
-            href={`/players/${shownDot.playerId}`}
+            href={playerHref(shownDot.playerId, pastSeason)}
             className="cursor-pointer [&_text]:hover:underline"
             style={passive ? { pointerEvents: "none" } : undefined}
             onClick={(e) => e.stopPropagation()}

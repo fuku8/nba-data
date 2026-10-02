@@ -9,6 +9,7 @@ import { getTeamColor } from "@/lib/constants/teams";
 import type { PlayerPerGame, PlayerAdvanced } from "@/lib/types";
 import { SegmentedName } from "@/components/segmented-name";
 import { TOP_N } from "./constants";
+import { playerHref } from "@/lib/season-path";
 
 interface LeaderEntry {
   playerId: number;
@@ -21,9 +22,11 @@ interface LeaderEntry {
 function LeaderBoard({
   title,
   entries,
+  pastSeason,
 }: {
   title: string;
   entries: LeaderEntry[];
+  pastSeason?: string;
 }) {
   return (
     <Card>
@@ -38,7 +41,7 @@ function LeaderBoard({
             <div className="flex items-center gap-2 min-w-0 flex-1">
               <span className="w-6 text-right text-muted-foreground font-mono shrink-0">{i + 1}</span>
               <div className="min-w-0 leading-snug">
-                <Link href={`/players/${e.playerId}`} className="font-medium hover:underline">
+                <Link href={playerHref(e.playerId, pastSeason)} className="font-medium hover:underline">
                   <SegmentedName
                     name={e.player}
                     suffix={
@@ -80,10 +83,12 @@ export function LeadersClient({
   minGp,
   perGame,
   advanced,
+  pastSeason,
 }: {
   minGp: number;
   perGame: PlayerPerGame[];
   advanced: PlayerAdvanced[];
+  pastSeason?: string;
 }) {
   return (
     <div className="space-y-6">
@@ -98,34 +103,34 @@ export function LeadersClient({
 
         <TabsContent value="basic">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <LeaderBoard title="Points (PTS)" entries={makeLeaders(perGame, (p) => p.pts)} />
-            <LeaderBoard title="Rebounds (REB)" entries={makeLeaders(perGame, (p) => p.trb)} />
-            <LeaderBoard title="Assists (AST)" entries={makeLeaders(perGame, (p) => p.ast)} />
-            <LeaderBoard title="Steals (STL)" entries={makeLeaders(perGame, (p) => p.stl)} />
-            <LeaderBoard title="Blocks (BLK)" entries={makeLeaders(perGame, (p) => p.blk)} />
-            <LeaderBoard title="3-Pointers Made (3PM)" entries={makeLeaders(perGame, (p) => p.threePt)} />
+            <LeaderBoard pastSeason={pastSeason} title="Points (PTS)" entries={makeLeaders(perGame, (p) => p.pts)} />
+            <LeaderBoard pastSeason={pastSeason} title="Rebounds (REB)" entries={makeLeaders(perGame, (p) => p.trb)} />
+            <LeaderBoard pastSeason={pastSeason} title="Assists (AST)" entries={makeLeaders(perGame, (p) => p.ast)} />
+            <LeaderBoard pastSeason={pastSeason} title="Steals (STL)" entries={makeLeaders(perGame, (p) => p.stl)} />
+            <LeaderBoard pastSeason={pastSeason} title="Blocks (BLK)" entries={makeLeaders(perGame, (p) => p.blk)} />
+            <LeaderBoard pastSeason={pastSeason} title="3-Pointers Made (3PM)" entries={makeLeaders(perGame, (p) => p.threePt)} />
           </div>
         </TabsContent>
 
         <TabsContent value="efficiency">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <LeaderBoard title="FG%" entries={makeLeaders(perGame.filter((p) => p.fga >= 5), (p) => p.fgPct, "pct")} />
-            <LeaderBoard title="3P%" entries={makeLeaders(perGame.filter((p) => p.threePtA >= 2), (p) => p.threePtPct, "pct")} />
-            <LeaderBoard title="FT%" entries={makeLeaders(perGame.filter((p) => p.fta >= 2), (p) => p.ftPct, "pct")} />
-            <LeaderBoard title="TS%" entries={makeLeaders(advanced, (p) => p.tsPct, "pct")} />
-            <LeaderBoard title="eFG%" entries={makeLeaders(advanced, (p) => p.efgPct, "pct")} />
-            <LeaderBoard title="USG%" entries={makeLeaders(advanced, (p) => p.usgPct, "pct")} />
+            <LeaderBoard pastSeason={pastSeason} title="FG%" entries={makeLeaders(perGame.filter((p) => p.fga >= 5), (p) => p.fgPct, "pct")} />
+            <LeaderBoard pastSeason={pastSeason} title="3P%" entries={makeLeaders(perGame.filter((p) => p.threePtA >= 2), (p) => p.threePtPct, "pct")} />
+            <LeaderBoard pastSeason={pastSeason} title="FT%" entries={makeLeaders(perGame.filter((p) => p.fta >= 2), (p) => p.ftPct, "pct")} />
+            <LeaderBoard pastSeason={pastSeason} title="TS%" entries={makeLeaders(advanced, (p) => p.tsPct, "pct")} />
+            <LeaderBoard pastSeason={pastSeason} title="eFG%" entries={makeLeaders(advanced, (p) => p.efgPct, "pct")} />
+            <LeaderBoard pastSeason={pastSeason} title="USG%" entries={makeLeaders(advanced, (p) => p.usgPct, "pct")} />
           </div>
         </TabsContent>
 
         <TabsContent value="advanced">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <LeaderBoard title="Off Rating" entries={makeLeaders(advanced, (p) => p.offRating, "plus")} />
-            <LeaderBoard title="Def Rating" entries={makeLeaders(advanced, (p) => p.defRating, undefined, false)} />
-            <LeaderBoard title="Net Rating" entries={makeLeaders(advanced, (p) => p.netRating, "plus")} />
-            <LeaderBoard title="PIE" entries={makeLeaders(advanced, (p) => p.pie, "pct")} />
-            <LeaderBoard title="AST%" entries={makeLeaders(advanced, (p) => p.astPct, "pct")} />
-            <LeaderBoard title="REB%" entries={makeLeaders(advanced, (p) => p.rebPct, "pct")} />
+            <LeaderBoard pastSeason={pastSeason} title="Off Rating" entries={makeLeaders(advanced, (p) => p.offRating, "plus")} />
+            <LeaderBoard pastSeason={pastSeason} title="Def Rating" entries={makeLeaders(advanced, (p) => p.defRating, undefined, false)} />
+            <LeaderBoard pastSeason={pastSeason} title="Net Rating" entries={makeLeaders(advanced, (p) => p.netRating, "plus")} />
+            <LeaderBoard pastSeason={pastSeason} title="PIE" entries={makeLeaders(advanced, (p) => p.pie, "pct")} />
+            <LeaderBoard pastSeason={pastSeason} title="AST%" entries={makeLeaders(advanced, (p) => p.astPct, "pct")} />
+            <LeaderBoard pastSeason={pastSeason} title="REB%" entries={makeLeaders(advanced, (p) => p.rebPct, "pct")} />
           </div>
         </TabsContent>
       </Tabs>

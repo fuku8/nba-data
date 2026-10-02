@@ -8,6 +8,9 @@ import { findBoxScore, boxScoreGameIds } from "@/lib/data/games";
 import { PhaseBadge } from "@/components/phase-switch";
 import { withFullNames } from "@/lib/data/names-ja";
 import { SegmentedName } from "@/components/segmented-name";
+import { TeamLink } from "@/components/team-link";
+import { currentSeason } from "@/lib/season";
+import { playerHref, seasonPath } from "@/lib/season-path";
 
 export const dynamicParams = false;
 
@@ -124,7 +127,7 @@ function pct(v: number | null | undefined) {
   return (v * 100).toFixed(1) + "%";
 }
 
-function ScoreHeader({ away, home }: { away: TeamScore; home: TeamScore }) {
+function ScoreHeader({ away, home, pastSeason }: { away: TeamScore; home: TeamScore; pastSeason?: string }) {
   const awayWin = away.score > home.score;
   const homeWin = home.score > away.score;
 
@@ -133,11 +136,11 @@ function ScoreHeader({ away, home }: { away: TeamScore; home: TeamScore }) {
       <div className="flex items-center justify-between gap-4">
         {/* Away */}
         <div className={`flex-1 text-center ${awayWin ? "" : "opacity-50"}`}>
-          <Link href={`/teams/${away.tricode}`}>
+          <TeamLink abbr={away.tricode} pastSeason={pastSeason}>
             <div className="h-16 w-16 rounded-full mx-auto mb-2 flex items-center justify-center text-white text-xl font-bold" style={{ backgroundColor: getTeamColor(away.tricode) }}>
               {away.tricode}
             </div>
-          </Link>
+          </TeamLink>
           <div className={`text-5xl font-bold font-mono ${awayWin ? "" : "text-muted-foreground"}`}>{away.score}</div>
           <div className="text-sm text-muted-foreground mt-1">{away.wins}-{away.losses}</div>
         </div>
@@ -151,11 +154,11 @@ function ScoreHeader({ away, home }: { away: TeamScore; home: TeamScore }) {
 
         {/* Home */}
         <div className={`flex-1 text-center ${homeWin ? "" : "opacity-50"}`}>
-          <Link href={`/teams/${home.tricode}`}>
+          <TeamLink abbr={home.tricode} pastSeason={pastSeason}>
             <div className="h-16 w-16 rounded-full mx-auto mb-2 flex items-center justify-center text-white text-xl font-bold" style={{ backgroundColor: getTeamColor(home.tricode) }}>
               {home.tricode}
             </div>
-          </Link>
+          </TeamLink>
           <div className={`text-5xl font-bold font-mono ${homeWin ? "" : "text-muted-foreground"}`}>{home.score}</div>
           <div className="text-sm text-muted-foreground mt-1">{home.wins}-{home.losses}</div>
         </div>
@@ -164,7 +167,7 @@ function ScoreHeader({ away, home }: { away: TeamScore; home: TeamScore }) {
   );
 }
 
-function QuarterScores({ away, home }: { away: TeamScore; home: TeamScore }) {
+function QuarterScores({ away, home, pastSeason }: { away: TeamScore; home: TeamScore; pastSeason?: string }) {
   const quarters = [
     { label: "Q1", a: away.q1, h: home.q1 },
     { label: "Q2", a: away.q2, h: home.q2 },
@@ -193,11 +196,11 @@ function QuarterScores({ away, home }: { away: TeamScore; home: TeamScore }) {
             return (
               <tr key={team.tricode} className="border-b last:border-0">
                 <td className="py-3 px-4">
-                  <Link href={`/teams/${team.tricode}`} className="flex items-center gap-2 hover:underline font-medium">
+                  <TeamLink abbr={team.tricode} pastSeason={pastSeason} className="flex items-center gap-2 hover:underline font-medium">
                     <div className="h-3 w-3 rounded-full" style={{ backgroundColor: getTeamColor(team.tricode) }} />
                     {team.tricode}
                     {team.isHome && <span className="text-xs text-muted-foreground">H</span>}
-                  </Link>
+                  </TeamLink>
                 </td>
                 {vals.map((v, i) => (
                   <td key={i} className="py-3 px-4 text-center font-mono">{v ?? "—"}</td>
@@ -226,7 +229,7 @@ function sumMinutes(players: PlayerStats[]): string {
   return Math.round(total).toString();
 }
 
-function PlayerTable({ players, tricode, teamStats }: { players: PlayerStats[]; tricode: string; teamStats?: TeamStats }) {
+function PlayerTable({ players, tricode, teamStats, pastSeason }: { players: PlayerStats[]; tricode: string; teamStats?: TeamStats; pastSeason?: string }) {
   const active = players.filter((p) => p.minutes && p.minutes !== "");
   // 表示名はフル日本語名（plan §13-1）
   const sorted = withFullNames(
@@ -296,7 +299,7 @@ function PlayerTable({ players, tricode, teamStats }: { players: PlayerStats[]; 
             return (
               <tr key={p.personId} className="border-b last:border-0 hover:bg-muted/20">
                 <td className="py-2 px-3 font-medium sticky left-0 z-10 bg-card min-w-[12em] max-w-[12em] sm:max-w-none leading-snug">
-                  <Link href={`/players/${p.personId}`} className="block hover:underline">
+                  <Link href={playerHref(p.personId, pastSeason)} className="block hover:underline">
                     <SegmentedName name={p.player} />
                   </Link>
                 </td>
@@ -338,6 +341,8 @@ export default async function GameDetailPage({
   const away = box.teams.find((t) => !t.isHome);
   const home = box.teams.find((t) => t.isHome);
   if (!away || !home) notFound();
+  // 過去季の試合なら、リンク先をその季に保つ（plan.md §13-10）。試合一覧は今季分しか無いので、戻り先はその季のブラケット
+  const pastSeason = box.season === currentSeason() ? undefined : box.season;
 
   const awayStats = box.teamStats.find((t) => t.tricode === away.tricode);
   const homeStats = box.teamStats.find((t) => t.tricode === home.tricode);
@@ -352,21 +357,25 @@ export default async function GameDetailPage({
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Link href="/games/po" className="hover:underline">← 試合一覧</Link>
+        {pastSeason ? (
+          <Link href={seasonPath("/playoffs", pastSeason)} className="hover:underline">← プレーオフ</Link>
+        ) : (
+          <Link href="/games/po" className="hover:underline">← 試合一覧</Link>
+        )}
         <PhaseBadge phase="po" />
         {gameDate && <span>· {gameDate} (ET)</span>}
         <span>· {box.gameStatusText}</span>
       </div>
 
-      <ScoreHeader away={away} home={home} />
+      <ScoreHeader away={away} home={home} pastSeason={pastSeason} />
 
-      <QuarterScores away={away} home={home} />
+      <QuarterScores away={away} home={home} pastSeason={pastSeason} />
 
       {box.players.length > 0 ? (
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">チーム・選手スタッツ</h2>
-          <PlayerTable players={awayPlayers} tricode={away.tricode} teamStats={awayStats} />
-          <PlayerTable players={homePlayers} tricode={home.tricode} teamStats={homeStats} />
+          <PlayerTable players={awayPlayers} tricode={away.tricode} teamStats={awayStats} pastSeason={pastSeason} />
+          <PlayerTable players={homePlayers} tricode={home.tricode} teamStats={homeStats} pastSeason={pastSeason} />
         </div>
       ) : (
         <div className="rounded-xl border bg-card p-6 text-center text-muted-foreground text-sm">
