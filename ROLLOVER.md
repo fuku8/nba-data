@@ -60,11 +60,12 @@ git push origin main   # SSH が使えない環境では HTTPS URL を明示
 
 | 確認項目 | 期待 |
 |---|---|
-| `out/playoffs.html` | 「プレーオフ開幕前」 |
+| `out/playoffs.html` | 「プレーオフ開幕前」と、季の切替（2025-26 へのリンク） |
 | `out/index.html` | 見出しが「2026-27 Regular Season」 |
 | `out/players/203999.html` | 今季未出場の選手でもページがあり、2025-26 の RS が上・PO が下で出る |
 | 今季出場のある選手の `out/players/<id>.html` | Stats 表は今季の行＋「過去シーズン」の畳み、図表は季のタブ（既定は今季） |
-| `out/playoffs/NYK-SAS.html` | 過去季（2025-26）のシリーズ詳細が残っている |
+| `out/standings/2025-26.html`・`out/leaders/2025-26.html`・`out/leaders/po/2025-26.html`・`out/playoffs/2025-26.html` | 過去季に残すページ（`plan.md` §13-10）。ヘッダーが「2025-26・順位表・リーダーズ・プレーオフ・今季へ」だけで、チーム名がリンクになっていない |
+| `out/playoffs/2025-26/NYK-SAS.html` | 過去季（2025-26）のシリーズ詳細が残っている（季つきの URL。季なしの `out/playoffs/NYK-SAS.html` は無くなる） |
 | `out/games/0042500101.html` | 過去季（2025-26 PO）のボックススコアが残っている |
 | `out/og/players/` | 選手 OG 画像が1人1枚（582 件以上） |
 
@@ -104,7 +105,7 @@ npm run build
 
 繰越後の状態を模擬してビルドしたとき、以下の 2 件でビルドが落ちた（2026-09-02・`38ea369` で修正済み）。同種の変更を入れるときに再発しやすいので残す。
 
-1. **動的ルートの `generateStaticParams` が空になると `output: "export"` はビルド失敗にする**（「missing generateStaticParams()」。`next/dist/build/index.js` の `prerenderedRoutes.length > 0` 判定）。`/games/[gameId]` は boxscore（PO のみ取得）から params を作るため RS 期間中に空になった。→ 現季＋過去季から探す（`findBoxScore` / `boxScoreGameIds`）。新しい `[param]` ルートを足すときは「現季のデータが無い期間に params が空にならないか」を必ず考える。`/teams/[teamId]` は固定 30 チーム、`/players/[...slug]` は全季の選手を列挙するので安全。`/playoffs/[series]` は同じ理由で 2026-10-01 の模擬繰越ビルドが落ち、現季→過去季の順で探す形に直した。
+1. **動的ルートの `generateStaticParams` が空になると `output: "export"` はビルド失敗にする**（「missing generateStaticParams()」。`next/dist/build/index.js` の `prerenderedRoutes.length > 0` 判定）。`/games/[gameId]` は boxscore（PO のみ取得）から params を作るため RS 期間中に空になった。→ 現季＋過去季から探す（`findBoxScore` / `boxScoreGameIds`）。新しい `[param]` ルートを足すときは「現季のデータが無い期間に params が空にならないか」を必ず考える。`/teams/[teamId]` は固定 30 チーム、`/players/[...slug]` は全季の選手を列挙するので安全。`/playoffs/[series]` は同じ理由で 2026-10-01 の模擬繰越ビルドが落ちた。今は `/playoffs/[...slug]` が今季のシリーズに加えて過去季のブラケットとシリーズ（季つきの URL）を出すので、過去季がある限り空にならない。過去季に残すページ（`[[...season]]` ルート）と `/og/seasons/[...slug]` は、今季ぶんを必ず含めて空を避けている。
 2. **Route Handler は拡張子なしのファイルで書き出される**ため、`og/players/<id>` と `og/players/<id>/<season>` が同名衝突して EISDIR。→ 過去季は `/og/players/<season>/<id>` に逆順化。`page.tsx` は `.html` が付くので衝突しない。（2026-10-01 に選手ページを1人1ページにしたので、季つきの OG URL は今は無い）
 
 模擬ビルドのやり方（本体を汚さない）:
