@@ -1,0 +1,9 @@
+# OG画像の Content-Type。静的エクスポートで拡張子なしのファイルになるため、Cloudflare Pages が
+# application/octet-stream で配信してしまう（Google が画像と認識せず「ページ」として集計する）。
+# kokkai-data の public/_headers と同じ対処。
+/opengraph-image
+  Content-Type: image/png
+/*/opengraph-image
+  Content-Type: image/png
+/og/*
+  Content-Type: image/png
