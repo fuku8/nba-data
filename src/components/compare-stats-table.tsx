@@ -102,6 +102,8 @@ export function CompareStatsTable<P extends { playerId: number; player: string }
                     style={favors === null ? undefined : { color: colors[favors] }}
                   >
                     {formatDiff(a, b, row.digits)}
+                    {/* 有利な側を矢印でも示す（↑上段・↓下段）。DRtg のような低いほど良い項目は符号から読めず、色だけでは色覚異常で区別できない */}
+                    {favors === 0 ? " ↑" : favors === 1 ? " ↓" : ""}
                   </td>
                 );
               })}
@@ -113,7 +115,7 @@ export function CompareStatsTable<P extends { playerId: number; player: string }
       </div>
       <p className="mt-2 text-xs text-muted-foreground">
         緑の太字はその項目で最も良い値（2人以上のとき。GP・MPGは向きがないため対象外、DRtgは低いほど良い向きで判定）。
-        2人比較のときは最下行に差を表示し、色は有利な側の選手色。
+        2人比較のときは最下行に差を表示し、↑は上段・↓は下段の選手が有利（色も有利な側の選手色）。
       </p>
     </div>
   );

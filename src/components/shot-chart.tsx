@@ -37,6 +37,10 @@ const R = 3.2;
 // 各点を半径Rの円弧2つで描くサブパスにして連結する（座標は整数0.1ft単位なので小数は出ない）
 const dotsPath = (pts: Shot[]) =>
   pts.map(([x, y]) => `M${sx(x) - R},${sy(y)}a${R},${R} 0 1,0 ${R * 2},0a${R},${R} 0 1,0 -${R * 2},0`).join("");
+// 失敗は×印（形でも成功と区別する。緑／灰の色だけだと色覚異常や印刷で見分けられない。Hue-Man Factor, IEEE VIS 2025）
+const XR = 2.6;
+const crossesPath = (pts: Shot[]) =>
+  pts.map(([x, y]) => `M${sx(x) - XR},${sy(y) - XR}l${XR * 2},${XR * 2}M${sx(x) - XR},${sy(y) + XR}l${XR * 2},-${XR * 2}`).join("");
 
 export function ShotChart({ shots }: { shots: Shot[] }) {
   if (shots.length === 0) return null;
@@ -53,7 +57,7 @@ export function ShotChart({ shots }: { shots: Shot[] }) {
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[440px]" role="img" aria-label="ショットチャート">
         <CourtLines />
         {/* 点は成功/失敗それぞれ1本の <path> にまとめる（1,000個超の <circle> だと静的HTMLとRSCペイロードで二重に太る。plan.md §12-11） */}
-        <path d={dotsPath(drawnMissed)} fill="#64748b" fillOpacity={0.4} />
+        <path d={crossesPath(drawnMissed)} fill="none" stroke="#64748b" strokeOpacity={0.55} strokeWidth={1.2} />
         <path d={dotsPath(drawnMade)} fill="#10b981" fillOpacity={0.65} />
       </svg>
       <div className="flex gap-4 text-xs text-muted-foreground">
@@ -62,7 +66,9 @@ export function ShotChart({ shots }: { shots: Shot[] }) {
           成功 {made.length}
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full inline-block bg-slate-500 opacity-60" />
+          <svg width={10} height={10} aria-hidden="true" className="text-slate-500">
+            <path d="M1,1L9,9M1,9L9,1" stroke="currentColor" strokeWidth={1.5} />
+          </svg>
           失敗 {missed.length}
         </span>
         <span>FG {pct.toFixed(1)}%（{shots.length}本）</span>

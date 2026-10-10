@@ -37,6 +37,8 @@ function BracketSlot({ s }: { s: PlayoffSeries | null }) {
     // 枠全体がシリーズ詳細へのリンク（重ねたLink）。チーム名リンクは z-10 で上に残す
     <div className={`relative h-full rounded-md border bg-card px-2 py-1.5 text-sm min-h-14 flex flex-col justify-center gap-0.5 transition-colors hover:bg-accent/40 ${inProgress ? "border-orange-500/60" : ""}`}>
       <Link href={seriesHref(s, pastSeason)} className="absolute inset-0" aria-label="シリーズ詳細" />
+      {/* 進行中は橙の枠に加えて文字でも示す（枠色だけだと色覚異常で終了シリーズと区別できない） */}
+      {inProgress && <span className="absolute right-1 top-0.5 text-[10px] leading-none text-orange-500">進行中</span>}
       {rows.map((t) => {
         const abbr = getTeamAbbr(t.name);
         const won = !inProgress && s.winner === t.name;
@@ -147,7 +149,10 @@ function SeriesRow({ s }: { s: PlayoffSeries }) {
     <div className={`relative grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-md border bg-card px-3 py-2 text-sm transition-colors hover:bg-accent/40 ${inProgress ? "border-orange-500/60" : ""}`}>
       <Link href={seriesHref(s, pastSeason)} className="absolute inset-0" aria-label="シリーズ詳細" />
       <div className="flex justify-end">{side(s.team1, false)}</div>
-      <span className={`font-mono font-semibold tabular-nums ${inProgress ? "text-orange-500" : ""}`}>{s.team1Wins}-{s.team2Wins}</span>
+      <span className={`flex flex-col items-center font-mono font-semibold tabular-nums ${inProgress ? "text-orange-500" : ""}`}>
+        {s.team1Wins}-{s.team2Wins}
+        {inProgress && <span className="text-[10px] font-normal leading-none">進行中</span>}
+      </span>
       <div className="flex justify-start">{side(s.team2, true)}</div>
     </div>
   );

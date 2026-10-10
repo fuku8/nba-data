@@ -306,7 +306,7 @@ function CompareGroup({
 }) {
   const legend = (
     <span className="text-xs text-muted-foreground">
-      <span className="font-semibold" style={{ color: RS_COLOR }}>灰=RS</span> · <span className="font-semibold" style={{ color: PO_COLOR }}>橙=PO</span>
+      <span className="font-semibold" style={{ color: RS_COLOR }}>破線（灰）=RS</span> · <span className="font-semibold" style={{ color: PO_COLOR }}>実線（橙）=PO</span>
     </span>
   );
   const arrow = (a: number | null, b: number | null) =>
