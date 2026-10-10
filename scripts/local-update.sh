@@ -5,8 +5,18 @@ REPO_DIR="/Users/arakawahiroaki/nba-data"
 cd "$REPO_DIR"
 
 # 実行証跡: 開始1行・終了1行を logs/run.log に残す。末尾が start のままなら前回が終わっていない
+# ロック兼用: その start が LOCK_TTL_MIN 以内なら実行中とみなして退く。超過はクラッシュ残骸として無視（警告のみ）
 RUN_LOG=logs/run.log
-tail -n1 "$RUN_LOG" 2>/dev/null | grep -q ' start$' && echo "[$(date '+%Y-%m-%d %H:%M:%S')] WARN previous run has no end line" | tee -a "$RUN_LOG"
+LOCK_TTL_MIN=120
+last="$(tail -n1 "$RUN_LOG" 2>/dev/null || true)"
+if [[ "$last" == *' start' ]]; then
+  age=$(( ( $(date +%s) - $(date -j -f '%Y-%m-%d %H:%M:%S' "${last:1:19}" +%s) ) / 60 ))
+  if (( age < LOCK_TTL_MIN )); then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] another run started ${age}min ago -> skip"
+    exit 0
+  fi
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] WARN previous run has no end line (${age}min ago, stale -> ignore)" | tee -a "$RUN_LOG"
+fi
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] start" >> "$RUN_LOG"
 trap 'rc=$?; echo "[$(date "+%Y-%m-%d %H:%M:%S")] end rc=$rc" >> "$RUN_LOG"' EXIT
 
@@ -33,6 +43,9 @@ if [[ "$(date +%u)" == "7" ]]; then
     /usr/bin/git clean -fdq data/shots
   }
 fi
+
+# 所有者別仕分け: このジョブが書くのは data/ だけ。それ以外の未コミット差分は人の編集として触らず報告のみ
+/usr/bin/git status --porcelain | grep -v '^.. data/' | sed "s/^/[$(date '+%Y-%m-%d %H:%M:%S')] NOTE untouched (not ours): /" || true
 
 git add data/
 if /usr/bin/git diff --cached --quiet; then
