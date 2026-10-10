@@ -38,9 +38,9 @@ function parseIds(raw: string | null, players: ComparePlayer[]): number[] {
     .slice(0, MAX_PLAYERS);
 }
 
-const COLORS = ["#3b82f6", "#ef4444", "#22c55e", "#f59e0b"];
-// 選手ごとの線種。赤と緑（2人目・3人目）は1型・2型色覚で混同しやすいため、色だけに頼らない（Hue-Man Factor, IEEE VIS 2025）
-const DASHES = ["", "6 3", "2 3", "8 3 2 3"];
+// 系列は色だけで区別し、線種は使わない（2026-08-06 ユーザー決定: 破線は図のうるささと凡例の見にくさが上回る。sumo-data docs/design-system.md）。
+// その代わり色対は色覚多様性でも判別できる Okabe-Ito パレット（空色・橙・緑・赤紫）。旧 #ef4444×#22c55e は赤緑で1型・2型色覚で混同しやすかった
+const COLORS = ["#56b4e9", "#e69f00", "#009e73", "#cc79a7"];
 
 export interface ComparePlayer {
   playerId: number;
@@ -76,16 +76,14 @@ export interface ComparePlayer {
   } | null;
 }
 
-// 凡例を選択順・縦1列で描画（rechartsの並びに依存しない）。見本は図と同じ線種の短い線
-const legendContent = (items: { name: string; color: string; dash: string }[]) =>
+// 凡例を選択順・縦1列で描画（rechartsの並びに依存しない）
+const legendContent = (items: { name: string; color: string }[]) =>
   function LegendList() {
     return (
       <ul className="flex flex-col items-center gap-1 text-sm" style={{ paddingTop: 36 }}>
         {items.map((it) => (
           <li key={it.name} className="flex items-center gap-1.5" style={{ color: it.color }}>
-            <svg width={24} height={10} aria-hidden="true" className="shrink-0">
-              <line x1={1} y1={5} x2={23} y2={5} stroke={it.color} strokeWidth={2} strokeDasharray={it.dash || undefined} />
-            </svg>
+            <span className="inline-block h-2.5 w-2.5 shrink-0" style={{ backgroundColor: it.color }} />
             {it.name}
           </li>
         ))}
@@ -291,7 +289,8 @@ export function CompareClient({ players, phase, season, poAvailable, asOf }: { p
                   <RadarChart data={radarData} outerRadius="72%">
                     <PolarGrid />
                     <PolarAngleAxis dataKey="stat" />
-                    <PolarRadiusAxis domain={[0, 100]} tick={false} />
+                    {/* axisLine: 目盛りを消しても軸線だけ中心から右へ残るので消す */}
+                    <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
                     {selectedPlayers.map((p, i) => (
                       <Radar
                         key={p.playerId}
@@ -299,14 +298,13 @@ export function CompareClient({ players, phase, season, poAvailable, asOf }: { p
                         dataKey={p.playerId}
                         stroke={COLORS[i]}
                         strokeWidth={2}
-                        strokeDasharray={DASHES[i] || undefined}
                         fill={COLORS[i]}
                         fillOpacity={0.12}
                       />
                     ))}
                     <Legend
                       verticalAlign="bottom"
-                      content={legendContent(selectedPlayers.map((p, i) => ({ name: dn(p), color: COLORS[i], dash: DASHES[i] })))}
+                      content={legendContent(selectedPlayers.map((p, i) => ({ name: dn(p), color: COLORS[i] })))}
                     />
                   </RadarChart>
                 </ResponsiveContainer>
@@ -333,7 +331,7 @@ export function CompareClient({ players, phase, season, poAvailable, asOf }: { p
                     <RadarChart data={radarData2} outerRadius="72%">
                       <PolarGrid />
                       <PolarAngleAxis dataKey="stat" />
-                      <PolarRadiusAxis domain={[0, 100]} tick={false} />
+                      <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
                       {hustleEligible.map((p) => {
                         const i = selectedPlayers.indexOf(p);
                         return (
@@ -343,7 +341,6 @@ export function CompareClient({ players, phase, season, poAvailable, asOf }: { p
                             dataKey={p.playerId}
                             stroke={COLORS[i]}
                             strokeWidth={2}
-                            strokeDasharray={DASHES[i] || undefined}
                             fill={COLORS[i]}
                             fillOpacity={0.12}
                           />
@@ -351,12 +348,7 @@ export function CompareClient({ players, phase, season, poAvailable, asOf }: { p
                       })}
                       <Legend
                         verticalAlign="bottom"
-                        content={legendContent(
-                          hustleEligible.map((p) => {
-                            const i = selectedPlayers.indexOf(p);
-                            return { name: dn(p), color: COLORS[i], dash: DASHES[i] };
-                          })
-                        )}
+                        content={legendContent(hustleEligible.map((p) => ({ name: dn(p), color: COLORS[selectedPlayers.indexOf(p)] })))}
                       />
                     </RadarChart>
                   </ResponsiveContainer>

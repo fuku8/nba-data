@@ -22,8 +22,8 @@ function pt(i: number, n: number, r: number): [number, number] {
   return [CX + r * Math.cos(a), CY + r * Math.sin(a)];
 }
 
-// base を渡すと base（灰・破線）の上に items（橙・実線）を重ねる（RS vs PO 比較用。軸の並びは同じ前提）。
-// 色に加えて線種でも区別する（色覚異常・印刷で灰と橙が近づいても読める）
+// base を渡すと base（灰）の上に items（橙）を重ねる（RS vs PO 比較用。軸の並びは同じ前提）。
+// 線種は使わない（2026-08-06 ユーザー決定: 破線は図のうるささが上回る。灰×橙は明度差で判別できる）
 export function VersatilityRadar({ items, base }: { items: RadarItem[]; base?: RadarItem[] }) {
   const n = items.length;
   const ring = (frac: number) => items.map((_, i) => pt(i, n, R * frac).join(",")).join(" ");
@@ -39,7 +39,7 @@ export function VersatilityRadar({ items, base }: { items: RadarItem[]; base?: R
         const [x, y] = pt(i, n, R);
         return <line key={i} x1={CX} y1={CY} x2={x} y2={y} stroke="currentColor" strokeOpacity={0.15} />;
       })}
-      {base && <polygon points={shapeOf(base)} fill="#94a3b8" fillOpacity={0.3} stroke="#94a3b8" strokeWidth={1.5} strokeDasharray="6 3" />}
+      {base && <polygon points={shapeOf(base)} fill="#94a3b8" fillOpacity={0.3} stroke="#94a3b8" strokeWidth={1.5} />}
       <polygon points={shape} fill="#f97316" fillOpacity={0.35} stroke="#f97316" strokeWidth={1.5} />
       {items.map((it, i) => {
         const [x, y] = pt(i, n, R + 18);
