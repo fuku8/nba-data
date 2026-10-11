@@ -28,13 +28,14 @@ export const seasonLabel = (phase: Phase, season = currentSeason()) =>
 
 export type Stat = { label: string; value: string };
 
-// title（大）・subtitle（中）・stats（下段の数値）・accent（左帯の色）
-export function ogImage({ title, subtitle, stats = [], accent = "#3f3f46", kicker }: {
+// title（大）・subtitle（中）・stats（下段の数値）・accent（左帯の色）・asOf（下段右の「データ反映 日付」。数値を載せる画像で渡す）
+export function ogImage({ title, subtitle, stats = [], accent = "#3f3f46", kicker, asOf }: {
   title: string;
   subtitle?: string;
   stats?: Stat[];
   accent?: string;
   kicker?: string;
+  asOf?: string;
 }) {
   // 全角（日本語）は半角の約2倍幅なので、幅換算でサイズを段階的に落とす
   const units = [...title].reduce((a, c) => a + ((c.codePointAt(0) ?? 0) > 0xff ? 2 : 1), 0);
@@ -52,13 +53,16 @@ export function ogImage({ title, subtitle, stats = [], accent = "#3f3f46", kicke
             <div style={{ fontSize: titleSize, fontWeight: 700, lineHeight: 1.1 }}>{title}</div>
             {subtitle && <div style={{ fontSize: 38, color: SOFT, marginTop: 18 }}>{subtitle}</div>}
           </div>
-          <div style={{ display: "flex", gap: 56, minHeight: 90 }}>
-            {stats.map((s) => (
-              <div key={s.label} style={{ display: "flex", flexDirection: "column" }}>
-                <span style={{ fontSize: 26, color: SOFT }}>{s.label}</span>
-                <span style={{ fontSize: 56, fontWeight: 700, lineHeight: 1.1 }}>{s.value}</span>
-              </div>
-            ))}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", minHeight: 90 }}>
+            <div style={{ display: "flex", gap: 56 }}>
+              {stats.map((s) => (
+                <div key={s.label} style={{ display: "flex", flexDirection: "column" }}>
+                  <span style={{ fontSize: 26, color: SOFT }}>{s.label}</span>
+                  <span style={{ fontSize: 56, fontWeight: 700, lineHeight: 1.1 }}>{s.value}</span>
+                </div>
+              ))}
+            </div>
+            {asOf && <span style={{ fontSize: 26, color: SOFT }}>データ反映 {asOf}</span>}
           </div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { NBA_TEAMS } from "@/lib/constants/teams";
 import { getTeamAdvanced } from "@/lib/data/teams";
+import { getLatestGameDate } from "@/lib/data/games";
 import { getTeamAbbr } from "@/lib/constants/teams";
 import { currentSeason } from "@/lib/season";
 import { ogImage, OG_SIZE, OG_CONTENT_TYPE } from "@/lib/og";
@@ -23,6 +24,7 @@ export default async function Image({ params }: { params: Promise<{ teamId: stri
     subtitle: `${info?.conference}ern Conference`,
     kicker: `NBA ${currentSeason()}`,
     accent: info?.primaryColor,
+    asOf: getLatestGameDate(),
     stats: adv ? [
       { label: "ORtg", value: adv.offRating.toFixed(1) },
       { label: "DRtg", value: adv.defRating.toFixed(1) },

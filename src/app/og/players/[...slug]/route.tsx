@@ -1,5 +1,6 @@
 import { getTeamColor, getTeamInfo } from "@/lib/constants/teams";
 import { ogImage } from "@/lib/og";
+import { getLatestGameDate } from "@/lib/data/games";
 import { playerNameJa } from "@/lib/data/names-ja";
 
 // 選手ページは catch-all ルートなので、その下に opengraph-image.tsx は置けない（Next の制約）。
@@ -24,6 +25,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
     subtitle: `${ja ? `${pg.player} · ` : ""}${getTeamInfo(pg.team)?.name ?? pg.team} · ${pg.gp} GP · ${pg.mpg.toFixed(1)} MPG`,
     kicker: `NBA ${season}`,
     accent: getTeamColor(pg.team),
+    asOf: getLatestGameDate(season),
     stats: [
       { label: "PTS", value: pg.pts.toFixed(1) },
       { label: "REB", value: pg.trb.toFixed(1) },
