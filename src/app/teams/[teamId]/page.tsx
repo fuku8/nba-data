@@ -35,13 +35,12 @@ export async function generateMetadata({ params }: { params: Promise<{ teamId: s
   const abbr = teamId.toUpperCase();
   const info = NBA_TEAMS[abbr];
   if (!info) return {};
-  const st = getStandings().find((s) => s.teamAbbr === abbr);
-  const rec = st ? `成績 ${st.wins}-${st.losses}、` : "";
+  // 勝敗は入れない（1日1回の更新で、検索結果の説明文は再クロールまで古い数字が残る）
   // 日本語名を主・英語名を従の併記（plan §13-1 段階1。検索流入用で、画面表示は変えない）
   const ja = teamNameJa(abbr);
   return pageMeta({
     title: `${ja ? `${ja}（${info.name}）` : info.name} · NBA ${currentSeason()}`,
-    description: `${ja ?? info.name}（${abbr}）の NBA ${currentSeason()} シーズン。${rec}レーティング・Season Heartbeat・ワンマン度・攻撃/守備4ファクター・ボール支配・チームスタッツ・ロスター${isPlayoffDataAvailable() ? "・プレーオフ成績" : ""}。`,
+    description: `${ja ?? info.name}（${abbr}）の NBA ${currentSeason()} シーズン。レーティング・Season Heartbeat・ワンマン度・攻撃/守備4ファクター・ボール支配・チームスタッツ・ロスター${isPlayoffDataAvailable() ? "・プレーオフ成績" : ""}。`,
     path: `/teams/${abbr}`,
   });
 }
