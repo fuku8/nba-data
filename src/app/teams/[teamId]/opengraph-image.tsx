@@ -1,5 +1,5 @@
 import { NBA_TEAMS } from "@/lib/constants/teams";
-import { getTeamAdvanced } from "@/lib/data/teams";
+import { getStandings, getTeamAdvanced } from "@/lib/data/teams";
 import { getLatestGameDate } from "@/lib/data/games";
 import { getTeamAbbr } from "@/lib/constants/teams";
 import { currentSeason } from "@/lib/season";
@@ -16,12 +16,13 @@ export default async function Image({ params }: { params: Promise<{ teamId: stri
   const { teamId } = await params;
   const abbr = teamId.toUpperCase();
   const info = NBA_TEAMS[abbr];
+  const st = getStandings().find((s) => s.teamAbbr === abbr);
   const adv = getTeamAdvanced().find((a) => getTeamAbbr(a.teamName) === abbr);
   const signed = (v: number) => (v > 0 ? "+" : "") + v.toFixed(1);
   return ogImage({
     title: info?.name ?? abbr,
-    // 勝敗は入れない（1日1回の更新で、SNS に残った過去投稿のサムネイルが日程進行後に古い数字のまま残る）
-    subtitle: `${info?.conference}ern Conference`,
+    // 勝敗は画面の見出しと同じ「○勝○敗」。古い投稿に残っても asOf の日付で時点が分かる
+    subtitle: st ? `${st.wins}勝${st.losses}敗 · ${info?.conference}ern Conference` : `${info?.conference}ern Conference`,
     kicker: `NBA ${currentSeason()}`,
     accent: info?.primaryColor,
     asOf: getLatestGameDate(),
