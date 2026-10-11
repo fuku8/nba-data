@@ -5,6 +5,7 @@ import { teamNameJa, withDisplayNames, withFullNames } from "@/lib/data/names-ja
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ChevronDown } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { getStandings, getTeamAdvanced, getTeamPerGame, getTeamPointsGini, getTeamDefenseFactors, getTeamOffenseFactors, getTerrainTeams, GINI_MIN_MP } from "@/lib/data/teams";
 import { getPlayerPerGame, getPlayerAdvanced, getPlayerTotals, getRoster, currentTeam } from "@/lib/data/players";
@@ -256,7 +257,7 @@ export default async function TeamDetailPage({
           ))}
         </div>
       )}
-      <div>
+      <div id="roster" className="scroll-mt-7">
         <h3 className="text-sm font-medium text-muted-foreground mb-2">ロスター — プレーオフ スタッツ</h3>
         <RosterClient players={poPlayers} />
       </div>
@@ -455,7 +456,7 @@ export default async function TeamDetailPage({
         <Separator />
 
         {/* ロスター */}
-        <Card>
+        <Card id="roster" className="scroll-mt-7">
           <CardHeader>
             <CardTitle>Roster ({rosterRows.length} players)</CardTitle>
           </CardHeader>
@@ -478,7 +479,7 @@ export default async function TeamDetailPage({
           {/* 日本語名主・英語名従（plan §13-1 段階4。選手ページの h1 と同型） */}
           <h1 className="text-3xl font-bold tracking-tight">{teamNameJa(abbr) ?? teamInfo.name}</h1>
           {teamNameJa(abbr) && <p className="text-sm text-muted-foreground">{teamInfo.name}</p>}
-          <div className="flex items-center gap-2 text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-2 text-muted-foreground">
             <span>{teamInfo.conference}ern Conference</span>
             <span>·</span>
             <span>{teamInfo.division} Division</span>
@@ -486,10 +487,17 @@ export default async function TeamDetailPage({
               <>
                 <span>·</span>
                 <Badge variant="outline">
-                  {standing.wins}-{standing.losses}
+                  {standing.wins}勝{standing.losses}敗
                 </Badge>
               </>
             )}
+            {/* 図が5ブロック続きロスターが深い位置になるため、勝敗バッジと同じ部品で入口を置く。
+                Link ではなく素の <a>: 同じ #roster を再クリックしても飛ぶ。
+                飛び先の id は RS/PO 両方のロスターに付けてある（Radix Tabs は非表示タブを DOM から外すので衝突しない） */}
+            <Badge variant="outline" render={<a href="#roster" />}>
+              ロスター {rosterRows.length}人
+              <ChevronDown data-icon="inline-end" />
+            </Badge>
           </div>
         </div>
       </div>
