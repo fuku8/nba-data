@@ -62,7 +62,13 @@ export function ogImage({ title, subtitle, stats = [], accent = "#3f3f46", kicke
                 </div>
               ))}
             </div>
-            {asOf && <span style={{ fontSize: 26, color: SOFT }}>データ反映 {asOf}</span>}
+            {/* 数値5つで横幅がほぼ埋まるので2行に分け、縮めずに右端（上段の季の表記と同じ位置）へ寄せる */}
+            {asOf && (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", flexShrink: 0, marginLeft: 32, fontSize: 26, color: SOFT }}>
+                <span>データ反映</span>
+                <span>{asOf}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
