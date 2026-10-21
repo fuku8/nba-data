@@ -443,9 +443,11 @@ def compute_po_series(po_games_ready: bool) -> bool:
             return False
 
         po_games_path = os.path.join(DATA_DIR, "po_games.csv")
+        # PO 開始前は po_games.csv が無い（繰越で消え、PO の試合が出るまで作られない）。失敗扱いにすると
+        # local-update.sh が data/ ごと戻し、RS の日次取得が毎日捨てられる
         if not os.path.exists(po_games_path):
-            print("  ✗ po_games.csv が存在しません")
-            return False
+            print("  - po_games.csv なし（PO 開始前）: po_series は集計しない")
+            return True
 
         games_df = pd.read_csv(po_games_path)
         series_data: dict = {}
