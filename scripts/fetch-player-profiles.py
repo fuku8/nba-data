@@ -37,7 +37,8 @@ def load_target_ids() -> list[int]:
     for path in [PER_GAME_CSV, PO_PER_GAME_CSV, os.path.join(DATA_DIR, "player_teams.csv")]:
         if os.path.exists(path):
             df = pd.read_csv(path, usecols=["PLAYER_ID"])
-            ids.update(df["PLAYER_ID"].tolist())
+            # 空欄が1つでもあると列が float になり、全 ID が 1630173.0 の形で API に渡る
+            ids.update(df["PLAYER_ID"].dropna().astype(int).tolist())
     return sorted(ids)
 
 
