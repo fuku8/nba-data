@@ -31,9 +31,10 @@ def load_fetched_ids() -> set[int]:
 
 
 def load_target_ids() -> list[int]:
-    """player_per_game.csv と po_player_per_game.csv から全選手 ID をマージして返す。"""
+    """player_per_game.csv・po_player_per_game.csv・player_teams.csv（名簿）から全選手 ID をマージして返す。
+    名簿を含めるのは、未出場のルーキー・新加入もロスター表に名前が出るため（日本語名の対象はこのファイルの選手）"""
     ids: set[int] = set()
-    for path in [PER_GAME_CSV, PO_PER_GAME_CSV]:
+    for path in [PER_GAME_CSV, PO_PER_GAME_CSV, os.path.join(DATA_DIR, "player_teams.csv")]:
         if os.path.exists(path):
             df = pd.read_csv(path, usecols=["PLAYER_ID"])
             ids.update(df["PLAYER_ID"].tolist())
