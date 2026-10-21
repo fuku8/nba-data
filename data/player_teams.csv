@@ -8,12 +8,10 @@ PLAYER_ID,PLAYER_NAME,TEAM_ABBREVIATION
 1629638,Nickeil Alexander-Walker,ATL
 1628960,Grayson Allen,PHX
 1628386,Jarrett Allen,CLE
-1630631,Jose Alvarado,NYK
 203937,Kyle Anderson,MIN
 1630828,Alex Antetokounmpo,MIL
 203507,Giannis Antetokounmpo,MIL
 203648,Thanasis Antetokounmpo,MIL
-1628384,OG Anunoby,NYK
 1630166,Deni Avdija,POR
 1629028,Deandre Ayton,LAL
 1628963,Marvin Bagley III,DAL
@@ -24,9 +22,7 @@ PLAYER_ID,PLAYER_NAME,TEAM_ABBREVIATION
 1630217,Desmond Bane,ORL
 1630625,Dalano Banton,BOS
 1631230,Dominick Barlow,PHI
-203084,Harrison Barnes,SAS
 1630567,Scottie Barnes,TOR
-1642964,Brooks Barnhizer,OKC
 1629628,RJ Barrett,TOR
 1629646,Charles Bassey,GSW
 1642419,Jamison Battle,TOR
@@ -40,26 +36,20 @@ PLAYER_ID,PLAYER_NAME,TEAM_ABBREVIATION
 1641710,Anthony Black,ORL
 1641778,Leaky Black,WAS
 203992,Bogdan Bogdanović,LAC
-1641737,Adem Bona,PHI
 1626164,Devin Booker,PHX
 1631123,Jamaree Bouyea,PHX
 1628396,Tony Bradley,ATL
 1631128,Christian Braun,DEN
 1642886,Koby Brea,PHX
-1628969,Mikal Bridges,NYK
 1628970,Miles Bridges,CHA
 1628415,Dillon Brooks,PHX
 1641780,Johni Broome,PHI
 1628971,Bruce Brown,DEN
-1627759,Jaylen Brown,BOS
 1641738,Kobe Brown,IND
-1628973,Jalen Brunson,NYK
-1642868,Carter Bryant,SAS
 1628418,Thomas Bryant,CLE
 202710,Jimmy Butler III,GSW
 1641824,Matas Buzelis,CHI
 1631288,Jamal Cain,ORL
-203484,Kentavious Caldwell-Pope,MEM
 1641739,Toumani Camara,POR
 203991,Clint Capela,HOU
 1642928,Dylan Cardwell,SAC
@@ -68,10 +58,7 @@ PLAYER_ID,PLAYER_NAME,TEAM_ABBREVIATION
 1642269,Devin Carter,SAC
 1628975,Jevon Carter,ORL
 1628976,Wendell Carter Jr.,ORL
-1627936,Alex Caruso,OKC
-1642264,Stephon Castle,SAS
 1630658,Colin Castleton,ORL
-1630577,Julian Champagnie,SAS
 1630551,Justin Champagnie,WAS
 1642353,Cam Christie,LAC
 1631108,Max Christie,DAL
@@ -79,7 +66,6 @@ PLAYER_ID,PLAYER_NAME,TEAM_ABBREVIATION
 1631321,Sidy Cissoko,POR
 1641740,Jaylen Clark,MIN
 1629634,Brandon Clarke,MEM
-203903,Jordan Clarkson,NYK
 1629651,Nic Claxton,BKN
 1642383,Walter Clayton Jr.,MEM
 1642363,Nique Clifford,SAC
@@ -87,7 +73,6 @@ PLAYER_ID,PLAYER_NAME,TEAM_ABBREVIATION
 1641730,Noah Clowney,BKN
 1629599,Amir Coffey,PHX
 1642268,Isaiah Collier,UTA
-1628381,John Collins,LAC
 1628380,Zach Collins,CHI
 201144,Mike Conley,MIN
 1626192,Pat Connaughton,CHA
@@ -96,7 +81,6 @@ PLAYER_ID,PLAYER_NAME,TEAM_ABBREVIATION
 1642907,Cedric Coward,MEM
 1642384,Isaiah Crawford,HOU
 1643018,LJ Cryer,GSW
-1630595,Cade Cunningham,DET
 203552,Seth Curry,GSW
 201939,Stephen Curry,GSW
 1642359,Pacôme Dadiet,NYK
@@ -115,19 +99,15 @@ PLAYER_ID,PLAYER_NAME,TEAM_ABBREVIATION
 1629029,Luka Dončić,LAL
 1629652,Luguentz Dort,OKC
 1630245,Ayo Dosunmu,MIN
-203083,Andre Drummond,PHI
 1627739,Kris Dunn,LAC
 1642346,Ryan Dunn,PHX
 201142,Kevin Durant,HOU
-1631105,Jalen Duren,DET
 1642856,Egor Dëmin,BKN
 1631106,Tari Eason,HOU
 1641744,Zach Edey,MEM
-1642845,VJ Edgecombe,PHI
 1630162,Anthony Edwards,MIN
 1642348,Justin Edwards,PHI
 1631165,Keon Ellis,CLE
-203954,Joel Embiid,PHI
 1642400,Tristan Enaruna,CLE
 1642855,Noa Essengue,CHI
 1630623,Tyson Etienne,BKN
@@ -139,25 +119,20 @@ PLAYER_ID,PLAYER_NAME,TEAM_ABBREVIATION
 1642843,Cooper Flagg,DAL
 1642853,Rasheer Fleming,PHX
 1631323,Simone Fontecchio,MIA
-1628368,De'Aaron Fox,SAS
 1642402,Enrique Freeman,MIN
 1642277,Johnny Furphy,IND
 1629655,Daniel Gafford,DAL
 1642066,Myron Gardner,MIA
 1629636,Darius Garland,LAC
-1630568,Luka Garza,BOS
 1641718,Keyonte George,UTA
 1642273,Kyshawn George,WAS
-202331,Paul George,PHI
 201959,Taj Gibson,MEM
 1630581,Josh Giddey,CHI
 1642933,Keshon Gilbert,ATL
-1628983,Shai Gilgeous-Alexander,OKC
 1630264,Anthony Gill,WAS
 1631221,Collin Gillespie,PHX
 203497,Rudy Gobert,MIN
 1642884,Vladislav Goldin,MIA
-1642864,Hugo González,BOS
 1630692,Jordan Goodwin,PHX
 203932,Aaron Gordon,DEN
 203924,Jerami Grant,POR
@@ -165,7 +140,6 @@ PLAYER_ID,PLAYER_NAME,TEAM_ABBREVIATION
 1631260,AJ Green,MIL
 203110,Draymond Green,GSW
 1630224,Jalen Green,PHX
-1629750,Javonte Green,DET
 201145,Jeff Green,HOU
 1630182,Josh Green,CHA
 1629656,Quentin Grimes,PHI
@@ -177,13 +151,9 @@ PLAYER_ID,PLAYER_NAME,TEAM_ABBREVIATION
 201935,James Harden,CLE
 1630702,Jaden Hardy,WAS
 1641989,Elijah Harkless,UTA
-1642844,Dylan Harper,SAS
 1631199,Ron Harper Jr.,BOS
 203914,Gary Harris,MIL
 202699,Tobias Harris,DET
-1628404,Josh Hart,NYK
-1628392,Isaiah Hartenstein,OKC
-1630573,Sam Hauser,BOS
 1641722,Jordan Hawkins,NOP
 1629637,Jaxson Hayes,LAL
 1630165,Killian Hayes,SAC
@@ -196,12 +166,9 @@ PLAYER_ID,PLAYER_NAME,TEAM_ABBREVIATION
 1642396,Blake Hinson,UTA
 1628988,Aaron Holiday,HOU
 201950,Jrue Holiday,POR
-1641842,Ronald Holland II,DET
 1641747,DaRon Holmes II,DEN
-1631096,Chet Holmgren,OKC
 201143,Al Horford,GSW
 1641724,Jett Howard,ORL
-1628989,Kevin Huerter,DET
 1630643,Jay Huff,IND
 1630574,Ariel Hukporti,NYK
 1629631,De'Andre Hunter,SAC
@@ -220,18 +187,14 @@ PLAYER_ID,PLAYER_NAME,TEAM_ABBREVIATION
 1631218,Trayce Jackson-Davis,TOR
 1642857,Kasparas Jakučionis,MIA
 1642355,Bronny James,LAL
-2544,LeBron James,LAL
 1642883,Sion James,CHA
 1631170,Jaime Jaquez Jr.,MIA
 1641998,Trey Jemison III,NYK
-1642450,Daniss Jenkins,DET
 1629660,Ty Jerome,MEM
-1630198,Isaiah Joe,OKC
 1642358,AJ Johnson,DAL
 1629661,Cameron Johnson,DEN
 1643052,Chaney Johnson,BKN
 1630552,Jalen Johnson,ATL
-1629640,Keldon Johnson,SAS
 1642352,Keshad Johnson,MIA
 1642848,Tre Johnson,WAS
 203999,Nikola Jokić,DEN
@@ -243,7 +206,6 @@ PLAYER_ID,PLAYER_NAME,TEAM_ABBREVIATION
 1642461,Spencer Jones,DEN
 1630200,Tre Jones,CHI
 1626145,Tyus Jones,DEN
-1642357,David Jones Garcia,SAS
 1627884,Derrick Jones Jr.,LAC
 201599,DeAndre Jordan,NOP
 1631107,Nikola Jović,MIA
@@ -260,7 +222,6 @@ PLAYER_ID,PLAYER_NAME,TEAM_ABBREVIATION
 1642278,Tyler Kolek,NYK
 1631132,Christian Koloko,ATL
 1629723,John Konchar,UTA
-1628436,Luke Kornet,SAS
 1630249,Vít Krejčí,POR
 1630228,Jonathan Kuminga,ATL
 1628398,Kyle Kuzma,MIL
@@ -293,11 +254,8 @@ PLAYER_ID,PLAYER_NAME,TEAM_ABBREVIATION
 1642942,Jahmai Mashack,MEM
 1631097,Bennedict Mathurin,LAC
 1631255,Karlo Matković,NOP
-1630178,Tyrese Maxey,PHI
 1643024,Chris Mañon,LAL
 1643016,Bez Mbeng,UTA
-1630540,Miles McBride,NYK
-1642272,Jared McCain,OKC
 1630644,Mac McClung,CHI
 203468,CJ McCollum,ATL
 204456,T.J. McConnell,IND
@@ -317,7 +275,6 @@ PLAYER_ID,PLAYER_NAME,TEAM_ABBREVIATION
 1642434,Riley Minix,CLE
 1631169,Josh Minott,BKN
 1642274,Yves Missi,NOP
-1642349,Ajay Mitchell,OKC
 1630558,Davion Mitchell,MIA
 1628378,Donovan Mitchell,CLE
 1630596,Evan Mobley,CLE
@@ -378,17 +335,14 @@ PLAYER_ID,PLAYER_NAME,TEAM_ABBREVIATION
 203939,Dwight Powell,DAL
 1626181,Norman Powell,MIA
 1627752,Taurean Prince,MIL
-1630202,Payton Pritchard,BOS
 1642878,Tyrese Proctor,CLE
 1641765,Olivier-Maxence Prosper,MEM
 1642389,Zyon Pullin,MIN
 1642852,Derik Queen,NOP
-1629674,Neemias Queta,BOS
 1630193,Immanuel Quickley,TOR
 203944,Julius Randle,MIN
 1642875,Maxime Raynaud,SAC
 1630559,Austin Reaves,LAL
-1630194,Paul Reed,DET
 1642882,Julian Reese,WAS
 1641810,Antonio Reeves,CHA
 1629675,Naz Reid,MIN
@@ -397,8 +351,6 @@ PLAYER_ID,PLAYER_NAME,TEAM_ABBREVIATION
 1642859,Jase Richardson,ORL
 1642860,Will Riley,WAS
 1642258,Zaccharie Risacher,ATL
-1629130,Duncan Robinson,DET
-1629011,Mitchell Robinson,NYK
 1631223,David Roddy,DEN
 1631157,Ryan Rollins,MIL
 1641712,Rayan Rupert,MEM
@@ -413,12 +365,10 @@ PLAYER_ID,PLAYER_NAME,TEAM_ABBREVIATION
 1642259,Alex Sarr,WAS
 1630846,Olivier Sarr,CLE
 1631204,Marcus Sasser,DET
-1631248,Baylor Scheierman,BOS
 203471,Dennis Schröder,CLE
 1630578,Alperen Sengun,HOU
 1641729,Brice Sensabaugh,UTA
 1629012,Collin Sexton,CHI
-1629013,Landry Shamet,NYK
 1630545,Terrence Shannon Jr,MIN
 1630549,Day'Ron Sharpe,BKN
 1631101,Shaedon Sharpe,POR
@@ -427,7 +377,6 @@ PLAYER_ID,PLAYER_NAME,TEAM_ABBREVIATION
 1642263,Reed Sheppard,HOU
 1642917,Max Shulga,BOS
 1627783,Pascal Siakam,IND
-1629014,Anfernee Simons,CHI
 1642354,KJ Simpson,DEN
 1630579,Jericho Sims,MIL
 1641771,Jalen Slawson,IND
@@ -449,12 +398,10 @@ PLAYER_ID,PLAYER_NAME,TEAM_ABBREVIATION
 1629622,Max Strus,CLE
 1630591,Jalen Suggs,ORL
 1630256,Jae'Sean Tate,HOU
-1628369,Jayson Tatum,BOS
 202066,Garrett Temple,TOR
 1631207,Dalen Terry,PHI
 1642876,Adou Thiero,LAL
 1641708,Amen Thompson,HOU
-1641709,Ausar Thompson,DET
 1630679,Ethan Thompson,IND
 202691,Klay Thompson,DAL
 1629680,Matisse Thybulle,POR
@@ -464,7 +411,6 @@ PLAYER_ID,PLAYER_NAME,TEAM_ABBREVIATION
 1642910,John Tonje,BOS
 1642260,Nikola Topić,OKC
 1630167,Obi Toppin,IND
-1626157,Karl-Anthony Towns,NYK
 1642849,Nolan Traore,BKN
 1629018,Gary Trent Jr.,MIL
 1631131,Oscar Tshiebwe,UTA
@@ -472,18 +418,14 @@ PLAYER_ID,PLAYER_NAME,TEAM_ABBREVIATION
 1642281,Jaylon Tyson,CLE
 202685,Jonas Valanciunas,DEN
 1629020,Jarred Vanderbilt,LAL
-1630170,Devin Vassell,SAS
 1629216,Gabe Vincent,ATL
 1641774,Tristan Vukcevic,WAS
 202696,Nikola Vučević,BOS
 1629731,Dean Wade,CLE
 1630532,Franz Wagner,ORL
 1629021,Moritz Wagner,ORL
-1631133,Jabari Walker,PHI
 1641716,Jarace Walker,IND
-1641717,Cason Wallace,OKC
 1630811,Keaton Wallace,ATL
-1641775,Jordan Walsh,BOS
 1642266,Ja'Kobe Walter,TOR
 1642276,Kel'el Ware,MIA
 1629023,P.J. Washington,DAL
@@ -493,11 +435,9 @@ PLAYER_ID,PLAYER_NAME,TEAM_ABBREVIATION
 1642364,Jamir Watkins,WAS
 1631212,Peyton Watson,DEN
 1642377,Jaylen Wells,MEM
-1641705,Victor Wembanyama,SAS
 1631104,Blake Wesley,POR
 201566,Russell Westbrook,SAC
 1629632,Coby White,CHA
-1628401,Derrick White,BOS
 1641715,Cam Whitmore,WAS
 1630598,Aaron Wiggins,OKC
 203952,Andrew Wiggins,MIA
@@ -505,9 +445,6 @@ PLAYER_ID,PLAYER_NAME,TEAM_ABBREVIATION
 1630314,Brandon Williams,DAL
 1642262,Cody Williams,UTA
 1629684,Grant Williams,CHA
-1631114,Jalen Williams,OKC
-1631119,Jaylin Williams,OKC
-1629026,Kenrich Williams,OKC
 1631109,Mark Williams,PHX
 1631466,Nate Williams,GSW
 1630172,Patrick Williams,CHI
