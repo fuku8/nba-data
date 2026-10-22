@@ -36,6 +36,11 @@ TRACKING_OUT=(data/player_hustle.csv data/po_player_hustle.csv data/player_speed
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] hustle failed -> revert tracking csv (continue)"
   /usr/bin/git checkout -q -- "${TRACKING_OUT[@]}" 2>/dev/null || true
 }
+# プロフィール（シーズン中に契約した選手の分。未取得の選手だけ1人1呼び出し）。日本語名は手で回す（SCHEDULE.md F2・2026-10-22 決定）
+/opt/anaconda3/bin/python3 scripts/fetch-player-profiles.py || {
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] profiles failed -> revert player_profiles.csv (continue)"
+  /usr/bin/git checkout -q -- data/player_profiles.csv 2>/dev/null || true
+}
 if [[ "$(date +%u)" == "7" ]]; then
   /opt/anaconda3/bin/python3 scripts/fetch-shotcharts.py || {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] shotcharts failed -> revert data/shots (continue)"
