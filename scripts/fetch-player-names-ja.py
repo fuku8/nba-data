@@ -85,6 +85,16 @@ def search_ja(name: str) -> str | None:
     return None
 
 
+def media_style(ja: str) -> str:
+    """Wikipedia の記事名を日本語メディアの書き方に揃える（2026-10-26 ふくたろう決定）:
+    「・ジュニア」→「Jr.」、複合姓の「＝」→「・」、頭文字「T・J・」→「TJ・」、ヴ→バ行"""
+    ja = re.sub(r"・ジュニア$", "Jr.", ja).replace("＝", "・").replace("=", "・")
+    ja = re.sub(r"^([A-Z])・([A-Z])・", r"\1\2・", ja)
+    for v, b in (("ヴァ", "バ"), ("ヴィ", "ビ"), ("ヴェ", "ベ"), ("ヴォ", "ボ"), ("ヴ", "ブ")):
+        ja = ja.replace(v, b)
+    return ja
+
+
 def write(path: str, key: str, rows: list[tuple[str, str]]) -> tuple[int, list[str]]:
     keep = {}
     if os.path.exists(path):
@@ -103,7 +113,7 @@ def write(path: str, key: str, rows: list[tuple[str, str]]) -> tuple[int, list[s
                 w.writerow([k, n, keep[k]["NAME_JA"], keep[k]["SOURCE"]])
             elif n in ja:
                 # 日本語版の記事名から曖昧さ回避の括弧を除く（例「ジェイレン・ウィリアムズ (バスケットボール)」）
-                w.writerow([k, n, ja[n].split(" (")[0], "wikipedia-ja"])
+                w.writerow([k, n, media_style(ja[n].split(" (")[0]), "wikipedia-ja"])
             else:
                 w.writerow([k, n, "", ""]); missing.append(n)
     return len(names), missing

@@ -2,14 +2,18 @@ import { readCsvFile, csvToObjects, num } from "./csv-utils";
 
 // 選手・チームの日本語名対応表（plan §13-1。data/ 直下・シーズン非依存。繰越後に scripts/fetch-player-names-ja.py で再生成）
 // 段階1では title・description・比較検索にだけ使い、画面表示は変えない
-let playerMap: Map<number, string> | null = null;
+let playerMap: Map<number, { ja: string; en: string }> | null = null;
 let teamMap: Map<string, string> | null = null;
 
-export function playerNameJa(playerId: number): string | undefined {
+function playerRow(playerId: number) {
   playerMap ??= new Map(
-    csvToObjects(readCsvFile("player_names_ja.csv")).map((d) => [num(d["PLAYER_ID"]), d["NAME_JA"]])
+    csvToObjects(readCsvFile("player_names_ja.csv")).map((d) => [num(d["PLAYER_ID"]), { ja: d["NAME_JA"], en: d["NAME_EN"] }])
   );
-  return playerMap.get(playerId) || undefined;
+  return playerMap.get(playerId);
+}
+
+export function playerNameJa(playerId: number): string | undefined {
+  return playerRow(playerId)?.ja || undefined;
 }
 
 export function teamNameJa(abbr: string): string | undefined {
@@ -28,24 +32,23 @@ export function allTeamNamesJa(): Record<string, string> {
 // 日本の記事でも通る定着した頭文字略称（plan §13-1 段階3）。長い姓の選手だけ。
 // 定着が確認できたものだけ手で足す（既定はカタカナ姓の自動生成）
 const PLAYER_NAME_SHORT: Record<number, string> = {
-  1628983: "SGA", // シェイ・ギルジャス＝アレクサンダー
-  203484: "KCP", // ケンテイビアス・コールドウェル＝ポープ
-  1629638: "ニキール", // アレクサンダー＝ウォーカー。日本ではファーストネームで流通（リーグに1人）
-  1629008: "MPJ", // マイケル・ポーター・ジュニア
+  1628983: "SGA", // シェイ・ギルジャス・アレクサンダー
+  203484: "KCP", // ケンテイビアス・コールドウェル・ポープ
+  1629638: "ニキール", // アレクサンダー・ウォーカー。日本ではファーストネームで流通（リーグに1人）
+  1629008: "MPJ", // マイケル・ポーターJr.
+  1642357: "ジョーンズ・ガルシア", // 英語名がハイフンなしの複合姓（David Jones Garcia）
 };
 
-// カタカナ姓（「・」区切りの末尾。ジュニア・n世は前の要素と結合。「＝」複合姓はそのまま）
-function surnameJa(ja: string): string {
-  const parts = ja.split("・");
-  const last = parts[parts.length - 1];
-  if (["ジュニア", "2世", "3世", "4世"].includes(last) && parts.length >= 2)
-    return `${parts[parts.length - 2]}・${last}`;
-  return last;
+// カタカナ姓（「・」区切りの末尾。Jr.・n世は姓に続けて書く。
+// 複合姓も「・」区切りなので、英語名の姓のハイフンの数だけ末尾の要素を足す: Finney-Smith → フィニー・スミス）
+function surnameJa(ja: string, en: string): string {
+  const enSurname = en.replace(/ (Jr\.|II|III|IV)$/, "").split(" ").pop() ?? "";
+  return ja.split("・").slice(-enSurname.split("-").length).join("・");
 }
 
 export function playerNameShort(playerId: number): string | undefined {
-  const ja = playerNameJa(playerId);
-  return PLAYER_NAME_SHORT[playerId] ?? (ja ? surnameJa(ja) : undefined);
+  const row = playerRow(playerId);
+  return PLAYER_NAME_SHORT[playerId] ?? (row?.ja ? surnameJa(row.ja, row.en) : undefined);
 }
 
 // 表・リスト・文中用: player をフル日本語名に差し替える（対応表に無い選手は英語名のまま）。
