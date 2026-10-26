@@ -6,7 +6,7 @@ import type { QuadrantDot } from "@/components/quadrant-map";
 
 // 選手ページ「使われ方 × 効率」マップの背景データ（全選手ページで共有。GP≥rsMinGp(season)・TOT行なし・シーズン別）。
 // ページに埋め込むと静的書き出しの HTML と RSC payload の両方に載り、583ページで約120MB増えるため
-// 1ファイルを client で読む（検証: _ai_workspace/reports/2026-09-25-選手ページへの選手マップ掲載の検証.md）
+// 1ファイルを client で読む（検証: ~/nba-data/docs/reports/2026-09-25-選手ページへの選手マップ掲載の検証.md）
 export const dynamic = "force-static";
 
 export function GET() {
