@@ -11,7 +11,7 @@ PLAYER_ID,NAME_EN,NAME_JA,SOURCE
 201569,Eric Gordon,エリック・ゴードン,wikipedia-ja
 201572,Brook Lopez,ブルック・ロペス,wikipedia-ja
 201587,Nicolas Batum,ニコラ・バトゥーム,wikipedia-ja
-201599,DeAndre Jordan,デアンドレ・ジョーダン,wikipedia-ja
+201599,DeAndre Jordan,ディアンドレ・ジョーダン,manual
 201935,James Harden,ジェームズ・ハーデン,wikipedia-ja
 201939,Stephen Curry,ステフィン・カリー,wikipedia-ja
 201942,DeMar DeRozan,デマー・デローザン,wikipedia-ja
@@ -19,7 +19,7 @@ PLAYER_ID,NAME_EN,NAME_JA,SOURCE
 201959,Taj Gibson,タージ・ギブソン,wikipedia-ja
 202066,Garrett Temple,ギャレット・テンプル,wikipedia-ja
 202331,Paul George,ポール・ジョージ,wikipedia-ja
-202685,Jonas Valančiūnas,ヨナス・バランチューナス,wikipedia-ja
+202685,Jonas Valančiūnas,ヨナス・バランチュナス,manual
 202687,Bismack Biyombo,ビスマック・ビヨンボ,wikipedia-ja
 202691,Klay Thompson,クレイ・トンプソン,wikipedia-ja
 202695,Kawhi Leonard,カワイ・レナード,wikipedia-ja
@@ -46,7 +46,7 @@ PLAYER_ID,NAME_EN,NAME_JA,SOURCE
 203897,Zach LaVine,ザック・ラビーン,wikipedia-ja
 203903,Jordan Clarkson,ジョーダン・クラークソン,wikipedia-ja
 203914,Gary Harris,ゲイリー・ハリス,wikipedia-ja
-203924,Jerami Grant,ジェラミ・グラント,wikipedia-ja
+203924,Jerami Grant,ジェレミー・グラント,manual
 203926,Doug McDermott,ダグ・マクダーモット,wikipedia-ja
 203932,Aaron Gordon,アーロン・ゴードン,wikipedia-ja
 203935,Marcus Smart,マーカス・スマート,wikipedia-ja
@@ -66,14 +66,14 @@ PLAYER_ID,NAME_EN,NAME_JA,SOURCE
 1626145,Tyus Jones,タイアス・ジョーンズ,wikipedia-ja
 1626156,D'Angelo Russell,ディアンジェロ・ラッセル,wikipedia-ja
 1626157,Karl-Anthony Towns,カール・アンソニー・タウンズ,wikipedia-ja
-1626162,Kelly Oubre Jr.,ケリー・ウーブレJr.,wikipedia-ja
+1626162,Kelly Oubre Jr.,ケリー・ウーブレイJr.,manual
 1626164,Devin Booker,デビン・ブッカー,wikipedia-ja
 1626166,Cameron Payne,キャメロン・ペイン,wikipedia-ja
 1626167,Myles Turner,マイルズ・ターナー,wikipedia-ja
 1626171,Bobby Portis,ボビー・ポーティス,wikipedia-ja
 1626172,Kevon Looney,ケボン・ルーニー,wikipedia-ja
 1626181,Norman Powell,ノーマン・パウエル,wikipedia-ja
-1626192,Pat Connaughton,パット・コノートン,wikipedia-ja
+1626192,Pat Connaughton,パット・カナートン,manual
 1626204,Larry Nance Jr.,ラリー・ナンスJr.,wikipedia-ja
 1626220,Royce O'Neale,ロイス・オニール,wikipedia-ja
 1627734,Domantas Sabonis,ドマンタス・サボニス,wikipedia-ja
@@ -81,7 +81,7 @@ PLAYER_ID,NAME_EN,NAME_JA,SOURCE
 1627741,Buddy Hield,バディ・ヒールド,wikipedia-ja
 1627742,Brandon Ingram,ブランドン・イングラム,wikipedia-ja
 1627746,Skal Labissiere,スカル・ラビシエ,wikipedia-ja
-1627747,Caris LeVert,カリス・レバート,wikipedia-ja
+1627747,Caris LeVert,キャリス・ルバート,manual
 1627749,Dejounte Murray,デジャンテ・マレー,wikipedia-ja
 1627750,Jamal Murray,ジャマール・マレー,wikipedia-ja
 1627751,Jakob Poeltl,ヤコブ・パートル,wikipedia-ja
@@ -89,8 +89,8 @@ PLAYER_ID,NAME_EN,NAME_JA,SOURCE
 1627759,Jaylen Brown,ジェイレン・ブラウン,wikipedia-ja
 1627780,Gary Payton II,ゲイリー・ペイトン2世,wikipedia-ja
 1627783,Pascal Siakam,パスカル・シアカム,wikipedia-ja
-1627824,Guerschon Yabusele,グエルション・ヤブセレ,wikipedia-ja
-1627826,Ivica Zubac,イビツァ・ズバッツ,wikipedia-ja
+1627824,Guerschon Yabusele,ガーション・ヤブセレ,manual
+1627826,Ivica Zubac,イビチャ・ズバッツ,manual
 1627827,Dorian Finney-Smith,ドリアン・フィニー・スミス,wikipedia-ja
 1627884,Derrick Jones Jr.,デリック・ジョーンズJr.,wikipedia-ja
 1627936,Alex Caruso,アレックス・カルーソ,wikipedia-ja
@@ -117,8 +117,8 @@ PLAYER_ID,NAME_EN,NAME_JA,SOURCE
 1628418,Thomas Bryant,トーマス・ブライアント,wikipedia-ja
 1628420,Monte Morris,モンテ・モリス,wikipedia-ja
 1628436,Luke Kornet,ルーク・コーネット,wikipedia-ja
-1628449,Chris Boucher,クリス・ブーシェ,wikipedia-ja
-1628467,Maxi Kleber,マキシ・クレバー,wikipedia-ja
+1628449,Chris Boucher,クリス・ブーシェイ,manual
+1628467,Maxi Kleber,マキシ・クリバー,manual
 1628502,Nigel Hayes-Davis,ナイジェル・ヘイズ・デイビス,暫定
 1628960,Grayson Allen,グレイソン・アレン,wikipedia-ja
 1628963,Marvin Bagley III,マービン・バグリー3世,wikipedia-ja
@@ -144,7 +144,7 @@ PLAYER_ID,NAME_EN,NAME_JA,SOURCE
 1629012,Collin Sexton,コリン・セクストン,wikipedia-ja
 1629013,Landry Shamet,ランドリー・シャメット,wikipedia-ja
 1629014,Anfernee Simons,アンファニー・サイモンズ,wikipedia-ja
-1629018,Gary Trent Jr.,ゲイリー・トレントJr.,wikipedia-ja
+1629018,Gary Trent Jr.,ギャリー・トレントJr.,manual
 1629020,Jarred Vanderbilt,ジャレッド・バンダービルト,wikipedia-ja
 1629021,Moritz Wagner,モリッツ・バグナー,wikipedia-ja
 1629023,P.J. Washington,PJ・ワシントン,wikipedia-ja
@@ -170,7 +170,7 @@ PLAYER_ID,NAME_EN,NAME_JA,SOURCE
 1629627,Zion Williamson,ザイオン・ウィリアムソン,wikipedia-ja
 1629628,RJ Barrett,RJ・バレット,wikipedia-ja
 1629630,Ja Morant,ジャ・モラント,wikipedia-ja
-1629631,De'Andre Hunter,デアンドレ・ハンター,wikipedia-ja
+1629631,De'Andre Hunter,ディアンドレ・ハンター,manual
 1629632,Coby White,コービー・ホワイト,wikipedia-ja
 1629634,Brandon Clarke,ブランドン・クラーク,wikipedia-ja
 1629636,Darius Garland,ダリアス・ガーランド,wikipedia-ja
@@ -183,7 +183,7 @@ PLAYER_ID,NAME_EN,NAME_JA,SOURCE
 1629651,Nic Claxton,ニコラス・クラクストン,wikipedia-ja
 1629652,Luguentz Dort,ルゲンツ・ドート,wikipedia-ja
 1629655,Daniel Gafford,ダニエル・ギャフォード,wikipedia-ja
-1629656,Quentin Grimes,クエンティン・グライムズ,wikipedia-ja
+1629656,Quentin Grimes,クエンティン・グライムス,manual
 1629660,Ty Jerome,タイ・ジェローム,wikipedia-ja
 1629661,Cameron Johnson,キャメロン・ジョンソン,wikipedia-ja
 1629673,Jordan Poole,ジョーダン・プール,wikipedia-ja
@@ -199,13 +199,13 @@ PLAYER_ID,NAME_EN,NAME_JA,SOURCE
 1630163,LaMelo Ball,ラメロ・ボール,wikipedia-ja
 1630164,James Wiseman,ジェームズ・ワイズマン,wikipedia-ja
 1630165,Killian Hayes,キリアン・ヘイズ,wikipedia-ja
-1630166,Deni Avdija,デニ・アブディア,wikipedia-ja
+1630166,Deni Avdija,デニ・アブディヤ,manual
 1630167,Obi Toppin,オビ・トッピン,wikipedia-ja
 1630168,Onyeka Okongwu,オニエカ・オコング,wikipedia-ja
 1630170,Devin Vassell,デビン・バッセル,wikipedia-ja
 1630171,Isaac Okoro,アイザック・オコロ,wikipedia-ja
 1630172,Patrick Williams,パトリック・ウィリアムズ,wikipedia-ja
-1630173,Precious Achiuwa,プレシャス・アチュワ,wikipedia-ja
+1630173,Precious Achiuwa,プレシャス・アチウワ,manual
 1630174,Aaron Nesmith,アーロン・ネスミス,wikipedia-ja
 1630175,Cole Anthony,コール・アンソニー,wikipedia-ja
 1630178,Tyrese Maxey,タイリース・マクシー,wikipedia-ja
@@ -263,7 +263,7 @@ PLAYER_ID,NAME_EN,NAME_JA,SOURCE
 1630572,Sandro Mamukelashvili,サンドロ・マムケラシュビリ,wikipedia-ja
 1630573,Sam Hauser,サム・ハウザー,wikipedia-ja
 1630574,Ariel Hukporti,アリエル・フクポルティ,暫定
-1630577,Julian Champagnie,ジュリアン・シャンパニー,wikipedia-ja
+1630577,Julian Champagnie,ジュリアン・シャンペニー,manual
 1630578,Alperen Sengun,アルペラン・シェングン,wikipedia-ja
 1630579,Jericho Sims,ジェリコ・シムズ,wikipedia-ja
 1630581,Josh Giddey,ジョシュ・ギディー,wikipedia-ja
@@ -273,10 +273,10 @@ PLAYER_ID,NAME_EN,NAME_JA,SOURCE
 1630591,Jalen Suggs,ジェイレン・サッグス,wikipedia-ja
 1630592,Jalen Wilson,ジェイレン・ウィルソン,暫定
 1630595,Cade Cunningham,ケイド・カニングハム,wikipedia-ja
-1630596,Evan Mobley,エバン・モーブリー,wikipedia-ja
+1630596,Evan Mobley,エバン・モブリー,manual
 1630598,Aaron Wiggins,アーロン・ウィギンズ,wikipedia-ja
 1630604,E.J. Liddell,EJ・リデル,wikipedia-ja
-1630610,DeJon Jarreau,デジョン・ジャロー,暫定
+1630610,DeJon Jarreau,デジョン・ジャロウ,manual
 1630611,Gui Santos,ギー・サントス,wikipedia-ja
 1630619,Moussa Cisse,ムサ・シセ,暫定
 1630621,Hunter Dickinson,ハンター・ディキンソン,暫定
@@ -292,7 +292,7 @@ PLAYER_ID,NAME_EN,NAME_JA,SOURCE
 1630692,Jordan Goodwin,ジョーダン・グッドウィン,wikipedia-ja
 1630695,Micah Potter,マイカ・ポッター,暫定
 1630696,Dru Smith,ドルー・スミス,暫定
-1630699,MarJon Beauchamp,マージョン・ボーチャンプ,wikipedia-ja
+1630699,MarJon Beauchamp,マージョン・ボウチャンプ,manual
 1630700,Dyson Daniels,ダイソン・ダニエルズ,wikipedia-ja
 1630702,Jaden Hardy,ジェイデン・ハーディー,wikipedia-ja
 1630703,Scoot Henderson,スクート・ヘンダーソン,wikipedia-ja
@@ -367,7 +367,7 @@ PLAYER_ID,NAME_EN,NAME_JA,SOURCE
 1631260,AJ Green,AJ・グリーン,wikipedia-ja
 1631288,Jamal Cain,ジャマール・ケイン,暫定
 1631321,Sidy Cissoko,シディ・シソッコ,wikipedia-ja
-1631323,Simone Fontecchio,シモーネ・フォンテキオ,暫定
+1631323,Simone Fontecchio,シモーネ・フォンテッキオ,manual
 1631338,Mouhamadou Gueye,ムハマドゥ・ゲイ,暫定
 1631342,Daeqwon Plowden,デイクワン・プラウデン,暫定
 1631351,Lucas Williamson,ルーカス・ウィリアムソン,暫定
@@ -421,7 +421,7 @@ PLAYER_ID,NAME_EN,NAME_JA,SOURCE
 1641775,Jordan Walsh,ジョーダン・ウォルシュ,wikipedia-ja
 1641778,Leaky Black,リーキー・ブラック,暫定
 1641780,Johni Broome,ジョニ・ブルーム,暫定
-1641783,Tristan da Silva,トリスタン・ダ・シウバ,wikipedia-ja
+1641783,Tristan da Silva,トリスタン・ダ・シルバ,manual
 1641787,Tosan Evbuomwan,トサン・エブオムワン,暫定
 1641790,PJ Hall,PJ・ホール,暫定
 1641794,Dillon Jones,ディロン・ジョーンズ,暫定
@@ -470,7 +470,7 @@ PLAYER_ID,NAME_EN,NAME_JA,SOURCE
 1642285,Cam Spencer,キャム・スペンサー,暫定
 1642345,Oso Ighodaro,オソ・イゴダロ,wikipedia-ja
 1642346,Ryan Dunn,ライアン・ダン,wikipedia-ja
-1642347,Jamal Shead,ジャマール・シェード,暫定
+1642347,Jamal Shead,ジャマール・シェッド,manual
 1642348,Justin Edwards,ジャスティン・エドワーズ,wikipedia-ja
 1642349,Ajay Mitchell,エイジェイ・ミッチェル,wikipedia-ja
 1642352,Keshad Johnson,ケシャド・ジョンソン,暫定
@@ -481,7 +481,7 @@ PLAYER_ID,NAME_EN,NAME_JA,SOURCE
 1642358,AJ Johnson,AJ・ジョンソン,wikipedia-ja
 1642359,Pacôme Dadiet,パコム・ダディエ,暫定
 1642362,Payton Sandfort,ペイトン・サンドフォート,暫定
-1642363,Nique Clifford,ニーク・クリフォード,暫定
+1642363,Nique Clifford,ニク・クリフォード,manual
 1642364,Jamir Watkins,ジャミア・ワトキンス,暫定
 1642366,Quinten Post,クインテン・ポスト,wikipedia-ja
 1642367,Jonathan Mogbo,ジョナサン・モグボ,暫定
@@ -517,7 +517,7 @@ PLAYER_ID,NAME_EN,NAME_JA,SOURCE
 1642848,Tre Johnson,トレイ・ジョンソン,wikipedia-ja
 1642849,Nolan Traore,ノーラン・トラオレ,wikipedia-ja
 1642851,Kon Knueppel,コン・カニップル,wikipedia-ja
-1642852,Derik Queen,デリク・クイーン,wikipedia-ja
+1642852,Derik Queen,デリック・クイーン,manual
 1642853,Rasheer Fleming,ラシール・フレミング,暫定
 1642854,Asa Newell,エイサ・ニューエル,wikipedia-ja
 1642855,Noa Essengue,ノア・エセング,wikipedia-ja
@@ -545,7 +545,7 @@ PLAYER_ID,NAME_EN,NAME_JA,SOURCE
 1642884,Vladislav Goldin,ウラジスラフ・ゴールディン,暫定
 1642885,Mohamed Diawara,モハメド・ディアワラ,暫定
 1642886,Koby Brea,コビー・ブレア,暫定
-1642905,Yang Hansen,楊瀚森,暫定
+1642905,Yang Hansen,ヤン・ハンセン,manual
 1642907,Cedric Coward,セドリック・カワード,wikipedia-ja
 1642910,John Tonje,ジョン・トンジェ,暫定
 1642911,Rocco Zikarsky,ロッコ・ジカースキー,暫定
