@@ -88,7 +88,7 @@ function RegularSeason({ season }: { season: string }) {
           <div className="rounded-lg border bg-card px-4 py-3 text-sm overflow-x-auto whitespace-nowrap sm:whitespace-normal">
             {lastGames.map((g) => (
               <span key={g.gameId} className="mr-5 inline-block whitespace-nowrap leading-7 text-muted-foreground">
-                <span className="font-semibold text-foreground">{g.homeTeam} {g.homePts}</span>-{g.awayPts} {g.awayTeam}
+                <span className={g.homePts > g.awayPts ? "font-semibold text-foreground" : ""}>{g.homeTeam} {g.homePts}</span>-<span className={g.awayPts > g.homePts ? "font-semibold text-foreground" : ""}>{g.awayPts} {g.awayTeam}</span>
               </span>
             ))}
           </div>
