@@ -49,6 +49,7 @@ export function PlayersClient({
   shooterMin3pa,
   mapTeamTop,
   namesJa,
+  unplayed,
   asOf,
 }: {
   phase: Phase;
@@ -59,6 +60,8 @@ export function PlayersClient({
   advanced: PlayerAdvanced[];
   // 検索照合＋表の表示に使う日本語フル名（playerId → 日本語名。対応表に無い選手は含まれない）
   namesJa: Record<number, string>;
+  // 名簿に居て今季まだ出場の無い選手（RS のみ。検索したときだけ表の下に出す）
+  unplayed: { playerId: number; player: string; team: string; playerJa: string | null; hasPage: boolean }[];
   usageEfficiencyDots: QuadrantDot[];
   shooterDots: QuadrantDot[];
   minGp: number;
@@ -100,6 +103,12 @@ export function PlayersClient({
     }
     return result;
   }, [perGame, search, minGames, namesJa]);
+
+  const filteredUnplayed = useMemo(() => {
+    if (!search) return [];
+    const q = normalizeName(search);
+    return unplayed.filter((p) => normalizeName(p.player).includes(q) || (p.playerJa != null && normalizeName(p.playerJa).includes(q)));
+  }, [unplayed, search]);
 
   const sortedPerGame = useMemo(() => {
     return [...filteredPerGame].sort((a, b) => {
@@ -379,6 +388,32 @@ export function PlayersClient({
           </Card>
         </TabsContent>
       </Tabs>
+
+      {filteredUnplayed.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>今季未出場の選手</CardTitle>
+            <CardDescription>名簿に居て、今季まだ出場の無い選手です</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2">
+              {filteredUnplayed.map((p) => (
+                <li key={p.playerId} className="flex items-center gap-3">
+                  {p.hasPage ? (
+                    <Link href={`/players/${p.playerId}`} className="hover:underline font-medium">{p.playerJa ?? p.player}</Link>
+                  ) : (
+                    <span className="font-medium">{p.playerJa ?? p.player}</span>
+                  )}
+                  <Link href={`/teams/${p.team}`} className="flex items-center gap-1.5 text-muted-foreground hover:underline">
+                    <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: getTeamColor(p.team) }} />
+                    {p.team}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (

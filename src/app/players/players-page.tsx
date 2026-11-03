@@ -1,4 +1,5 @@
-import { getPlayerPerGame, getPlayerAdvanced, getPlayerTotals } from "@/lib/data/players";
+import { getPlayerPerGame, getPlayerAdvanced, getPlayerTotals, getRoster } from "@/lib/data/players";
+import { allPlayerIds } from "@/app/players/[...slug]/player-page";
 import { isPlayoffDataAvailable } from "@/lib/data/playoffs";
 import { rsMinGp, PO_MIN_GP } from "@/lib/data/player-types";
 import type { Phase } from "@/lib/phase";
@@ -47,6 +48,17 @@ export function renderPlayers(phase: Phase) {
     if (ja) namesJa[p.playerId] = ja;
   }
 
+  // 名簿に居て今季まだ出場の無い選手。表には載せず、検索したときだけ表の下に出す（2026-11-03 ふくたろう決定・RS のみ。
+  // PO は出場しない選手が名簿に多く残るため対象外）。過去季にも成績の無い選手は選手ページが無いので、チームページの
+  // ロスターと同じくリンクにしない
+  const played = new Set(perGame.map((p) => p.playerId));
+  const withPage = new Set(allPlayerIds());
+  const unplayed = phase === "rs"
+    ? getRoster().filter((r) => !played.has(r.playerId)).map((r) => ({
+        playerId: r.playerId, player: r.player, team: r.team, playerJa: playerNameJa(r.playerId) ?? null, hasPage: withPage.has(r.playerId),
+      }))
+    : [];
+
   const shooterDots: QuadrantDot[] = withDisplayNames(perGame.filter((p) => p.gp >= minGp && p.threePtA >= SHOOTER_MIN_3PA))
     .map((p) => ({ playerId: p.playerId, name: p.player, team: p.team, x: p.threePtA, y: p.threePtPct }));
 
@@ -59,6 +71,7 @@ export function renderPlayers(phase: Phase) {
       perGame={perGame}
       advanced={advanced}
       namesJa={namesJa}
+      unplayed={unplayed}
       usageEfficiencyDots={usageEfficiencyDots}
       shooterDots={shooterDots}
       minGp={minGp}

@@ -111,7 +111,7 @@ const PRESETS: { label: string; ids: number[] }[] = [
 // 表示は日本語名主・英語名従（plan §13-1 段階2）。データ（player）は英語のまま
 const dn = (p: ComparePlayer) => p.playerJa ?? p.player;
 
-export function CompareClient({ players, phase, season, poAvailable, asOf }: { players: ComparePlayer[]; phase: Phase; season: string; poAvailable: boolean; asOf: string }) {
+export function CompareClient({ players, phase, season, poAvailable, listMinGp, asOf }: { players: ComparePlayer[]; phase: Phase; season: string; poAvailable: boolean; listMinGp: number; asOf: string }) {
   const searchParams = useSearchParams();
   const [selectedIds, setSelectedIds] = useState<number[]>(() => parseIds(searchParams.get("ids"), players));
   const [search, setSearch] = useState("");
@@ -194,7 +194,7 @@ export function CompareClient({ players, phase, season, poAvailable, asOf }: { p
         </div>
       </div>
       <p className="text-muted-foreground mt-1">
-        選手を追加すると比較表・レーダーチャート・得点の作り方が表示されます（1名から可、最大{MAX_PLAYERS}名で比較）。
+        選手を追加すると比較表・レーダーチャート・得点の作り方が表示されます（1名から可、最大{MAX_PLAYERS}名で比較）。検索できるのは今季{phase === "po" ? "のプレーオフ" : ""}に{listMinGp}試合以上出場した選手だけです。
       </p>
 
       {/* Search + Selected */}

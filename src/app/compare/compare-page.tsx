@@ -104,6 +104,7 @@ export function renderCompare(phase: Phase) {
         phase={phase}
         season={currentSeason()}
         poAvailable={poAvailable}
+        listMinGp={listMinGp}
         asOf={phase === "po" ? getPoLastGameDate() : getLatestGameDate()}
       />
     </Suspense>
